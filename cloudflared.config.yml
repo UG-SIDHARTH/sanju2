@@ -1,0 +1,18 @@
+# Cloudflare Tunnel Configuration (/etc/cloudflared/config.yml)
+tunnel: 20d266bb-3ec1-4224-a027-364f1cb9a50a
+credentials-file: /etc/cloudflared/20d266bb-3ec1-4224-a027-364f1cb9a50a.json
+
+ingress:
+  # Existing services
+  - hostname: omnicheck.ugsidharth.in
+    service: http://localhost:9999
+
+  - hostname: sanju.ugsidharth.in
+    service: http://localhost:8099
+
+  # New Spider-Man Snakes & Ladders game (port 9000)
+  - hostname: sanju2.ugsidharth.in
+    service: http://localhost:9000
+
+  # Catch-all rule (must always be last)
+  - service: http_status:404
