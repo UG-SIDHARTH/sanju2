@@ -8,6 +8,7 @@ import { SpiderMan } from './SpiderMan.js';
 import { GreenGoblin } from './GreenGoblin.js';
 import { Dice3D } from './Dice3D.js';
 import { CameraDirector } from './CameraDirector.js';
+import { DrOctopus } from './DrOctopus.js';
 
 export class GameManager {
   constructor(scene, camera, renderer, audioManager, comicFX) {
@@ -22,6 +23,9 @@ export class GameManager {
     this.dice = new Dice3D(scene, audioManager);
     this.hud = null;
 
+    // Doctor Octopus (Tile 100 Ambush)
+    this.drOctopus = new DrOctopus(scene, audioManager, comicFX);
+
     // Game state
     this.players = [];
     this.activePlayerIndex = 0;
@@ -34,6 +38,8 @@ export class GameManager {
     // Entities: 5 Spider-Men & 6 Green Goblins
     this.spiderMen = [];
     this.greenGoblins = [];
+
+    this.activeMovement = null;
 
     this.spideyFixedTiles = [38, 55, 73, 86, 94];
     this.goblinFixedTiles = [28, 44, 62, 77, 89, 96];
@@ -69,6 +75,11 @@ export class GameManager {
     this.greenGoblins.forEach(g => this.scene.remove(g.root));
     this.greenGoblins = [];
 
+    if (this.drOctopus) {
+      this.drOctopus.root.visible = false;
+      this.drOctopus.isAbducting = false;
+    }
+
     // Spawn Players (MJs)
     for (let i = 0; i < playerCount; i++) {
       const char = CharacterFactory.createMJ(i);
@@ -87,7 +98,7 @@ export class GameManager {
     }
 
     this.spideyFixedTiles.forEach((fixedTile, idx) => {
-      const spidey = new SpiderMan(this.scene, idx + 1, fixedTile, this.audioManager, this.comicFX);
+      const spidey = new SpiderMan(this.scene, idx + 1, fixedTile, this.audioManager, this.comicFX, this.board);
       const pos = this.board.getTileWorldPosition(fixedTile);
       spidey.setPosition(pos);
 
@@ -167,78 +178,107 @@ export class GameManager {
         this.hud.logEvent(`${activePlayer.config.name} rolled a 6! BONUS TURN!`, true);
       }
 
-      this.movePlayerStepByStep(activePlayer, diceRoll, getsBonusFromSix);
+      this.startPlayerMovement(activePlayer, diceRoll, getsBonusFromSix);
     });
   }
 
-  movePlayerStepByStep(player, steps, getsBonusFromSix) {
+  startPlayerMovement(player, steps, getsBonusFromSix) {
+    // 1. If player was holding hands with Spider-Man, release cleanly before stepping forward
+    this.spiderMen.forEach(s => {
+      if (s.partnerMJ === player) {
+        s.releaseHands();
+      }
+    });
+
     const startTile = player.currentTile;
     const targetTile = startTile + steps;
-    const tileSequence = [];
+    const path = [];
 
     for (let t = startTile + 1; t <= targetTile; t++) {
-      tileSequence.push(t);
+      path.push(t);
     }
 
-    if (tileSequence.length === 0) {
+    if (path.length === 0) {
       this.finishTurn(getsBonusFromSix);
       return;
     }
 
-    let stepIndex = 0;
     player.animator.setState('walking');
 
-    const walkNextStep = () => {
-      if (stepIndex >= tileSequence.length) {
-        player.currentTile = targetTile;
+    const firstTile = path[0];
+    const fromPos = player.root.position.clone();
+    const toPos = this.board.getTileWorldPosition(firstTile);
+    player.root.lookAt(toPos.x, player.root.position.y, toPos.z);
+    this.audioManager.playFootstep();
+
+    this.activeMovement = {
+      player,
+      path,
+      pathIndex: 0,
+      stepElapsed: 0,
+      stepDuration: 0.38, // 380ms per step: clean, natural, realistic bipedal walking pace
+      fromPos,
+      toPos,
+      targetTile,
+      getsBonusFromSix
+    };
+  }
+
+  updateMovement(delta) {
+    if (!this.activeMovement) return;
+
+    const m = this.activeMovement;
+    m.stepElapsed += delta;
+    const rawProgress = Math.min(1.0, m.stepElapsed / m.stepDuration);
+
+    // Smoothstep easing for human stepping momentum
+    const ease = rawProgress * rawProgress * (3 - 2 * rawProgress);
+    m.player.root.position.lerpVectors(m.fromPos, m.toPos, ease);
+    m.player.root.lookAt(m.toPos.x, m.player.root.position.y, m.toPos.z);
+
+    // Dynamic camera tracking player walking
+    this.cameraDirector.focusOnPlayer(m.player.root.position);
+
+    if (rawProgress >= 1.0) {
+      // Step complete onto tile
+      m.player.root.position.copy(m.toPos);
+      const currentTileNum = m.path[m.pathIndex];
+      m.player.currentTile = currentTileNum;
+
+      this.hud.updateTurnDisplay(m.player, this.bonusRollEarned || m.getsBonusFromSix);
+      this.hud.renderPlayersList(this.players, this.activePlayerIndex);
+
+      m.pathIndex++;
+
+      if (m.pathIndex < m.path.length) {
+        // Setup next step
+        const nextTileNum = m.path[m.pathIndex];
+        m.fromPos.copy(m.toPos);
+        m.toPos = this.board.getTileWorldPosition(nextTileNum);
+        m.stepElapsed = 0;
+        m.player.root.lookAt(m.toPos.x, m.player.root.position.y, m.toPos.z);
+        this.audioManager.playFootstep();
+      } else {
+        // All steps completed!
+        const targetTile = m.targetTile;
+        const getsBonusFromSix = m.getsBonusFromSix;
+        const player = m.player;
+        this.activeMovement = null;
+
         player.animator.setState('idle');
         this.updatePlayerPositionsOnTile(targetTile);
         this.hud.renderPlayersList(this.players, this.activePlayerIndex);
         this.hud.updateTurnDisplay(player, this.bonusRollEarned || getsBonusFromSix);
 
         this.checkTileEvents(player, targetTile, getsBonusFromSix);
-        return;
       }
-
-      const nextTileNum = tileSequence[stepIndex];
-      const fromPos = player.root.position.clone();
-      const toPos = this.board.getTileWorldPosition(nextTileNum);
-
-      player.root.lookAt(toPos.x, player.root.position.y, toPos.z);
-
-      const stepDuration = 0.25;
-      const startTime = performance.now();
-
-      this.audioManager.playFootstep();
-      this.cameraDirector.focusOnPlayer(toPos);
-
-      const animateStep = () => {
-        const now = performance.now();
-        const progress = (now - startTime) / (stepDuration * 1000);
-
-        if (progress < 1.0) {
-          const currentPos = new THREE.Vector3().lerpVectors(fromPos, toPos, progress);
-          player.root.position.copy(currentPos);
-          requestAnimationFrame(animateStep);
-        } else {
-          player.root.position.copy(toPos);
-          player.currentTile = nextTileNum;
-          this.hud.updateTurnDisplay(player, this.bonusRollEarned || getsBonusFromSix);
-          stepIndex++;
-          walkNextStep();
-        }
-      };
-
-      requestAnimationFrame(animateStep);
-    };
-
-    walkNextStep();
+    }
   }
 
   checkTileEvents(player, landedTile, hadBonusRoll) {
     let bonusRoll = hadBonusRoll;
 
-    // 1. Secret 100 Rule
+    // 1. Secret 100 Rule (Doctor Octopus Ambush)
     if (landedTile === 100) {
       this.handleSecret100Reached(player);
       return;
@@ -260,6 +300,16 @@ export class GameManager {
         this.checkCollisionAndFinish(player, bonusRoll);
       });
       return;
+    }
+
+    // 2.5 Spider-Man Station Tile: Spider-Man and MJ hold hands side-by-side!
+    const stationedSpidey = this.spiderMen.find(s => s.fixedTileNumber === landedTile);
+    if (stationedSpidey) {
+      this.comicFX.spawnAt(stationedSpidey.root.position, 'TEAM UP!', '#ef4444', '#ffffff', 2.0);
+      this.comicFX.showBanner(`SPIDER-MAN #${stationedSpidey.id} & ${player.config.name} HOLD HANDS!`);
+      this.audioManager.playHeroicCatch();
+      this.hud.logEvent(`🦸 Spider-Man #${stationedSpidey.id} and ${player.config.name} team up and hold hands!`, true);
+      stationedSpidey.holdHands(player);
     }
 
     // 3. Green Goblin Hazard
@@ -345,43 +395,73 @@ export class GameManager {
 
   handleSecret100Reached(player) {
     this.audioManager.playSuspenseHeartbeat();
-    this.cameraDirector.focusOnTile100(this.board.getTileWorldPosition(100));
-    this.hud.logEvent(`⚡ ${player.config.name} REACHED TILE 100! EVALUATING OUTCOME...`, true);
+    const tile100Pos = this.board.getTileWorldPosition(100);
+    this.cameraDirector.focusOnTile100(tile100Pos);
+    this.hud.logEvent(`⚡ ${player.config.name} REACHED TILE 100! SOMETHING IS COMING...`, true);
 
     setTimeout(() => {
-      const isWin = this.secret100IsWin;
+      this.hud.logEvent(`🐙 AMBUSH! DOCTOR OCTOPUS DESCENDS UPON TILE 100!`, true);
 
-      if (isWin) {
-        this.audioManager.playVictory();
-        player.animator.setState('victory');
-        this.comicFX.spawnAt(player.root.position, 'VICTORY!', '#10b981', '#ffffff', 3.0);
-        this.hud.showSecret100Reveal(player, true);
-        this.hud.logEvent(`🏆 ${player.config.name} WINS THE GAME!`, true);
-      } else {
-        this.audioManager.playDefeatGong();
-        player.isEliminated = true;
-        player.animator.setState('defeat');
-        this.comicFX.spawnAt(player.root.position, 'TRAP!', '#ef4444', '#ffffff', 3.0);
+      this.drOctopus.triggerAbduction(
+        player,
+        // onComplete:
+        () => {
+          this.audioManager.playDefeatGong();
+          player.isEliminated = true;
 
-        this.hud.showSecret100Reveal(player, false, () => {
-          const activeSurvivors = this.players.filter(p => !p.isEliminated);
-          if (activeSurvivors.length === 1) {
-            const winner = activeSurvivors[0];
-            this.audioManager.playVictory();
-            winner.animator.setState('victory');
-            this.hud.showSecret100Reveal(winner, true);
-            this.hud.logEvent(`🏆 ${winner.config.name} IS THE SURVIVING MJ! VICTORY!`, true);
-          } else {
-            this.advanceToNextPlayer();
-          }
-        });
-      }
-    }, 1500);
+          this.hud.showSecret100Reveal(player, false, () => {
+            const activeSurvivors = this.players.filter(p => !p.isEliminated);
+            if (activeSurvivors.length === 1) {
+              const winner = activeSurvivors[0];
+              this.audioManager.playVictory();
+              winner.animator.setState('victory');
+              this.hud.showSecret100Reveal(winner, true);
+              this.hud.logEvent(`🏆 ${winner.config.name} IS THE SURVIVING MJ! VICTORY!`, true);
+            } else if (activeSurvivors.length === 0) {
+              this.hud.logEvent(`☠️ All MJs were abducted by Doctor Octopus! Multiverse fallen!`, true);
+            } else {
+              this.advanceToNextPlayer();
+            }
+          });
+        },
+        // onCameraUpdate:
+        (docPos, mjPos, progress) => {
+          this.cameraDirector.trackFlyingGoblin(docPos, mjPos, progress);
+        }
+      );
+    }, 1200);
   }
 
   updatePlayerPositionsOnTile(tileNumber) {
     const playersOnTile = this.players.filter(p => !p.isEliminated && p.currentTile === tileNumber);
     const baseTilePos = this.board.getTileWorldPosition(tileNumber);
+    const spideyOnTile = this.spiderMen.find(s => s.fixedTileNumber === tileNumber);
+
+    if (spideyOnTile) {
+      if (playersOnTile.length > 0) {
+        // Spider-Man & MJ hold hands side-by-side! (No carrying)
+        const partnerPlayer = playersOnTile[0];
+        spideyOnTile.holdHands(partnerPlayer);
+
+        // If additional players are also on this tile, place them safely adjacent so they do not clip
+        if (playersOnTile.length > 1) {
+          const others = playersOnTile.slice(1);
+          others.forEach((p, idx) => {
+            const angle = (idx / others.length) * Math.PI + Math.PI / 2;
+            const offsetX = Math.cos(angle) * 0.95;
+            const offsetZ = Math.sin(angle) * 0.95;
+            p.root.position.set(baseTilePos.x + offsetX, 0.1, baseTilePos.z + offsetZ);
+            p.root.lookAt(baseTilePos.x, 0.1, baseTilePos.z);
+          });
+        }
+      } else {
+        // No players on this tile; release hands if Spidey was holding hands
+        if (spideyOnTile.isHoldingHands) {
+          spideyOnTile.releaseHands();
+        }
+      }
+      return;
+    }
 
     if (playersOnTile.length === 1) {
       playersOnTile[0].root.position.set(baseTilePos.x, 0.1, baseTilePos.z);
@@ -433,9 +513,11 @@ export class GameManager {
   }
 
   update(delta) {
+    this.updateMovement(delta);
     this.cameraDirector.update(delta);
     this.players.forEach(p => p.animator.update(delta));
     this.spiderMen.forEach(s => s.update(delta));
     this.greenGoblins.forEach(g => g.update(delta));
+    if (this.drOctopus) this.drOctopus.update(delta);
   }
 }

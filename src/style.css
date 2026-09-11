@@ -1062,3 +1062,60 @@ canvas {
     font-size: 2.8rem;
   }
 }
+
+/* Floating Camera Zoom Controls */
+.zoom-controls {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 100;
+  pointer-events: auto;
+}
+
+.zoom-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.zoom-btn:hover {
+  background: rgba(56, 189, 248, 0.3);
+  border-color: #38bdf8;
+  transform: scale(1.1);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.5);
+}
+
+.zoom-btn:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 768px) {
+  .zoom-controls {
+    right: 12px;
+    top: auto;
+    bottom: 120px;
+    transform: none;
+  }
+  .zoom-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+  }
+}
+

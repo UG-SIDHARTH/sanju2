@@ -342,4 +342,118 @@ export class AudioManager {
     osc.start(t);
     osc.stop(t + 2.3);
   }
+
+  // Spider-Man catches MJ with both arms: Warm, charming heroic chime
+  playHeroicCatch() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    const t = this.ctx.currentTime;
+
+    // Sweet heroic arpeggiated chime
+    const chords = [
+      { f: 523.25, s: 0, d: 0.35 },    // C5
+      { f: 659.25, s: 0.08, d: 0.35 }, // E5
+      { f: 783.99, s: 0.16, d: 0.4 },  // G5
+      { f: 1046.5, s: 0.24, d: 0.6 }   // C6
+    ];
+
+    chords.forEach(c => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const st = t + c.s;
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(c.f, st);
+
+      gain.gain.setValueAtTime(0.4, st);
+      gain.gain.exponentialRampToValueAtTime(0.001, st + c.d);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(st);
+      osc.stop(st + c.d + 0.05);
+    });
+  }
+
+  // Dr. Octopus Mechanical Emergence: Heavy hydraulic servo hiss & metallic clamp
+  playDocOckEmergence() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    const t = this.ctx.currentTime;
+
+    // 1. Heavy low metallic thud
+    const subOsc = this.ctx.createOscillator();
+    const subGain = this.ctx.createGain();
+    subOsc.type = 'sawtooth';
+    subOsc.frequency.setValueAtTime(110, t);
+    subOsc.frequency.exponentialRampToValueAtTime(32, t + 0.8);
+
+    subGain.gain.setValueAtTime(0.7, t);
+    subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.9);
+
+    const subFilter = this.ctx.createBiquadFilter();
+    subFilter.type = 'lowpass';
+    subFilter.frequency.setValueAtTime(220, t);
+
+    subOsc.connect(subFilter);
+    subFilter.connect(subGain);
+    subGain.connect(this.masterGain);
+    subOsc.start(t);
+    subOsc.stop(t + 0.9);
+
+    // 2. High metallic servo whir
+    const servoOsc = this.ctx.createOscillator();
+    const servoGain = this.ctx.createGain();
+    servoOsc.type = 'sawtooth';
+    servoOsc.frequency.setValueAtTime(680, t + 0.1);
+    servoOsc.frequency.exponentialRampToValueAtTime(1250, t + 0.4);
+    servoOsc.frequency.exponentialRampToValueAtTime(450, t + 0.8);
+
+    servoGain.gain.setValueAtTime(0.01, t);
+    servoGain.gain.linearRampToValueAtTime(0.35, t + 0.2);
+    servoGain.gain.exponentialRampToValueAtTime(0.001, t + 0.85);
+
+    const servoFilter = this.ctx.createBiquadFilter();
+    servoFilter.type = 'bandpass';
+    servoFilter.frequency.setValueAtTime(900, t);
+    servoFilter.Q.setValueAtTime(5, t);
+
+    servoOsc.connect(servoFilter);
+    servoFilter.connect(servoGain);
+    servoGain.connect(this.masterGain);
+    servoOsc.start(t + 0.1);
+    servoOsc.stop(t + 0.9);
+  }
+
+  // Dr. Octopus "JUST LIKE I PLANNED" sinister chord sting
+  playDocOckVoiceChime() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    const t = this.ctx.currentTime;
+
+    // Dark sinister minor chords: D minor / Bb major villainous progression
+    const darkChords = [146.83, 174.61, 220.0, 293.66]; // D3, F3, A3, D4
+
+    darkChords.forEach(freq => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, t);
+
+      gain.gain.setValueAtTime(0.3, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 2.4);
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(650, t);
+      filter.frequency.exponentialRampToValueAtTime(180, t + 2.2);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(t);
+      osc.stop(t + 2.5);
+    });
+  }
 }
+

@@ -32,11 +32,31 @@ export class HUD {
     this.btnStartGame = document.getElementById('btn-start-game');
     this.btnPlayAgain = document.getElementById('btn-play-again');
 
+    this.btnZoomIn = document.getElementById('btn-zoom-in');
+    this.btnZoomReset = document.getElementById('btn-zoom-reset');
+    this.btnZoomOut = document.getElementById('btn-zoom-out');
+
     this.selectedPlayerCount = 3;
     this.setupListeners();
   }
 
   setupListeners() {
+    // Zoom buttons
+    if (this.btnZoomIn) {
+      this.btnZoomIn.addEventListener('click', () => {
+        this.gameManager.cameraDirector.zoomIn();
+      });
+    }
+    if (this.btnZoomReset) {
+      this.btnZoomReset.addEventListener('click', () => {
+        this.gameManager.cameraDirector.resetZoom();
+      });
+    }
+    if (this.btnZoomOut) {
+      this.btnZoomOut.addEventListener('click', () => {
+        this.gameManager.cameraDirector.zoomOut();
+      });
+    }
     // Player count buttons on Start Screen
     const countBtns = document.querySelectorAll('.player-count-btn');
     countBtns.forEach(btn => {
@@ -175,11 +195,11 @@ export class HUD {
     const playerCardEl = document.getElementById('reveal-player-card');
 
     titleEl.className = `reveal-title ${isWin ? 'win' : 'lose'}`;
-    titleEl.textContent = isWin ? 'YOU WIN!' : 'TOTAL TRAP!';
+    titleEl.textContent = isWin ? 'SURVIVING CHAMPION!' : 'DOCTOR OCTOPUS AMBUSH!';
 
     subtitleEl.textContent = isWin
-      ? `${player.config.name} conquered Tile 100! The multiverse is saved!`
-      : `${player.config.name} triggered the Trapdoor! ELIMINATED! The remaining MJs battle on!`;
+      ? `${player.config.name} is the surviving champion of the multiverse!`
+      : `Dr. Octopus: "JUST LIKE I PLANNED!" ${player.config.name} was seized by mechanical tentacles and dragged into the unknown! ELIMINATED!`;
 
     playerCardEl.innerHTML = `
       <div class="player-avatar-mini" style="background-color: ${player.config.hex}; width: 44px; height: 44px; font-size: 1.2rem;">

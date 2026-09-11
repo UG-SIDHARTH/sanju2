@@ -94,6 +94,7 @@ class App {
 
     const delta = Math.min(this.clock.getDelta(), 0.1);
 
+    if (this.environment) this.environment.update(delta);
     if (this.board) this.board.update(delta);
     if (this.comicFX) this.comicFX.update(delta);
     if (this.gameManager) this.gameManager.update(delta);

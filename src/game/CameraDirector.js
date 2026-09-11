@@ -24,22 +24,47 @@ export class CameraDirector {
     this.posDamp = 3.5;
     this.lookDamp = 4.5;
 
+    this.zoomLevel = 1.0;
+    this.targetZoomLevel = 1.0;
+    this.minZoom = 0.35;
+    this.maxZoom = 2.4;
+
     this.isDragging = false;
     this.prevMouse = { x: 0, y: 0 };
     this.orbitAngleX = 0;
     this.orbitAngleY = 0;
+    this.prevPinchDist = null;
 
     this.setupControls();
   }
 
   setupControls() {
     const onPointerDown = (e) => {
+      if (e.touches && e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        this.prevPinchDist = Math.hypot(dx, dy);
+        return;
+      }
       this.isDragging = true;
       this.prevMouse.x = e.clientX || (e.touches && e.touches[0].clientX) || 0;
       this.prevMouse.y = e.clientY || (e.touches && e.touches[0].clientY) || 0;
     };
 
     const onPointerMove = (e) => {
+      // Handle 2-finger touch pinch zoom
+      if (e.touches && e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.hypot(dx, dy);
+        if (this.prevPinchDist) {
+          const ratio = this.prevPinchDist / dist;
+          this.setZoom(this.targetZoomLevel * (1 + (ratio - 1) * 0.8));
+        }
+        this.prevPinchDist = dist;
+        return;
+      }
+
       if (!this.isDragging) return;
       const x = e.clientX || (e.touches && e.touches[0].clientX) || 0;
       const y = e.clientY || (e.touches && e.touches[0].clientY) || 0;
@@ -56,6 +81,14 @@ export class CameraDirector {
 
     const onPointerUp = () => {
       this.isDragging = false;
+      this.prevPinchDist = null;
+    };
+
+    // Smooth Mouse Wheel Zoom
+    const onWheel = (e) => {
+      e.preventDefault();
+      const factor = e.deltaY > 0 ? 1.12 : 0.88;
+      this.setZoom(this.targetZoomLevel * factor);
     };
 
     this.domElement.addEventListener('mousedown', onPointerDown);
@@ -63,8 +96,26 @@ export class CameraDirector {
     window.addEventListener('mouseup', onPointerUp);
 
     this.domElement.addEventListener('touchstart', onPointerDown, { passive: true });
-    window.addEventListener('touchmove', onPointerMove, { passive: true });
+    window.addEventListener('touchmove', onPointerMove, { passive: false });
     window.addEventListener('touchend', onPointerUp, { passive: true });
+
+    this.domElement.addEventListener('wheel', onWheel, { passive: false });
+  }
+
+  zoomIn() {
+    this.setZoom(this.targetZoomLevel * 0.82);
+  }
+
+  zoomOut() {
+    this.setZoom(this.targetZoomLevel * 1.22);
+  }
+
+  resetZoom() {
+    this.setZoom(1.0);
+  }
+
+  setZoom(val) {
+    this.targetZoomLevel = Math.max(this.minZoom, Math.min(this.maxZoom, val));
   }
 
   setMode(newMode) {
@@ -142,7 +193,13 @@ export class CameraDirector {
   }
 
   update(delta) {
-    const basePos = this.targetPosition.clone();
+    this.zoomLevel = THREE.MathUtils.lerp(this.zoomLevel, this.targetZoomLevel, delta * 7.0);
+
+    // Scale offset from targetLookAt by zoomLevel
+    const offset = new THREE.Vector3()
+      .subVectors(this.targetPosition, this.targetLookAt)
+      .multiplyScalar(this.zoomLevel);
+    const basePos = new THREE.Vector3().addVectors(this.targetLookAt, offset);
 
     if (this.orbitAngleX !== 0 || this.orbitAngleY !== 0) {
       const radius = basePos.distanceTo(this.targetLookAt);
