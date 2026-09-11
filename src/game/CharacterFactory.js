@@ -14,48 +14,313 @@ export const MJ_CONFIGS = [
 ];
 
 export class CharacterFactory {
+  static createRealisticFaceTexture(config) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    // 1. Warm natural human skin base with soft peach tone
+    const skinGrad = ctx.createRadialGradient(256, 256, 40, 256, 256, 260);
+    skinGrad.addColorStop(0, '#fed7aa'); // Warm highlight
+    skinGrad.addColorStop(0.6, '#fdba74'); // Warm peach skin tone
+    skinGrad.addColorStop(1, '#f97316'); // Subtle subsurface edge warmth
+    ctx.fillStyle = skinGrad;
+    ctx.fillRect(0, 0, 512, 512);
+
+    // 2. Soft Rosy Cheek Blush
+    [-1, 1].forEach(side => {
+      const cx = 256 + side * 115;
+      const cy = 295;
+      const blush = ctx.createRadialGradient(cx, cy, 5, cx, cy, 65);
+      blush.addColorStop(0, 'rgba(244, 63, 94, 0.40)');
+      blush.addColorStop(1, 'rgba(244, 63, 94, 0)');
+      ctx.fillStyle = blush;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 65, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // 3. Shaded Human Nose Bridge and Soft Nostrils
+    ctx.strokeStyle = 'rgba(194, 65, 12, 0.25)';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(250, 210);
+    ctx.quadraticCurveTo(248, 260, 244, 280);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(262, 210);
+    ctx.quadraticCurveTo(264, 260, 268, 280);
+    ctx.stroke();
+
+    // Nose tip highlight
+    const noseTip = ctx.createRadialGradient(256, 282, 2, 256, 282, 18);
+    noseTip.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
+    noseTip.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = noseTip;
+    ctx.beginPath();
+    ctx.arc(256, 282, 18, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Soft Nostrils
+    ctx.fillStyle = 'rgba(124, 45, 18, 0.65)';
+    ctx.beginPath();
+    ctx.ellipse(244, 288, 7, 4, -0.2, 0, Math.PI * 2);
+    ctx.ellipse(268, 288, 7, 4, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 4. Photorealistic Human Lips
+    ctx.save();
+    // Upper lip
+    ctx.fillStyle = '#e11d48';
+    ctx.beginPath();
+    ctx.moveTo(215, 350);
+    ctx.quadraticCurveTo(238, 335, 250, 342); // Cupid's bow left
+    ctx.quadraticCurveTo(256, 344, 262, 342); // Cupid's bow center
+    ctx.quadraticCurveTo(274, 335, 297, 350); // Cupid's bow right
+    ctx.quadraticCurveTo(256, 358, 215, 350);
+    ctx.fill();
+
+    // Lower lip (plump with soft gloss)
+    const lowerGrad = ctx.createRadialGradient(256, 368, 4, 256, 368, 30);
+    lowerGrad.addColorStop(0, '#fb7185');
+    lowerGrad.addColorStop(0.7, '#e11d48');
+    lowerGrad.addColorStop(1, '#be123c');
+    ctx.fillStyle = lowerGrad;
+    ctx.beginPath();
+    ctx.moveTo(215, 350);
+    ctx.quadraticCurveTo(256, 386, 297, 350);
+    ctx.quadraticCurveTo(256, 360, 215, 350);
+    ctx.fill();
+
+    // Soft Lip Creases & Specular Gloss
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.beginPath();
+    ctx.ellipse(256, 364, 18, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 5. Photorealistic Human Eyes
+    [-1, 1].forEach(side => {
+      const eyeX = 256 + side * 82;
+      const eyeY = 215;
+
+      ctx.save();
+      // Eye opening shape (almond)
+      ctx.beginPath();
+      ctx.moveTo(eyeX - 44, eyeY);
+      ctx.quadraticCurveTo(eyeX, eyeY - 26, eyeX + 44, eyeY);
+      ctx.quadraticCurveTo(eyeX, eyeY + 24, eyeX - 44, eyeY);
+      ctx.clip();
+
+      // Sclera (White with subtle gradient)
+      const scleraGrad = ctx.createLinearGradient(eyeX, eyeY - 25, eyeX, eyeY + 25);
+      scleraGrad.addColorStop(0, '#e2e8f0');
+      scleraGrad.addColorStop(0.3, '#f8fafc');
+      scleraGrad.addColorStop(1, '#cbd5e1');
+      ctx.fillStyle = scleraGrad;
+      ctx.fillRect(eyeX - 50, eyeY - 30, 100, 60);
+
+      // Iris with dark limbal ring and radial striations
+      const irisColor = config.eyeColor ? '#' + config.eyeColor.toString(16).padStart(6, '0') : '#059669';
+      const irisRadius = 22;
+
+      // Dark limbal ring
+      ctx.beginPath();
+      ctx.arc(eyeX, eyeY, irisRadius, 0, Math.PI * 2);
+      ctx.fillStyle = '#0f172a';
+      ctx.fill();
+
+      // Iris body
+      const irisGrad = ctx.createRadialGradient(eyeX, eyeY, 4, eyeX, eyeY, irisRadius);
+      irisGrad.addColorStop(0, '#6ee7b7');
+      irisGrad.addColorStop(0.5, irisColor);
+      irisGrad.addColorStop(1, '#064e3b');
+      ctx.fillStyle = irisGrad;
+      ctx.beginPath();
+      ctx.arc(eyeX, eyeY, irisRadius - 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Iris radiant fibers
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.lineWidth = 1;
+      for (let a = 0; a < Math.PI * 2; a += Math.PI / 8) {
+        ctx.beginPath();
+        ctx.moveTo(eyeX + Math.cos(a) * 6, eyeY + Math.sin(a) * 6);
+        ctx.lineTo(eyeX + Math.cos(a) * 18, eyeY + Math.sin(a) * 18);
+        ctx.stroke();
+      }
+
+      // Deep Black Pupil
+      ctx.fillStyle = '#090d16';
+      ctx.beginPath();
+      ctx.arc(eyeX, eyeY, 9, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cornea Specular Catchlight
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(eyeX + 5, eyeY - 5, 4, 0, Math.PI * 2);
+      ctx.arc(eyeX - 4, eyeY + 4, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+
+      // Upper Eyelash line (Dark & defined)
+      ctx.strokeStyle = '#090d16';
+      ctx.lineWidth = 4.5;
+      ctx.beginPath();
+      ctx.moveTo(eyeX - 46, eyeY + 2);
+      ctx.quadraticCurveTo(eyeX, eyeY - 28, eyeX + 46, eyeY + 2);
+      ctx.stroke();
+
+      // Delicate individual eyelashes
+      ctx.lineWidth = 1.8;
+      for (let l = -3; l <= 3; l++) {
+        const lx = eyeX + l * 10;
+        const ly = eyeY - 20 - Math.abs(l) * 1.5;
+        ctx.beginPath();
+        ctx.moveTo(lx, ly);
+        ctx.lineTo(lx + side * 4 + l * 2, ly - 8);
+        ctx.stroke();
+      }
+
+      // Natural Feathered Eyebrow
+      ctx.strokeStyle = '#78350f';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(eyeX - 42, eyeY - 36);
+      ctx.quadraticCurveTo(eyeX, eyeY - 52, eyeX + 44, eyeY - 40);
+      ctx.stroke();
+    });
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.generateMipmaps = true;
+    return tex;
+  }
+
+  static createDenimMaterial() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+
+    // Rich dark indigo base
+    ctx.fillStyle = '#1e3a8a';
+    ctx.fillRect(0, 0, 256, 256);
+
+    // Diagonal twill weave
+    ctx.strokeStyle = 'rgba(15, 23, 42, 0.4)';
+    ctx.lineWidth = 1.5;
+    for (let i = -256; i <= 512; i += 6) {
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i + 256, 256);
+      ctx.stroke();
+    }
+
+    // Subtle stonewash horizontal threads
+    ctx.strokeStyle = 'rgba(147, 197, 253, 0.15)';
+    ctx.lineWidth = 1;
+    for (let y = 0; y <= 256; y += 4) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(256, y);
+      ctx.stroke();
+    }
+
+    // Golden-orange side seam stitching
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([8, 6]);
+    ctx.beginPath();
+    ctx.moveTo(30, 0);
+    ctx.lineTo(30, 256);
+    ctx.moveTo(38, 0);
+    ctx.lineTo(38, 256);
+    ctx.stroke();
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(2, 4);
+
+    return new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 0.65,
+      metalness: 0.05
+    });
+  }
+
+  static createLeatherMaterial() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+
+    // Charcoal biker leather
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(0, 0, 256, 256);
+
+    // Fine pebbled leather grain
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
+    for (let i = 0; i < 600; i++) {
+      const rx = Math.random() * 256;
+      const ry = Math.random() * 256;
+      ctx.beginPath();
+      ctx.arc(rx, ry, Math.random() * 2 + 0.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(2, 2);
+
+    return new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 0.36,
+      metalness: 0.22
+    });
+  }
+
   static createMJ(playerIndex = 0) {
     const config = MJ_CONFIGS[playerIndex % MJ_CONFIGS.length];
     const root = new THREE.Group();
     root.name = `Character_${config.name}`;
 
-    // --- High-Quality Stylized Realistic Materials ---
-    // Warm peach human skin with soft specular response
+    // --- Photorealistic PBR Materials ---
+    const faceTex = CharacterFactory.createRealisticFaceTexture(config);
+    const headMat = new THREE.MeshStandardMaterial({
+      map: faceTex,
+      roughness: 0.50,
+      metalness: 0.04
+    });
+
     const skinMat = new THREE.MeshStandardMaterial({
       color: 0xfcd5b5,
       roughness: 0.55,
       metalness: 0.05
     });
 
-    // Charcoal biker leather jacket with realistic sheen
-    const jacketMat = new THREE.MeshStandardMaterial({
-      color: 0x242d38,
-      roughness: 0.38,
-      metalness: 0.18
-    });
-
-    // Darker jacket collar & lapel trim
+    const jacketMat = CharacterFactory.createLeatherMaterial();
     const jacketTrimMat = new THREE.MeshStandardMaterial({
-      color: 0x151b22,
-      roughness: 0.32,
-      metalness: 0.22
+      color: 0x0f172a,
+      roughness: 0.30,
+      metalness: 0.25
     });
 
-    // Crisp white ribbed camisole
     const shirtMat = new THREE.MeshStandardMaterial({
       color: 0xf8fafc,
       roughness: 0.65,
       metalness: 0.0
     });
 
-    // Fitted indigo denim jeans with soft cloth sheen
-    const jeansMat = new THREE.MeshStandardMaterial({
-      color: 0x22487a,
-      roughness: 0.72,
-      metalness: 0.05
-    });
+    const jeansMat = CharacterFactory.createDenimMaterial();
 
-    // White sneakers with dark accents
     const sneakerWhiteMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       roughness: 0.45,
@@ -66,18 +331,6 @@ export class CharacterFactory {
       roughness: 0.5,
       metalness: 0.1
     });
-
-    // Facial feature materials
-    const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const irisMat = new THREE.MeshBasicMaterial({ color: config.eyeColor || 0x10b981 });
-    const pupilMat = new THREE.MeshBasicMaterial({ color: 0x090d16 });
-    const catchlightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const lipMat = new THREE.MeshStandardMaterial({
-      color: 0xf43f5e,
-      roughness: 0.3,
-      metalness: 0.05
-    });
-    const browMat = new THREE.MeshBasicMaterial({ color: 0x451a03 });
 
     // Lustrous hair material with rich specular gloss
     const hairMat = new THREE.MeshStandardMaterial({
@@ -93,21 +346,21 @@ export class CharacterFactory {
     pelvis.position.y = 1.05;
     root.add(pelvis);
 
-    // Contoured hip curve
+    // Contoured feminine hips (Smooth Capsule)
     const hipsMesh = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.23, 0.21, 0.22, 12),
+      new THREE.CapsuleGeometry(0.18, 0.12, 6, 12),
       jeansMat
     );
-    hipsMesh.scale.set(1.05, 1.0, 0.9);
+    hipsMesh.scale.set(1.18, 1.0, 0.90);
     pelvis.add(hipsMesh);
 
     // Jeans waistband & belt loops
     const waistband = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.235, 0.235, 0.04, 12),
+      new THREE.CylinderGeometry(0.23, 0.23, 0.04, 14),
       jacketTrimMat
     );
     waistband.position.y = 0.09;
-    waistband.scale.set(1.06, 1.0, 0.92);
+    waistband.scale.set(1.10, 1.0, 0.92);
     pelvis.add(waistband);
 
     // --- 2. TORSO & CHEST ---
@@ -115,13 +368,13 @@ export class CharacterFactory {
     torso.position.y = 0.16;
     pelvis.add(torso);
 
-    // Slender waist
+    // Slender waist (Smooth Capsule)
     const waistMesh = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.20, 0.22, 0.16, 12),
+      new THREE.CapsuleGeometry(0.16, 0.10, 6, 12),
       shirtMat
     );
     waistMesh.position.y = 0.08;
-    waistMesh.scale.set(1.0, 1.0, 0.85);
+    waistMesh.scale.set(1.08, 1.0, 0.82);
     torso.add(waistMesh);
 
     // Feminine jacket chest
@@ -129,12 +382,12 @@ export class CharacterFactory {
     chestGroup.position.y = 0.24;
     torso.add(chestGroup);
 
-    // Main jacket body
+    // Main jacket body (Smooth Capsule)
     const chestMesh = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.22, 0.20, 0.26, 12),
+      new THREE.CapsuleGeometry(0.18, 0.14, 6, 12),
       jacketMat
     );
-    chestMesh.scale.set(1.08, 1.0, 0.88);
+    chestMesh.scale.set(1.14, 1.0, 0.88);
     chestGroup.add(chestMesh);
 
     // Inner V-neck top
@@ -180,89 +433,41 @@ export class CharacterFactory {
     head.position.y = 0.14;
     neck.add(head);
 
-    // Sculpted feminine head (tapered jaw & chin)
+    // Sculpted feminine human head (Photorealistic Face Texture)
     const headMesh = new THREE.Mesh(
-      new THREE.SphereGeometry(0.185, 16, 16),
-      skinMat
+      new THREE.SphereGeometry(0.185, 24, 24),
+      headMat
     );
-    headMesh.scale.set(0.92, 1.12, 0.96);
+    headMesh.scale.set(0.94, 1.12, 0.98);
+    headMesh.rotation.y = Math.PI; // Face forward (+Z towards camera)
     head.add(headMesh);
 
-    // Soft chin contour
+    // Anatomical soft chin contour
     const chin = new THREE.Mesh(
-      new THREE.SphereGeometry(0.07, 10, 10),
+      new THREE.SphereGeometry(0.065, 12, 12),
       skinMat
     );
-    chin.position.set(0, -0.14, 0.10);
+    chin.position.set(0, -0.14, 0.08);
     chin.scale.set(0.9, 0.8, 0.9);
     head.add(chin);
 
-    // Subtle nose tip
-    const nose = new THREE.Mesh(
-      new THREE.ConeGeometry(0.025, 0.05, 5),
-      skinMat
-    );
-    nose.position.set(0, -0.01, 0.185);
-    nose.rotation.x = Math.PI / 2;
-    head.add(nose);
-
-    // Contoured rose lips
-    const lips = new THREE.Mesh(
-      new THREE.BoxGeometry(0.07, 0.022, 0.02),
-      lipMat
-    );
-    lips.position.set(0, -0.065, 0.178);
-    head.add(lips);
-
-    // Expressive human eyes
+    // Anatomical delicate ears with silver stud earrings
     [-1, 1].forEach(side => {
-      const eyeGroup = new THREE.Group();
-      eyeGroup.position.set(side * 0.07, 0.025, 0.165);
-      eyeGroup.rotation.y = side * 0.15;
-      head.add(eyeGroup);
-
-      // Sclera (White)
-      const eyeWhite = new THREE.Mesh(
-        new THREE.SphereGeometry(0.038, 8, 8),
-        eyeWhiteMat
+      const ear = new THREE.Mesh(
+        new THREE.SphereGeometry(0.045, 8, 8),
+        skinMat
       );
-      eyeWhite.scale.set(1.1, 0.85, 0.4);
-      eyeGroup.add(eyeWhite);
+      ear.position.set(side * 0.17, 0, 0);
+      ear.scale.set(0.35, 0.9, 0.6);
+      head.add(ear);
 
-      // Iris (Emerald Green)
-      const iris = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.022, 0.022, 0.01, 8),
-        irisMat
+      // Silver stud earring
+      const earring = new THREE.Mesh(
+        new THREE.SphereGeometry(0.012, 6, 6),
+        new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.2 })
       );
-      iris.rotation.x = Math.PI / 2;
-      iris.position.z = 0.016;
-      eyeGroup.add(iris);
-
-      // Pupil (Dark)
-      const pupil = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.012, 0.012, 0.012, 8),
-        pupilMat
-      );
-      pupil.rotation.x = Math.PI / 2;
-      pupil.position.z = 0.020;
-      eyeGroup.add(pupil);
-
-      // Catchlight (Life gleam)
-      const catchlight = new THREE.Mesh(
-        new THREE.SphereGeometry(0.005, 4, 4),
-        catchlightMat
-      );
-      catchlight.position.set(0.008, 0.008, 0.025);
-      eyeGroup.add(catchlight);
-
-      // Arched Eyebrow
-      const brow = new THREE.Mesh(
-        new THREE.BoxGeometry(0.065, 0.012, 0.015),
-        browMat
-      );
-      brow.position.set(0, 0.045, 0.015);
-      brow.rotation.z = side * -0.15;
-      eyeGroup.add(brow);
+      earring.position.set(side * 0.18, -0.025, 0.01);
+      head.add(earring);
     });
 
     // --- 4. FLOWING LAYERED HAIR ---
@@ -336,9 +541,9 @@ export class CharacterFactory {
       const upperArm = new THREE.Group();
       shoulder.add(upperArm);
 
-      // Upper arm jacket sleeve
+      // Upper arm jacket sleeve (Smooth Capsule)
       const upperArmMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.065, 0.055, 0.30, 8),
+        new THREE.CapsuleGeometry(0.052, 0.18, 6, 12),
         jacketMat
       );
       upperArmMesh.position.y = -0.15;
@@ -348,37 +553,48 @@ export class CharacterFactory {
       forearm.position.y = -0.30;
       upperArm.add(forearm);
 
-      // Slender skin forearm
+      // Slender skin forearm (Smooth Capsule)
       const forearmMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.052, 0.042, 0.26, 8),
+        new THREE.CapsuleGeometry(0.042, 0.16, 6, 12),
         skinMat
       );
       forearmMesh.position.y = -0.13;
       forearm.add(forearmMesh);
 
-      // Delicate hand with palm & thumb
+      // Delicate hand with palm, thumb & fingers
       const handGroup = new THREE.Group();
       handGroup.position.y = -0.28;
       forearm.add(handGroup);
 
       const palm = new THREE.Mesh(
-        new THREE.BoxGeometry(0.05, 0.065, 0.035),
+        new THREE.CapsuleGeometry(0.032, 0.038, 4, 8),
         skinMat
       );
       palm.position.y = -0.03;
       handGroup.add(palm);
 
       const thumb = new THREE.Mesh(
-        new THREE.BoxGeometry(0.02, 0.035, 0.02),
+        new THREE.CapsuleGeometry(0.012, 0.024, 4, 6),
         skinMat
       );
-      thumb.position.set(side * 0.025, -0.02, 0.015);
+      thumb.position.set(side * 0.022, -0.02, 0.015);
+      thumb.rotation.z = side * -0.4;
       handGroup.add(thumb);
+
+      // Subtle fingers
+      [-0.016, -0.005, 0.005, 0.016].forEach(fx => {
+        const finger = new THREE.Mesh(
+          new THREE.CapsuleGeometry(0.008, 0.032, 3, 6),
+          skinMat
+        );
+        finger.position.set(fx, -0.062, 0);
+        handGroup.add(finger);
+      });
 
       arms[prefix] = { shoulder, upperArm, forearm, hand: handGroup };
     });
 
-    // --- 6. LEGS & SNEAKERS ---
+    // --- 6. LEGS & SNEAKERS (Smooth Capsule Anatomy) ---
     const legs = {};
     [-1, 1].forEach(side => {
       const isLeft = side === -1;
@@ -391,21 +607,30 @@ export class CharacterFactory {
       const thigh = new THREE.Group();
       hipJoint.add(thigh);
 
-      // Tapered thigh
+      // Contoured feminine thigh (Smooth Capsule)
       const thighMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.095, 0.075, 0.44, 10),
+        new THREE.CapsuleGeometry(0.082, 0.24, 8, 14),
         jeansMat
       );
       thighMesh.position.y = -0.22;
       thigh.add(thighMesh);
 
+      // Feminine kneecap (Patella)
+      const kneeCap = new THREE.Mesh(
+        new THREE.SphereGeometry(0.036, 8, 8),
+        jeansMat
+      );
+      kneeCap.position.set(0, -0.42, 0.06);
+      kneeCap.scale.set(0.9, 1.1, 0.6);
+      thigh.add(kneeCap);
+
       const calf = new THREE.Group();
       calf.position.y = -0.44;
       thigh.add(calf);
 
-      // Tapered slender calf
+      // Tapered slender calf (Smooth Capsule)
       const calfMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.075, 0.058, 0.44, 10),
+        new THREE.CapsuleGeometry(0.064, 0.24, 8, 14),
         jeansMat
       );
       calfMesh.position.y = -0.22;
@@ -444,15 +669,39 @@ export class CharacterFactory {
       legs[prefix] = { hipJoint, thigh, calf, foot };
     });
 
-    // Overhead glowing player indicator diamond
-    const badgeGroup = new THREE.Group();
-    badgeGroup.position.y = 2.45;
-    root.add(badgeGroup);
+    // Overhead high-clarity player indicator text badge (e.g. MJ-1, MJ-2, etc.)
+    const badgeCanvas = document.createElement('canvas');
+    badgeCanvas.width = 256;
+    badgeCanvas.height = 80;
+    const bCtx = badgeCanvas.getContext('2d');
+    bCtx.imageSmoothingEnabled = true;
 
-    const diamondGeo = new THREE.OctahedronGeometry(0.18, 0);
-    const diamondMat = new THREE.MeshBasicMaterial({ color: config.hairColor });
-    const diamond = new THREE.Mesh(diamondGeo, diamondMat);
-    badgeGroup.add(diamond);
+    // Glowing rounded pill
+    bCtx.fillStyle = 'rgba(15, 23, 42, 0.90)';
+    bCtx.strokeStyle = config.hex || '#38bdf8';
+    bCtx.lineWidth = 5;
+    bCtx.beginPath();
+    bCtx.roundRect(10, 10, 236, 60, 24);
+    bCtx.fill();
+    bCtx.stroke();
+
+    // Bold, crisp text "MJ-1", "MJ-2", etc.
+    bCtx.font = '900 38px "Outfit", sans-serif';
+    bCtx.textAlign = 'center';
+    bCtx.textBaseline = 'middle';
+    bCtx.fillStyle = '#ffffff';
+    bCtx.fillText(`MJ-${playerIndex + 1}`, 128, 40);
+
+    const badgeTex = new THREE.CanvasTexture(badgeCanvas);
+    const badgeSpriteMat = new THREE.SpriteMaterial({
+      map: badgeTex,
+      transparent: true,
+      depthTest: false
+    });
+    const badgeSprite = new THREE.Sprite(badgeSpriteMat);
+    badgeSprite.scale.set(1.4, 0.44, 1.0);
+    badgeSprite.position.y = 2.45;
+    root.add(badgeSprite);
 
     const animator = new CharacterAnimator({
       root,
@@ -464,9 +713,17 @@ export class CharacterFactory {
       rightArm: arms.right,
       leftLeg: legs.left,
       rightLeg: legs.right,
-      diamond,
+      badgeSprite,
       hairGroup,
       config
+    });
+
+    // Enable real-time soft shadows on all character meshes (excluding 2D text sprite)
+    root.traverse(child => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
     });
 
     return {
@@ -524,8 +781,9 @@ export class CharacterAnimator {
   }
 
   update(delta) {
-    if (this.nodes.diamond) {
-      this.nodes.diamond.rotation.y += delta * 2.5;
+    if (this.nodes.badgeSprite) {
+      this.idleTimer += delta;
+      this.nodes.badgeSprite.position.y = 2.45 + Math.sin(this.idleTimer * 2.5) * 0.04;
     }
 
     if (this.state === 'idle') {

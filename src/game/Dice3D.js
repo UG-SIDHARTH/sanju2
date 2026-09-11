@@ -123,38 +123,73 @@ export class Dice3D {
 
     const geo = new THREE.BoxGeometry(this.diceSize, this.diceSize, this.diceSize);
     const mesh = new THREE.Mesh(geo, materials);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
     return mesh;
   }
 
-  // Organic, physically randomized 3D tumbling roll
+  getTargetQuaternion(targetValue, randomYaw) {
+    const baseQuat = new THREE.Quaternion();
+    switch (targetValue) {
+      case 1:
+        baseQuat.set(0, 0, 0, 1);
+        break;
+      case 6:
+        baseQuat.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
+        break;
+      case 2:
+        baseQuat.setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI / 2);
+        break;
+      case 5:
+        baseQuat.setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.PI / 2);
+        break;
+      case 3:
+        baseQuat.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
+        break;
+      case 4:
+        baseQuat.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+        break;
+      default:
+        baseQuat.set(0, 0, 0, 1);
+    }
+
+    const yawQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), randomYaw);
+    return yawQuat.multiply(baseQuat);
+  }
+
+  // Organic, physically randomized 3D tumbling roll with unpredictable physics
   roll(targetValue, startPos, onComplete) {
     if (this.isRolling) return;
     this.isRolling = true;
     this.mesh.visible = true;
 
-    // Completely randomized physics parameters for this specific throw
-    const duration = 1.3 + Math.random() * 0.3; // 1.3 to 1.6s
+    // Completely randomized throw timing & physical dynamics
+    const duration = 1.35 + Math.random() * 0.35; // 1.35 to 1.7s
     const startTime = performance.now();
 
     const spawnPos = startPos ? startPos.clone() : new THREE.Vector3(0, 0, 0);
-    spawnPos.y = 1.2;
+    spawnPos.y = 1.4;
 
-    // Random throw direction & impulse
+    // Random throw direction & impulse across 360 degrees
     const launchAngle = Math.random() * Math.PI * 2;
-    const launchDistance = 1.5 + Math.random() * 2.0;
-    const peakHeight = 2.8 + Math.random() * 1.6;
+    const launchDistance = 1.8 + Math.random() * 2.2;
+    const peakHeight = 3.2 + Math.random() * 1.8;
 
-    // Multi-axis high-speed tumbling spin
-    const spins = 4 + Math.floor(Math.random() * 4); // 4 to 7 full rotations
+    // Multi-axis high-speed tumbling spin with randomized axis impulses
+    const spins = 5 + Math.floor(Math.random() * 4);
     const dirX = Math.random() > 0.5 ? 1 : -1;
     const dirY = Math.random() > 0.5 ? 1 : -1;
     const dirZ = Math.random() > 0.5 ? 1 : -1;
 
-    const spinX = (Math.PI * 2 * spins + Math.random() * Math.PI) * dirX;
-    const spinY = (Math.PI * 2 * spins + Math.random() * Math.PI) * dirY;
-    const spinZ = (Math.PI * 2 * (spins - 1) + Math.random() * Math.PI) * dirZ;
+    const spinX = (Math.PI * 2 * spins + Math.random() * Math.PI * 2) * dirX;
+    const spinY = (Math.PI * 2 * spins + Math.random() * Math.PI * 2) * dirY;
+    const spinZ = (Math.PI * 2 * (spins - 1) + Math.random() * Math.PI * 2) * dirZ;
 
-    const targetEuler = this.targetFaceRotations[targetValue];
+    // Random resting yaw angle (any of 360 degrees) so it never lands in a canned square position
+    const randomYaw = (Math.random() * Math.PI * 2);
+    const targetQuat = this.getTargetQuaternion(targetValue, randomYaw);
+
+    let startSettleQuat = null;
     let lastBounceTime = 0;
 
     const animateRoll = () => {
@@ -162,14 +197,15 @@ export class Dice3D {
       const progress = (now - startTime) / (duration * 1000);
 
       if (progress < 1.0) {
-        // Multi-bounce parabolic trajectory
-        const bounce1 = Math.abs(Math.sin(progress * Math.PI * 3.5));
-        const decay = Math.pow(1 - progress, 1.4);
+        // Multi-bounce parabolic trajectory with physical decay
+        const bounceCount = 4.0;
+        const bounce1 = Math.abs(Math.sin(progress * Math.PI * bounceCount));
+        const decay = Math.pow(1.0 - progress, 1.5);
         const yOffset = bounce1 * decay * peakHeight;
         this.mesh.position.y = 0.1 + this.diceSize / 2 + yOffset;
 
         // Sound on floor impact
-        if (yOffset < 0.25 && now - lastBounceTime > 180) {
+        if (yOffset < 0.28 && now - lastBounceTime > 160) {
           this.audioManager.playDiceClick();
           lastBounceTime = now;
         }
@@ -180,22 +216,24 @@ export class Dice3D {
         this.mesh.position.z = spawnPos.z + Math.sin(launchAngle) * launchDistance * travelT;
 
         // Dynamic chaotic tumbling that organically settles onto the face
-        if (progress < 0.65) {
-          this.mesh.rotation.x += spinX * 0.022;
-          this.mesh.rotation.y += spinY * 0.022;
-          this.mesh.rotation.z += spinZ * 0.022;
+        if (progress < 0.60) {
+          const deltaSpin = 0.024;
+          const spinDeltaEuler = new THREE.Euler(spinX * deltaSpin, spinY * deltaSpin, spinZ * deltaSpin);
+          const spinDeltaQuat = new THREE.Quaternion().setFromEuler(spinDeltaEuler);
+          this.mesh.quaternion.multiply(spinDeltaQuat);
         } else {
-          // Smooth ease settle
-          const settleT = (progress - 0.65) / 0.35;
-          const ease = Math.sin(settleT * Math.PI / 2);
-          this.mesh.rotation.x = THREE.MathUtils.lerp(this.mesh.rotation.x, targetEuler.x, ease);
-          this.mesh.rotation.y = THREE.MathUtils.lerp(this.mesh.rotation.y, targetEuler.y, ease);
-          this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, targetEuler.z, ease);
+          if (!startSettleQuat) {
+            startSettleQuat = this.mesh.quaternion.clone();
+          }
+          // Smooth spherical slerp settle onto the exact target face
+          const settleT = (progress - 0.60) / 0.40;
+          const ease = settleT * settleT * (3.0 - 2.0 * settleT); // Smoothstep
+          this.mesh.quaternion.slerpQuaternions(startSettleQuat, targetQuat, ease);
         }
 
         requestAnimationFrame(animateRoll);
       } else {
-        this.mesh.rotation.copy(targetEuler);
+        this.mesh.quaternion.copy(targetQuat);
         this.mesh.position.y = 0.1 + this.diceSize / 2;
         this.audioManager.playDiceClick();
         this.isRolling = false;

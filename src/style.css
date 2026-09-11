@@ -57,8 +57,9 @@ html, body {
 }
 
 canvas {
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 /* ==========================================================================
@@ -126,29 +127,27 @@ canvas {
 }
 
 .ui-btn {
-  background: var(--color-card-bg);
-  border: 1px solid var(--color-card-border);
+  background: #111927;
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
   color: #fff;
   padding: 8px 14px;
   border-radius: 8px;
   font-family: var(--font-ui);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 }
 
 .ui-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.4);
+  background: #1e293b;
+  border-color: #38bdf8;
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.8);
 }
 
 .ui-btn:active {
@@ -156,10 +155,10 @@ canvas {
 }
 
 .ui-btn-danger {
-  border-color: rgba(230, 36, 41, 0.5);
+  border-color: rgba(230, 36, 41, 0.7);
 }
 .ui-btn-danger:hover {
-  background: rgba(230, 36, 41, 0.3);
+  background: #7f1d1d;
   border-color: var(--color-spidey-red);
 }
 
@@ -169,13 +168,11 @@ canvas {
   top: 80px;
   left: 16px;
   width: 240px;
-  background: var(--color-card-bg);
-  border: 1px solid var(--color-card-border);
+  background: #0d131f;
+  border: 2px solid rgba(56, 189, 248, 0.45);
   border-radius: 14px;
   padding: 12px;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.85);
   pointer-events: auto;
   z-index: 15;
 }
@@ -284,13 +281,12 @@ canvas {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(10, 14, 22, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #0b111e;
+  border: 1.5px solid rgba(245, 158, 11, 0.6);
   padding: 6px 16px;
   border-radius: 20px;
-  backdrop-filter: blur(10px);
   pointer-events: auto;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.85);
   max-width: 90%;
 }
 
@@ -325,16 +321,14 @@ canvas {
 
 .turn-card {
   pointer-events: auto;
-  background: var(--color-card-bg);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: #0d131f;
+  border: 2.5px solid #38bdf8;
   border-radius: 20px;
   padding: 12px 24px;
   display: flex;
   align-items: center;
   gap: 24px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(230, 36, 41, 0.2);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.9), 0 0 16px rgba(56, 189, 248, 0.35);
   position: relative;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -543,9 +537,7 @@ canvas {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(5, 8, 14, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(5, 8, 14, 0.92);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -882,9 +874,7 @@ canvas {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.9);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: rgba(0, 0, 0, 0.95);
 }
 
 .reveal-content {
@@ -1080,9 +1070,8 @@ canvas {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(56, 189, 248, 0.4);
+  background: #0f172a;
+  border: 1.5px solid rgba(56, 189, 248, 0.6);
   color: #fff;
   font-size: 1.1rem;
   font-weight: 800;

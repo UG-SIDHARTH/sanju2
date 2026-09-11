@@ -251,6 +251,14 @@ export class DrOctopus {
       this.bodyGroup.add(tentacle.root);
       this.tentacles.push(tentacle);
     });
+
+    // Enable soft shadow casting & receiving on all Dr. Octopus meshes
+    this.root.traverse(child => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
   }
 
   createArticulatedTentacle(cfg, metalMat, jointMat, powerCoreMat) {
@@ -434,23 +442,29 @@ export class DrOctopus {
     this.comicFX.showBanner('DR. OCTOPUS: "JUST LIKE I PLANNED!"', 3000);
     this.audioManager.playDocOckVoiceChime();
 
-    // 2. Extend Upper Tentacles to Snatch MJ!
-    const grabDuration = 0.7;
+    // 2. Extend Upper & Lower Tentacles to Wrap Around MJ's Waist & Torso!
+    const grabDuration = 0.8;
     const grabStart = performance.now();
 
     const animateGrab = () => {
       const now = performance.now();
       const p = Math.min(1.0, (now - grabStart) / (grabDuration * 1000));
 
-      // Extend tentacles toward MJ
+      // Wrap tentacles forward and clamp around MJ
       this.tentacles.forEach(t => {
         if (t.config.isUpper) {
-          t.joints.forEach(j => {
-            j.rotation.x = THREE.MathUtils.lerp(-0.45, -0.85, p);
+          t.joints.forEach((j, jIdx) => {
+            j.rotation.x = THREE.MathUtils.lerp(-0.45, -0.92, p);
+            j.rotation.z = THREE.MathUtils.lerp(t.config.side * 0.25, t.config.side * 0.40, p);
           });
-          // Clamp pincers shut around MJ
+          // Clamp steel pincers firmly shut around MJ
           t.fingers.forEach(f => {
-            f.rotation.x = THREE.MathUtils.lerp(0, -0.4, p);
+            f.rotation.x = THREE.MathUtils.lerp(0, -0.55, p);
+          });
+        } else {
+          // Lower tentacles anchor to ground to prepare for rocket leap
+          t.joints.forEach((j, jIdx) => {
+            j.rotation.x = THREE.MathUtils.lerp(0.35, 0.65, p);
           });
         }
       });
@@ -458,7 +472,7 @@ export class DrOctopus {
       if (p < 1.0) {
         requestAnimationFrame(animateGrab);
       } else {
-        // Claws secured! Switch MJ to shocked abducted state
+        // Claws firmly clamped! Switch MJ to shocked struggling abducted state
         targetMJ.animator.setState('abducted');
         this.comicFX.spawnAt(targetMJ.root.position, 'CLANK!', '#e62429', '#ffffff', 1.8);
         this.audioManager.playDocOckEmergence();
@@ -473,11 +487,10 @@ export class DrOctopus {
   }
 
   executeAscentAndEscape(targetMJ, onComplete, onCameraUpdate) {
-    // 3. Dr. Octopus and his tentacles lift MJ high into the sky and escape
+    // 3. Dr. Octopus and his tentacles lift MJ high into the sky and carry her away
     const escapeDuration = 3.2;
     const escapeStart = performance.now();
     const startY = this.root.position.y;
-    const startMJPos = targetMJ.root.position.clone();
 
     const animateEscape = () => {
       const now = performance.now();
@@ -486,14 +499,35 @@ export class DrOctopus {
       // Ease in cubic for powerful rocket-like tentacle leap into the sky
       const t = p * p * (3 - 2 * p);
 
-      const curY = THREE.MathUtils.lerp(startY, 32.0, t);
+      const curY = THREE.MathUtils.lerp(startY, 34.0, t);
       this.root.position.y = curY;
       this.root.position.x += Math.sin(p * Math.PI) * 0.05;
 
-      // MJ is lifted with Dr. Octopus's mechanical claws
-      targetMJ.root.position.y = curY + 1.2;
+      // Mechanical tentacles hold and carry MJ right in front of Dr. Octopus!
+      this.tentacles.forEach(tObj => {
+        if (tObj.config.isUpper) {
+          tObj.joints.forEach((j, jIdx) => {
+            j.rotation.x = -0.92 + Math.sin(p * 12 + jIdx) * 0.04;
+            j.rotation.z = tObj.config.side * (0.38 + Math.cos(p * 10) * 0.03);
+          });
+          // Pincers remain tightly clamped around MJ's body
+          tObj.fingers.forEach(f => {
+            f.rotation.x = -0.55;
+          });
+        } else {
+          // Lower tentacles trailing downward and flexing dynamically
+          tObj.joints.forEach((j, jIdx) => {
+            j.rotation.x = 0.65 + Math.sin(p * 14 + jIdx) * 0.08;
+            j.rotation.z = tObj.config.side * 0.42;
+          });
+        }
+      });
+
+      // MJ is physically carried by Dr. Octopus's mechanical claws
+      targetMJ.root.position.y = curY + 1.1;
       targetMJ.root.position.x = this.root.position.x;
-      targetMJ.root.position.z = this.root.position.z + 0.6;
+      targetMJ.root.position.z = this.root.position.z + 0.65;
+      targetMJ.root.lookAt(this.root.position.x, targetMJ.root.position.y, this.root.position.z);
 
       if (onCameraUpdate) {
         onCameraUpdate(this.root.position, targetMJ.root.position, 0.5 + p * 0.5);

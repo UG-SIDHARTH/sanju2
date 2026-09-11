@@ -25,94 +25,127 @@ export class GreenGoblin {
     this.scene.add(this.root);
   }
 
+  createScalyMaterial() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+
+    // Rich villainous emerald green
+    ctx.fillStyle = '#15803d';
+    ctx.fillRect(0, 0, 256, 256);
+
+    // Goblin scale texture
+    ctx.strokeStyle = '#052e16';
+    ctx.lineWidth = 1.8;
+    const scaleSize = 16;
+    for (let y = 0; y <= 256; y += scaleSize) {
+      const rowOffset = (y / scaleSize) % 2 === 0 ? 0 : scaleSize / 2;
+      for (let x = -scaleSize; x <= 256 + scaleSize; x += scaleSize) {
+        ctx.beginPath();
+        ctx.arc(x + rowOffset, y, scaleSize * 0.65, 0, Math.PI);
+        ctx.stroke();
+      }
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(2, 2);
+
+    return new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 0.42,
+      metalness: 0.18
+    });
+  }
+
   buildModel() {
-    // --- Masterpiece Cinematic Oscorp Combat Materials ---
-    const armorEmeraldMat = new THREE.MeshStandardMaterial({
-      color: 0x047857,
-      roughness: 0.24,
-      metalness: 0.86,
-      emissive: 0x064e3b,
-      emissiveIntensity: 0.12
+    // --- Authentic Classic Green Goblin Materials ---
+    const greenScalyMat = this.createScalyMaterial();
+
+    const purpleMat = new THREE.MeshStandardMaterial({
+      color: 0x7e22ce, // Classic royal villain purple
+      roughness: 0.38,
+      metalness: 0.22
     });
 
-    const armorAccentMat = new THREE.MeshStandardMaterial({
-      color: 0x1e293b,
+    const purpleDarkMat = new THREE.MeshStandardMaterial({
+      color: 0x581c87,
       roughness: 0.35,
-      metalness: 0.8
+      metalness: 0.25
     });
 
-    const goldTrimMat = new THREE.MeshStandardMaterial({
-      color: 0xd97706,
-      roughness: 0.25,
-      metalness: 0.92
+    const satchelLeatherMat = new THREE.MeshStandardMaterial({
+      color: 0x78350f, // Brown leather satchel
+      roughness: 0.65,
+      metalness: 0.1
     });
 
-    const eyeGlowMat = new THREE.MeshStandardMaterial({
+    const eyeYellowMat = new THREE.MeshStandardMaterial({
       color: 0xfef08a,
-      emissive: 0xf59e0b,
-      emissiveIntensity: 1.6,
+      emissive: 0xeab308,
+      emissiveIntensity: 1.2,
       roughness: 0.1
     });
 
+    const pupilMat = new THREE.MeshBasicMaterial({ color: 0x090d16 });
+
     const teethMat = new THREE.MeshStandardMaterial({
-      color: 0x94a3b8,
-      roughness: 0.15,
-      metalness: 0.95
+      color: 0xfef9c3,
+      roughness: 0.2,
+      metalness: 0.1
     });
 
-    const gliderChassisMat = new THREE.MeshStandardMaterial({
+    const gliderMat = new THREE.MeshStandardMaterial({
       color: 0x1e293b,
-      roughness: 0.28,
-      metalness: 0.85
+      roughness: 0.25,
+      metalness: 0.88
     });
 
     const gliderChromeMat = new THREE.MeshStandardMaterial({
-      color: 0x94a3b8,
-      roughness: 0.18,
-      metalness: 0.92
-    });
-
-    const plasmaGlowMat = new THREE.MeshBasicMaterial({
-      color: 0x38bdf8
+      color: 0xcfd8dc,
+      roughness: 0.15,
+      metalness: 0.95
     });
 
     const pumpkinMat = new THREE.MeshStandardMaterial({
       color: 0xea580c,
       emissive: 0xf97316,
-      emissiveIntensity: 1.2,
+      emissiveIntensity: 1.3,
       roughness: 0.35
     });
 
-    // --- 1. HIGH-TECH OSCORP BAT-GLIDER ---
+    // --- 1. BAT-GLIDER WITH GLOWING AURA EFFECTS ---
     this.gliderGroup = new THREE.Group();
     this.gliderGroup.position.y = 0.25;
     this.root.add(this.gliderGroup);
 
     // Aerodynamic central fuselage
     const fuselage = new THREE.Mesh(
-      new THREE.BoxGeometry(0.7, 0.14, 1.5),
-      gliderChassisMat
+      new THREE.BoxGeometry(0.72, 0.14, 1.5),
+      gliderMat
     );
     fuselage.position.set(0, 0, 0.1);
     this.gliderGroup.add(fuselage);
 
     // Front ram / nose cone
     const nose = new THREE.Mesh(
-      new THREE.ConeGeometry(0.35, 0.6, 4),
-      gliderChassisMat
+      new THREE.ConeGeometry(0.35, 0.65, 4),
+      gliderMat
     );
     nose.rotation.x = Math.PI / 2;
     nose.rotation.y = Math.PI / 4;
-    nose.position.set(0, 0, 1.05);
+    nose.position.set(0, 0, 1.1);
     this.gliderGroup.add(nose);
 
-    // Twin forward cutting blades (titanium chrome)
+    // Twin forward scythe cutting blades
     [-1, 1].forEach(side => {
       const blade = new THREE.Mesh(
-        new THREE.BoxGeometry(0.04, 0.18, 0.7),
+        new THREE.BoxGeometry(0.04, 0.18, 0.75),
         gliderChromeMat
       );
-      blade.position.set(side * 0.28, -0.02, 1.1);
+      blade.position.set(side * 0.28, -0.02, 1.15);
       blade.rotation.x = 0.2;
       this.gliderGroup.add(blade);
     });
@@ -123,42 +156,43 @@ export class GreenGoblin {
       wingRoot.position.set(side * 0.35, 0, 0);
       this.gliderGroup.add(wingRoot);
 
-      // Main swept wing blade
+      // Main bat wing blade
       const wing = new THREE.Mesh(
-        new THREE.BoxGeometry(1.05, 0.06, 0.9),
-        gliderChassisMat
+        new THREE.BoxGeometry(1.08, 0.06, 0.95),
+        gliderMat
       );
-      wing.position.set(side * 0.52, 0.02, -0.12);
+      wing.position.set(side * 0.54, 0.02, -0.12);
       wing.rotation.y = side * 0.28;
       wing.rotation.z = side * -0.12;
       wingRoot.add(wing);
 
       // Polished leading edge blade
       const leadingEdge = new THREE.Mesh(
-        new THREE.BoxGeometry(1.08, 0.05, 0.12),
+        new THREE.BoxGeometry(1.10, 0.05, 0.12),
         gliderChromeMat
       );
-      leadingEdge.position.set(side * 0.52, 0.03, 0.28);
+      leadingEdge.position.set(side * 0.54, 0.03, 0.30);
       leadingEdge.rotation.y = side * 0.28;
       leadingEdge.rotation.z = side * -0.12;
       wingRoot.add(leadingEdge);
 
-      // Angled stabilizing wingtip fin
+      // Wingtip vertical fin
       const tipFin = new THREE.Mesh(
-        new THREE.BoxGeometry(0.08, 0.32, 0.65),
+        new THREE.BoxGeometry(0.08, 0.34, 0.65),
         gliderChromeMat
       );
-      tipFin.position.set(side * 1.18, 0.12, -0.22);
+      tipFin.position.set(side * 1.20, 0.12, -0.22);
       tipFin.rotation.z = side * 0.25;
       wingRoot.add(tipFin);
     });
 
-    // Dual Plasma Jet Turbines (Rear)
+    // Dual Jet Turbines with Flaming Exhaust Plumes
     this.thrusters = [];
+    this.flames = [];
     [-1, 1].forEach(side => {
       const engineCowl = new THREE.Mesh(
         new THREE.CylinderGeometry(0.14, 0.16, 0.55, 12),
-        gliderChassisMat
+        gliderMat
       );
       engineCowl.rotation.x = Math.PI / 2;
       engineCowl.position.set(side * 0.26, 0.02, -0.72);
@@ -166,150 +200,244 @@ export class GreenGoblin {
 
       const nozzleRing = new THREE.Mesh(
         new THREE.CylinderGeometry(0.145, 0.145, 0.08, 12),
-        goldTrimMat
+        purpleDarkMat
       );
       nozzleRing.rotation.x = Math.PI / 2;
       nozzleRing.position.set(side * 0.26, 0.02, -0.98);
       this.gliderGroup.add(nozzleRing);
 
-      // Glowing plasma exhaust core
+      // Inner glowing core
       const plasma = new THREE.Mesh(
         new THREE.CylinderGeometry(0.11, 0.06, 0.22, 10),
-        plasmaGlowMat
+        new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
       );
       plasma.rotation.x = Math.PI / 2;
       plasma.position.set(side * 0.26, 0.02, -1.08);
       this.gliderGroup.add(plasma);
       this.thrusters.push(plasma);
+
+      // Fiery jet exhaust flame plume shooting out
+      const flame = new THREE.Mesh(
+        new THREE.ConeGeometry(0.13, 0.75, 8),
+        new THREE.MeshBasicMaterial({
+          color: 0xf97316,
+          transparent: true,
+          opacity: 0.85
+        })
+      );
+      flame.rotation.x = -Math.PI / 2;
+      flame.position.set(side * 0.26, 0.02, -1.55);
+      this.gliderGroup.add(flame);
+      this.flames.push(flame);
     });
+
+    // --- HOVERBOARD GLOWING AURA FIELD ---
+    // Pulsing translucent electromagnetic energy aura hovering beneath and around the glider
+    const auraCanvas = document.createElement('canvas');
+    auraCanvas.width = 256;
+    auraCanvas.height = 256;
+    const aCtx = auraCanvas.getContext('2d');
+    const aGrad = aCtx.createRadialGradient(128, 128, 20, 128, 128, 128);
+    aGrad.addColorStop(0, 'rgba(168, 85, 247, 0.85)'); // Vibrant purple core
+    aGrad.addColorStop(0.5, 'rgba(34, 197, 94, 0.55)');  // Electric green halo
+    aGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');     // Fading cyan edge
+    aCtx.fillStyle = aGrad;
+    aCtx.fillRect(0, 0, 256, 256);
+
+    const auraTex = new THREE.CanvasTexture(auraCanvas);
+    const auraGeo = new THREE.PlaneGeometry(3.6, 2.6);
+    this.auraMat = new THREE.MeshBasicMaterial({
+      map: auraTex,
+      transparent: true,
+      opacity: 0.75,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    this.auraMesh = new THREE.Mesh(auraGeo, this.auraMat);
+    this.auraMesh.rotation.x = -Math.PI / 2;
+    this.auraMesh.position.y = -0.15;
+    this.gliderGroup.add(this.auraMesh);
 
     // Magnetic Foot Clamps
     [-1, 1].forEach(side => {
       const clamp = new THREE.Mesh(
         new THREE.BoxGeometry(0.22, 0.06, 0.36),
-        goldTrimMat
+        purpleDarkMat
       );
       clamp.position.set(side * 0.22, 0.10, 0.12);
       this.gliderGroup.add(clamp);
     });
 
-    // --- 2. NORMAN OSBORN OSCORP FLIGHT SUIT ---
+    // --- 2. AUTHENTIC GREEN GOBLIN BODY ---
     this.goblinBody = new THREE.Group();
     this.goblinBody.position.y = 0.15;
     this.gliderGroup.add(this.goblinBody);
 
-    // Armored Pelvis & Belt
+    // Hips & Pelvis
     this.pelvis = new THREE.Group();
     this.pelvis.position.y = 0.88;
     this.goblinBody.add(this.pelvis);
 
-    const armoredHips = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.24, 0.20, 0.22, 8),
-      armorEmeraldMat
+    const scalyHips = new THREE.Mesh(
+      new THREE.CapsuleGeometry(0.19, 0.12, 6, 12),
+      greenScalyMat
     );
-    this.pelvis.add(armoredHips);
+    scalyHips.scale.set(1.15, 1.0, 0.9);
+    this.pelvis.add(scalyHips);
 
-    const utilityBelt = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.245, 0.245, 0.06, 8),
-      goldTrimMat
+    // Purple belt
+    const purpleBelt = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.24, 0.24, 0.05, 12),
+      purpleDarkMat
     );
-    utilityBelt.position.y = 0.09;
-    this.pelvis.add(utilityBelt);
+    purpleBelt.position.y = 0.09;
+    this.pelvis.add(purpleBelt);
 
-    // Torso with Sculpted Muscular Exoskeleton
+    // Torso with Scaly Green Bodysuit & Purple Vest / Tunic
     this.torso = new THREE.Group();
     this.torso.position.y = 0.16;
     this.pelvis.add(this.torso);
 
-    // Segmented waist
+    // Scaly green waist (Smooth Capsule)
     const waist = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.23, 0.22, 0.18, 8),
-      armorAccentMat
+      new THREE.CapsuleGeometry(0.18, 0.10, 6, 12),
+      greenScalyMat
     );
     waist.position.y = 0.09;
+    waist.scale.set(1.1, 1.0, 0.85);
     this.torso.add(waist);
 
-    // Muscular emerald chestplate
+    // Green scaly muscular chest (Smooth Capsule)
     const chestPlate = new THREE.Mesh(
-      new THREE.BoxGeometry(0.50, 0.34, 0.32),
-      armorEmeraldMat
+      new THREE.CapsuleGeometry(0.22, 0.16, 6, 12),
+      greenScalyMat
     );
     chestPlate.position.set(0, 0.26, 0.02);
+    chestPlate.scale.set(1.22, 1.0, 0.90);
     this.torso.add(chestPlate);
 
-    // Oscorp crest emblem on sternum
-    const crest = new THREE.Mesh(
-      new THREE.ConeGeometry(0.08, 0.14, 4),
-      goldTrimMat
+    // Classic Purple Sleeveless Tunic / Vest with jagged scalloped bottom
+    const purpleVest = new THREE.Mesh(
+      new THREE.CapsuleGeometry(0.23, 0.15, 6, 12),
+      purpleMat
     );
-    crest.position.set(0, 0.28, 0.19);
-    crest.rotation.z = Math.PI;
-    this.torso.add(crest);
+    purpleVest.position.set(0, 0.27, 0.02);
+    purpleVest.scale.set(1.24, 1.0, 0.92);
+    this.torso.add(purpleVest);
 
-    // --- 3. MENACING OSCORP BATTLE MASK & HELMET ---
+    // Brown Leather Satchel with Shoulder Strap (for Pumpkin Bombs)
+    const strap = new THREE.Mesh(
+      new THREE.BoxGeometry(0.08, 0.65, 0.36),
+      satchelLeatherMat
+    );
+    strap.position.set(0, 0.26, 0.02);
+    strap.rotation.z = -0.55;
+    this.torso.add(strap);
+
+    // Leather satchel pouch at hip
+    const pouch = new THREE.Mesh(
+      new THREE.BoxGeometry(0.18, 0.20, 0.12),
+      satchelLeatherMat
+    );
+    pouch.position.set(-0.25, 0.02, 0.05);
+    pouch.rotation.z = 0.15;
+    this.torso.add(pouch);
+
+    // --- 3. CLASSIC GREEN GOBLIN HEAD WITH PURPLE HOODED COWL ---
     this.head = new THREE.Group();
     this.head.position.y = 0.52;
     this.torso.add(this.head);
 
-    // Sculpted armored helmet dome
-    const helmetDome = new THREE.Mesh(
+    // Scaly green face & head dome
+    const headMesh = new THREE.Mesh(
       new THREE.SphereGeometry(0.20, 12, 12),
-      armorEmeraldMat
+      greenScalyMat
     );
-    helmetDome.scale.set(0.95, 1.15, 1.05);
-    this.head.add(helmetDome);
+    headMesh.scale.set(0.95, 1.15, 1.05);
+    this.head.add(headMesh);
 
-    // Aerodynamic swept-back helmet fins (horns)
+    // Classic Purple Cowl / Hood covering crown and forehead
+    const cowlHood = new THREE.Mesh(
+      new THREE.SphereGeometry(0.21, 12, 12),
+      purpleMat
+    );
+    cowlHood.position.set(0, 0.04, -0.04);
+    cowlHood.scale.set(1.02, 1.12, 1.08);
+    this.head.add(cowlHood);
+
+    // Long Drooping Pointed Cowl Tail hanging down back!
+    const cowlTail = new THREE.Mesh(
+      new THREE.ConeGeometry(0.12, 0.55, 8),
+      purpleMat
+    );
+    cowlTail.position.set(0, 0.12, -0.32);
+    cowlTail.rotation.x = -1.15;
+    this.head.add(cowlTail);
+
+    // Large Pointed Goblin Ears extending out sideways
     [-1, 1].forEach(side => {
-      const fin = new THREE.Mesh(
-        new THREE.ConeGeometry(0.06, 0.38, 6),
-        armorEmeraldMat
+      const ear = new THREE.Mesh(
+        new THREE.ConeGeometry(0.07, 0.28, 6),
+        greenScalyMat
       );
-      fin.position.set(side * 0.14, 0.14, -0.12);
-      fin.rotation.x = -0.7;
-      fin.rotation.z = side * -0.28;
-      this.head.add(fin);
+      ear.position.set(side * 0.22, 0.04, -0.06);
+      ear.rotation.z = side * -1.25;
+      ear.rotation.x = 0.15;
+      this.head.add(ear);
     });
 
-    // Brow guard
-    const brow = new THREE.Mesh(
-      new THREE.BoxGeometry(0.32, 0.06, 0.12),
-      armorEmeraldMat
-    );
-    brow.position.set(0, 0.08, 0.18);
-    brow.rotation.x = 0.25;
-    this.head.add(brow);
-
-    // Glowing menacing amber slit eye lenses
+    // Bulging Menacing Golden-Yellow Eyes with Slit Pupils
     [-1, 1].forEach(side => {
-      const eyeLense = new THREE.Mesh(
-        new THREE.BoxGeometry(0.09, 0.045, 0.03),
-        eyeGlowMat
+      const eyeGroup = new THREE.Group();
+      eyeGroup.position.set(side * 0.08, 0.05, 0.18);
+      eyeGroup.rotation.z = side * 0.22;
+      this.head.add(eyeGroup);
+
+      const eyeSphere = new THREE.Mesh(
+        new THREE.SphereGeometry(0.065, 8, 8),
+        eyeYellowMat
       );
-      eyeLense.position.set(side * 0.08, 0.04, 0.19);
-      eyeLense.rotation.z = side * 0.35;
-      eyeLense.rotation.y = side * 0.22;
-      this.head.add(eyeLense);
+      eyeSphere.scale.set(1.1, 0.9, 0.8);
+      eyeGroup.add(eyeSphere);
+
+      // Black slit pupil
+      const pupil = new THREE.Mesh(
+        new THREE.BoxGeometry(0.015, 0.07, 0.02),
+        pupilMat
+      );
+      pupil.position.set(0, 0, 0.05);
+      eyeGroup.add(pupil);
     });
 
-    // Menacing jagged razor teeth grille
-    const mouthGrille = new THREE.Mesh(
-      new THREE.BoxGeometry(0.20, 0.06, 0.08),
-      teethMat
+    // Maniacal Demonic Grinning Mouth with Jagged Teeth
+    const mouthCavity = new THREE.Mesh(
+      new THREE.BoxGeometry(0.22, 0.08, 0.05),
+      new THREE.MeshBasicMaterial({ color: 0x1f0404 })
     );
-    mouthGrille.position.set(0, -0.09, 0.17);
-    this.head.add(mouthGrille);
+    mouthCavity.position.set(0, -0.08, 0.18);
+    this.head.add(mouthCavity);
 
-    // Tapered predatory jawline
-    const jaw = new THREE.Mesh(
-      new THREE.ConeGeometry(0.12, 0.18, 6),
-      armorEmeraldMat
+    // Jagged pointed teeth
+    for (let t = -3; t <= 3; t++) {
+      const tooth = new THREE.Mesh(
+        new THREE.ConeGeometry(0.015, 0.035, 4),
+        teethMat
+      );
+      tooth.position.set(t * 0.028, -0.075, 0.20);
+      tooth.rotation.x = Math.PI;
+      this.head.add(tooth);
+    }
+
+    // Pointed chin
+    const chin = new THREE.Mesh(
+      new THREE.ConeGeometry(0.10, 0.18, 6),
+      greenScalyMat
     );
-    jaw.position.set(0, -0.14, 0.08);
-    jaw.rotation.x = Math.PI - 0.2;
-    this.head.add(jaw);
+    chin.position.set(0, -0.15, 0.09);
+    chin.rotation.x = Math.PI - 0.2;
+    this.head.add(chin);
 
-    // --- 4. ARMORED SHOULDERS & GAUNTLETS WITH PUMPKIN BOMB ---
+    // --- 4. ARMS WITH PURPLE FLARED GLOVES & PUMPKIN BOMB ---
     this.arms = {};
     [-1, 1].forEach(side => {
       const isLeft = side === -1;
@@ -319,19 +447,12 @@ export class GreenGoblin {
       shoulder.position.set(side * 0.32, 0.36, 0);
       this.torso.add(shoulder);
 
-      // Armored pauldron
-      const pauldron = new THREE.Mesh(
-        new THREE.SphereGeometry(0.09, 8, 8),
-        goldTrimMat
-      );
-      pauldron.scale.set(1.1, 0.9, 1.2);
-      shoulder.add(pauldron);
-
+      // Upper arm in green scale suit (Smooth Capsule)
       const upperArm = new THREE.Group();
       shoulder.add(upperArm);
       const upperMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.075, 0.065, 0.30, 8),
-        armorEmeraldMat
+        new THREE.CapsuleGeometry(0.068, 0.18, 6, 10),
+        greenScalyMat
       );
       upperMesh.position.y = -0.15;
       upperArm.add(upperMesh);
@@ -340,36 +461,47 @@ export class GreenGoblin {
       forearm.position.y = -0.30;
       upperArm.add(forearm);
 
-      const foreMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.07, 0.06, 0.28, 8),
-        armorEmeraldMat
+      // Purple Glove with flared cuff
+      const gloveCuff = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.085, 0.07, 0.08, 10),
+        purpleMat
       );
-      foreMesh.position.y = -0.14;
+      gloveCuff.position.y = -0.05;
+      forearm.add(gloveCuff);
+
+      const foreMesh = new THREE.Mesh(
+        new THREE.CapsuleGeometry(0.062, 0.16, 6, 10),
+        purpleMat
+      );
+      foreMesh.position.y = -0.15;
       forearm.add(foreMesh);
 
-      // Gauntlet blade fin
-      const armBlade = new THREE.Mesh(
-        new THREE.BoxGeometry(0.03, 0.16, 0.10),
-        goldTrimMat
-      );
-      armBlade.position.set(side * 0.08, -0.14, -0.04);
-      forearm.add(armBlade);
-
       const fist = new THREE.Mesh(
-        new THREE.SphereGeometry(0.058, 8, 8),
-        armorAccentMat
+        new THREE.SphereGeometry(0.055, 8, 8),
+        purpleMat
       );
-      fist.position.y = -0.30;
+      fist.position.y = -0.28;
       forearm.add(fist);
 
-      // --- GLOWING PUMPKIN BOMB IN RIGHT HAND ---
+      // Clawed fingers on glove
+      for (let f = -1; f <= 1; f++) {
+        const finger = new THREE.Mesh(
+          new THREE.ConeGeometry(0.015, 0.05, 4),
+          purpleMat
+        );
+        finger.position.set(f * 0.025, -0.32, 0.02);
+        finger.rotation.x = 0.5;
+        forearm.add(finger);
+      }
+
+      // --- GLOWING VOLCANIC PUMPKIN BOMB IN RIGHT HAND ---
       if (!isLeft) {
         this.pumpkinBomb = new THREE.Group();
-        this.pumpkinBomb.position.set(0, -0.35, 0.08);
+        this.pumpkinBomb.position.set(0, -0.36, 0.08);
         forearm.add(this.pumpkinBomb);
 
         const pumpkinSphere = new THREE.Mesh(
-          new THREE.SphereGeometry(0.13, 12, 12),
+          new THREE.SphereGeometry(0.14, 12, 12),
           pumpkinMat
         );
         this.pumpkinBomb.add(pumpkinSphere);
@@ -377,81 +509,88 @@ export class GreenGoblin {
         // Jack-o'-lantern carved eyes
         [-1, 1].forEach(pSide => {
           const pEye = new THREE.Mesh(
-            new THREE.ConeGeometry(0.03, 0.04, 3),
-            eyeGlowMat
+            new THREE.ConeGeometry(0.035, 0.045, 3),
+            eyeYellowMat
           );
-          pEye.position.set(pSide * 0.05, 0.03, 0.12);
+          pEye.position.set(pSide * 0.05, 0.03, 0.13);
           pEye.rotation.x = Math.PI / 2;
           this.pumpkinBomb.add(pEye);
         });
 
         // Wicked carved pumpkin grin
         const pMouth = new THREE.Mesh(
-          new THREE.BoxGeometry(0.09, 0.025, 0.03),
-          eyeGlowMat
+          new THREE.BoxGeometry(0.10, 0.03, 0.03),
+          eyeYellowMat
         );
-        pMouth.position.set(0, -0.04, 0.12);
+        pMouth.position.set(0, -0.04, 0.13);
         this.pumpkinBomb.add(pMouth);
 
-        // Metallic stem
+        // Bronze stem
         const stem = new THREE.Mesh(
           new THREE.CylinderGeometry(0.02, 0.025, 0.06, 6),
-          goldTrimMat
+          satchelLeatherMat
         );
-        stem.position.y = 0.14;
+        stem.position.y = 0.15;
         this.pumpkinBomb.add(stem);
       }
 
       this.arms[key] = { shoulder, upperArm, forearm };
     });
 
-    // --- 5. ARMORED COMBAT LEGS LOCKED TO GLIDER ---
+    // --- 5. GREEN LEGS & POINTED PURPLE ELF BOOTS (CURLED TOES) ---
     [-1, 1].forEach(side => {
       const hipJoint = new THREE.Group();
       hipJoint.position.set(side * 0.16, -0.06, 0);
       this.pelvis.add(hipJoint);
 
+      // Muscular scaly thigh (Smooth Capsule)
       const thigh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.095, 0.08, 0.40, 8),
-        armorEmeraldMat
+        new THREE.CapsuleGeometry(0.088, 0.22, 6, 12),
+        greenScalyMat
       );
       thigh.position.y = -0.20;
       hipJoint.add(thigh);
 
+      // Muscular scaly calf (Smooth Capsule)
       const calf = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.085, 0.075, 0.42, 8),
-        armorEmeraldMat
+        new THREE.CapsuleGeometry(0.076, 0.22, 6, 12),
+        greenScalyMat
       );
       calf.position.set(0, -0.42, 0);
       hipJoint.add(calf);
 
-      // Armored boots clamped to glider
+      // Purple pointed elf boot with curled-upward toe tip!
       const boot = new THREE.Mesh(
-        new THREE.BoxGeometry(0.13, 0.09, 0.26),
-        armorAccentMat
+        new THREE.BoxGeometry(0.13, 0.16, 0.26),
+        purpleMat
       );
-      boot.position.set(0, -0.64, 0.04);
+      boot.position.set(0, -0.60, 0.04);
       hipJoint.add(boot);
+
+      // Curled upward pointed toe
+      const curledToe = new THREE.Mesh(
+        new THREE.ConeGeometry(0.06, 0.18, 6),
+        purpleMat
+      );
+      curledToe.position.set(0, -0.64, 0.22);
+      curledToe.rotation.x = -Math.PI / 4;
+      hipJoint.add(curledToe);
     });
 
-    // Combat Aggressive Hover Pose
+    // Enable real-time soft shadow casting & receiving on character meshes
+    this.root.traverse(child => {
+      if (child.isMesh && child !== this.auraMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+
+    // Dynamic Menacing Comic Flight Pose
     this.arms.left.upperArm.rotation.set(-0.55, 0, 0.45);
     this.arms.left.forearm.rotation.set(0.45, 0, 0);
-    this.arms.right.upperArm.rotation.set(-0.75, 0.2, -0.35); // Primed to throw pumpkin bomb!
+    this.arms.right.upperArm.rotation.set(-0.75, 0.2, -0.35); // Ready to lob the pumpkin bomb!
     this.arms.right.forearm.rotation.set(0.65, 0, 0);
-    this.torso.rotation.x = 0.22; // Leaning forward aggressively into the flight
-
-    // Glowing hazardous perimeter ground ring
-    const hazardRing = new THREE.Mesh(
-      new THREE.RingGeometry(0.85, 1.1, 24),
-      new THREE.MeshBasicMaterial({
-        color: 0x10b981,
-        side: THREE.DoubleSide
-      })
-    );
-    hazardRing.rotation.x = -Math.PI / 2;
-    hazardRing.position.y = 0.03;
-    this.root.add(hazardRing);
+    this.torso.rotation.x = 0.22; // Leaning into the wind
   }
 
   setPosition(worldPos) {
@@ -520,16 +659,25 @@ export class GreenGoblin {
 
           requestAnimationFrame(animateFlight);
         } else {
-          // 3. Drop MJ onto destination tile
+          // 3. Touchdown! Drop MJ safely onto destination tile
+          this.root.position.set(destinationWorldPos.x, this.baseY + 0.8, destinationWorldPos.z);
           targetMJ.root.position.set(destinationWorldPos.x, 0.1, destinationWorldPos.z);
           targetMJ.root.rotation.set(0, 0, 0);
           targetMJ.animator.setState('idle');
 
-          this.comicFX.spawnAt(destinationWorldPos, 'BONK!', '#f97316', '#ffffff', 1.8);
+          this.comicFX.spawnAt(destinationWorldPos, 'BONK!', '#f97316', '#ffffff', 2.2);
           this.audioManager.playFootstep();
 
-          // 4. Return to post
-          this.returnToPost(originalGoblinPos, onComplete, onFlightUpdate);
+          // Camera locks onto the destination tile so player clearly sees where MJ was taken!
+          if (onFlightUpdate) {
+            onFlightUpdate(destinationWorldPos, destinationWorldPos, 1.0);
+          }
+
+          // 4. Hold for 1.4 seconds so the player clearly sees the destination tile & landing
+          setTimeout(() => {
+            this.audioManager.playGoblinLaugh();
+            this.returnToPost(originalGoblinPos, onComplete);
+          }, 1400);
         }
       };
 
@@ -537,7 +685,7 @@ export class GreenGoblin {
     }, 600);
   }
 
-  returnToPost(originalPos, onComplete, onFlightUpdate) {
+  returnToPost(originalPos, onComplete) {
     const startPos = this.root.position.clone();
     const returnDuration = 1.2;
     const startTime = performance.now();
@@ -552,10 +700,6 @@ export class GreenGoblin {
         p.y += Math.sin(progress * Math.PI) * 4.5;
         this.root.position.copy(p);
         this.root.lookAt(originalPos.x, p.y, originalPos.z);
-
-        if (onFlightUpdate) {
-          onFlightUpdate(p, originalPos, progress);
-        }
 
         requestAnimationFrame(animateReturn);
       } else {
@@ -593,6 +737,23 @@ export class GreenGoblin {
       this.thrusters.forEach((t, idx) => {
         const pulse = 1.0 + Math.sin(this.hoverTime * 14 + idx * Math.PI) * 0.2;
         t.scale.set(pulse, pulse, 1.0 + pulse * 0.3);
+      });
+    }
+
+    // Animate pulsating hoverboard electromagnetic energy aura field
+    if (this.auraMesh && this.auraMat) {
+      const auraPulse = 1.0 + Math.sin(this.hoverTime * 6.0) * 0.12;
+      this.auraMesh.scale.set(auraPulse, auraPulse, 1.0);
+      this.auraMat.opacity = 0.65 + Math.sin(this.hoverTime * 8.0) * 0.25;
+      this.auraMesh.rotation.z = Math.sin(this.hoverTime * 2.0) * 0.08;
+    }
+
+    // Flicker rocket jet exhaust flames
+    if (this.flames) {
+      this.flames.forEach((flame, idx) => {
+        const flameNoise = 0.85 + Math.sin(this.hoverTime * 28 + idx * 7) * 0.35;
+        flame.scale.set(1.0, 1.0, flameNoise);
+        flame.material.opacity = 0.75 + Math.sin(this.hoverTime * 20 + idx) * 0.2;
       });
     }
 

@@ -41,8 +41,40 @@ export class GameManager {
 
     this.activeMovement = null;
 
-    this.spideyFixedTiles = [38, 55, 73, 86, 94];
-    this.goblinFixedTiles = [28, 44, 62, 77, 89, 96];
+    this.spideyFixedTiles = [32, 52, 70, 85, 94];
+    this.spideyTriggerTiles = [14, 36, 56, 72, 82];
+    this.goblinFixedTiles = [26, 46, 64, 78, 89, 96];
+    // Guaranteed 100% safe non-special drop tiles (never equal to any Spidey trigger or fixed station)
+    this.goblinDropTiles = [10, 24, 44, 60, 68, 76];
+  }
+
+  // Strictly enforce that Green Goblin NEVER drops MJ onto any Spider-Man trigger or station tile
+  getSafeGoblinDropTile(goblinTile) {
+    const defaultDropMap = {
+      26: 10,
+      46: 24,
+      64: 44,
+      78: 60,
+      89: 68,
+      96: 76
+    };
+
+    let target = defaultDropMap[goblinTile] || Math.max(2, goblinTile - 16);
+
+    // Strict blacklist: Spidey triggers, Spidey fixed stations, Goblin hazards, and Goal
+    const forbidden = new Set([
+      ...this.spideyTriggerTiles,
+      ...this.spideyFixedTiles,
+      ...this.goblinFixedTiles,
+      100
+    ]);
+
+    // If target collides with any special tile, step down until a completely clean tile is found
+    while (target > 1 && forbidden.has(target)) {
+      target--;
+    }
+
+    return Math.max(1, target);
   }
 
   setBoard(board) {
@@ -53,12 +85,20 @@ export class GameManager {
     this.hud = hud;
   }
 
-  // Cryptographically secure random integer between min and max (inclusive)
+  // Multi-source cryptographically secure, unpredictable random integer with rejection sampling
   getRandomInt(min, max) {
     const range = max - min + 1;
-    const array = new Uint32Array(1);
-    window.crypto.getRandomValues(array);
-    return min + (array[0] % range);
+    const maxValid = Math.floor(0xFFFFFFFF / range) * range;
+    const buf = new Uint32Array(4);
+
+    let val;
+    do {
+      window.crypto.getRandomValues(buf);
+      const microTime = (Math.floor(performance.now() * 1000000) ^ Date.now()) >>> 0;
+      val = (buf[0] ^ (buf[1] << 7) ^ (buf[2] >>> 3) ^ (buf[3] << 13) ^ microTime) >>> 0;
+    } while (val >= maxValid);
+
+    return min + (val % range);
   }
 
   startNewMatch(playerCount = 3) {
@@ -89,20 +129,13 @@ export class GameManager {
       this.players.push(char);
     }
 
-    // Spawn 5 Spider-Men with 5 Unique Random Triggers
-    const triggerPool = [5, 9, 14, 18, 23, 31, 35, 41, 49, 58, 66];
-    // Shuffle trigger pool with crypto RNG
-    for (let i = triggerPool.length - 1; i > 0; i--) {
-      const j = this.getRandomInt(0, i);
-      [triggerPool[i], triggerPool[j]] = [triggerPool[j], triggerPool[i]];
-    }
-
+    // Spawn 5 Spider-Men with 5 Balanced Progressive Rescue Ladders (+12 to +18 tiles)
     this.spideyFixedTiles.forEach((fixedTile, idx) => {
       const spidey = new SpiderMan(this.scene, idx + 1, fixedTile, this.audioManager, this.comicFX, this.board);
       const pos = this.board.getTileWorldPosition(fixedTile);
       spidey.setPosition(pos);
 
-      const triggerTile = triggerPool[idx];
+      const triggerTile = this.spideyTriggerTiles[idx];
       spidey.setTriggerTile(triggerTile);
       this.spiderMen.push(spidey);
     });
@@ -157,10 +190,13 @@ export class GameManager {
       const needed = 100 - startTile;
 
       if (diceRoll > needed) {
-        // Roll exceeds 100! Forfeit turn!
+        // Roll exceeds 100! Ignore the dice throw!
         this.audioManager.playDiceClick();
         this.comicFX.spawnAt(activePlayer.root.position, `TOO HIGH! NEED ${needed}`, '#ef4444', '#ffffff', 2.0);
+        this.comicFX.showBanner(`ROLL ${diceRoll} TOO HIGH! NEED EXACTLY ${needed} TO REACH 100!`);
         this.hud.logEvent(`⚠️ ${activePlayer.config.name} rolled ${diceRoll}, but needs exactly ${needed} to reach 100! Turn forfeited.`, true);
+
+        this.bonusRollEarned = false;
 
         // Pause so player sees the roll result, then pass turn to next player
         setTimeout(() => {
@@ -305,53 +341,20 @@ export class GameManager {
     // 2.5 Spider-Man Station Tile: Spider-Man and MJ hold hands side-by-side!
     const stationedSpidey = this.spiderMen.find(s => s.fixedTileNumber === landedTile);
     if (stationedSpidey) {
-      this.comicFX.spawnAt(stationedSpidey.root.position, 'TEAM UP!', '#ef4444', '#ffffff', 2.0);
-      this.comicFX.showBanner(`SPIDER-MAN #${stationedSpidey.id} & ${player.config.name} HOLD HANDS!`);
       this.audioManager.playHeroicCatch();
-      this.hud.logEvent(`🦸 Spider-Man #${stationedSpidey.id} and ${player.config.name} team up and hold hands!`, true);
       stationedSpidey.holdHands(player);
     }
 
     // 3. Green Goblin Hazard
     const triggeredGoblin = this.greenGoblins.find(g => g.fixedTileNumber === landedTile);
     if (triggeredGoblin) {
-      this.hud.logEvent(`🎃 GREEN GOBLIN #${triggeredGoblin.id} AMBUSH on Tile ${landedTile}! Kidnapping ${player.config.name}!`, true);
-
-      // --- GUARANTEE: NEVER DROP ON SPIDER-MAN TRIGGER OR HAZARD TILE ---
-      const spideyTriggers = this.spiderMen.map(s => s.triggerTileNumber);
-      const forbidden = new Set([
-        ...this.spideyFixedTiles,
-        ...spideyTriggers,
-        ...this.goblinFixedTiles,
-        100
-      ]);
-
-      // Collect all safe lower tiles
-      const safeCandidates = [];
-      const minTile = 2;
-      const maxTile = Math.max(2, landedTile - 8);
-
-      for (let t = minTile; t <= maxTile; t++) {
-        if (!forbidden.has(t)) {
-          safeCandidates.push(t);
-        }
-      }
-
-      // Fallback to any safe tile on board below landedTile if candidates are tight
-      if (safeCandidates.length === 0) {
-        for (let t = 2; t < landedTile; t++) {
-          if (!forbidden.has(t)) safeCandidates.push(t);
-        }
-      }
-
-      // Cryptographically pick a safe tile
-      const dropTile = safeCandidates.length > 0
-        ? safeCandidates[this.getRandomInt(0, safeCandidates.length - 1)]
-        : Math.max(1, landedTile - 15);
-
+      // Calculate guaranteed safe drop tile (strictly never on any Spider-Man trigger or station)
+      const dropTile = this.getSafeGoblinDropTile(landedTile);
       const dropPos = this.board.getTileWorldPosition(dropTile);
 
-      // Trigger kidnapping with full real-time aerial camera tracking
+      this.hud.logEvent(`🎃 GREEN GOBLIN #${triggeredGoblin.id} AMBUSH on Tile ${landedTile}! Flying ${player.config.name} to safe Tile ${dropTile}!`, true);
+
+      // Trigger kidnapping with full real-time aerial camera tracking & touchdown hold
       triggeredGoblin.triggerKidnapping(
         player,
         dropPos,
@@ -361,13 +364,17 @@ export class GameManager {
           this.updatePlayerPositionsOnTile(dropTile);
           this.hud.renderPlayersList(this.players, this.activePlayerIndex);
           this.hud.updateTurnDisplay(player, bonusRoll);
-          this.hud.logEvent(`${player.config.name} dropped onto safe Tile ${dropTile}!`);
+          this.hud.logEvent(`${player.config.name} is now safe on Tile ${dropTile}!`);
 
           this.checkCollisionAndFinish(player, bonusRoll);
         },
-        // onFlightUpdate (tracks camera in real time so user sees full flight):
+        // onFlightUpdate (tracks camera in real time so user sees full flight & destination):
         (curGoblinPos, destWorldPos, progress) => {
-          this.cameraDirector.trackFlyingGoblin(curGoblinPos, destWorldPos, progress);
+          if (progress >= 1.0) {
+            this.cameraDirector.focusOnDestinationTile(destWorldPos);
+          } else {
+            this.cameraDirector.trackFlyingGoblin(curGoblinPos, destWorldPos, progress);
+          }
         }
       );
       return;

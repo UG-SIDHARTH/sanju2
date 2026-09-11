@@ -32,6 +32,7 @@ export class Board {
     const baseMat = new THREE.MeshLambertMaterial({ color: 0x090d16 });
     const baseMesh = new THREE.Mesh(baseGeo, baseMat);
     baseMesh.position.y = -0.4;
+    baseMesh.receiveShadow = true;
     this.boardGroup.add(baseMesh);
 
     // Glowing cyan rim
@@ -159,12 +160,21 @@ export class Board {
       const worldPos = new THREE.Vector3(x, y + 0.1, z);
 
       const topTex = this.createTileTexture(n, false, false, n === 100);
-      const sideMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
-      const topMat = new THREE.MeshBasicMaterial({ map: topTex });
+      const sideMat = new THREE.MeshStandardMaterial({
+        color: 0x0f172a,
+        roughness: 0.75,
+        metalness: 0.1
+      });
+      const topMat = new THREE.MeshStandardMaterial({
+        map: topTex,
+        roughness: 0.52,
+        metalness: 0.12
+      });
 
       const materials = [sideMat, sideMat, topMat, sideMat, sideMat, sideMat];
       const mesh = new THREE.Mesh(tileGeo, materials);
       mesh.position.set(x, y, z);
+      mesh.receiveShadow = true;
 
       this.boardGroup.add(mesh);
       this.tiles[n] = {

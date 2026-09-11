@@ -30,9 +30,201 @@ export class SpiderMan {
     this.scene.add(this.root);
   }
 
+  createWebbedSuitMaterial(isMask = false) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+
+    // Rich Spider-Man crimson red
+    ctx.fillStyle = '#be123c';
+    ctx.fillRect(0, 0, 512, 512);
+
+    // Subtle dark red hexagonal fabric honeycomb weave texture
+    ctx.strokeStyle = 'rgba(136, 19, 55, 0.45)';
+    ctx.lineWidth = 1;
+    for (let y = 0; y <= 512; y += 16) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(512, y);
+      ctx.stroke();
+    }
+
+    // Iconic Black Spider Webbing lines
+    ctx.strokeStyle = '#090d16';
+    ctx.lineWidth = 3.5;
+
+    if (isMask) {
+      // Concentric spider-web radial arcs from bridge of nose (center)
+      const cx = 256;
+      const cy = 256;
+      const rays = 16;
+      for (let r = 0; r < rays; r++) {
+        const angle = (r / rays) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(angle) * 360, cy + Math.sin(angle) * 360);
+        ctx.stroke();
+      }
+
+      // Connecting web arcs
+      for (let radius = 40; radius <= 280; radius += 36) {
+        ctx.beginPath();
+        for (let r = 0; r <= rays; r++) {
+          const angle = (r / rays) * Math.PI * 2;
+          const px = cx + Math.cos(angle) * radius;
+          const py = cy + Math.sin(angle) * radius;
+          if (r === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      }
+    } else {
+      // Suit body web grid (longitudinal lines & scalloped horizontal web lines)
+      for (let x = 0; x <= 512; x += 42) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, 512);
+        ctx.stroke();
+      }
+
+      for (let y = 20; y <= 512; y += 42) {
+        ctx.beginPath();
+        for (let x = 0; x <= 512; x += 42) {
+          ctx.quadraticCurveTo(x + 21, y - 10, x + 42, y);
+        }
+        ctx.stroke();
+      }
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.generateMipmaps = true;
+
+    return new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 0.38,
+      metalness: 0.12
+    });
+  }
+
+  createSpiderHand(side, redMat, webMat) {
+    const handGroup = new THREE.Group();
+    // side: -1 for left hand, 1 for right hand
+
+    // 1. Palm Base (Front anterior face with +Z, Back dorsal face with -Z)
+    const palm = new THREE.Mesh(
+      new THREE.BoxGeometry(0.078, 0.082, 0.036),
+      webMat || redMat
+    );
+    palm.position.y = -0.042;
+    handGroup.add(palm);
+
+    // Palm Cushion / Thenar Eminence at base of thumb (front side +Z)
+    const thenarPad = new THREE.Mesh(
+      new THREE.CapsuleGeometry(0.015, 0.032, 4, 8),
+      redMat
+    );
+    thenarPad.position.set(side * 0.024, -0.038, 0.014);
+    thenarPad.rotation.z = side * 0.35;
+    handGroup.add(thenarPad);
+
+    // Web-shooter palm trigger button (center of palm on +Z)
+    const triggerBtn = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.008, 0.008, 0.006, 8),
+      new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.2 })
+    );
+    triggerBtn.rotation.x = Math.PI / 2;
+    triggerBtn.position.set(0, -0.045, 0.019);
+    handGroup.add(triggerBtn);
+
+    // Back of Hand Knuckle Guard (dorsal side -Z)
+    const knuckleGuard = new THREE.Mesh(
+      new THREE.BoxGeometry(0.076, 0.022, 0.010),
+      webMat || redMat
+    );
+    knuckleGuard.position.set(0, -0.074, -0.014);
+    handGroup.add(knuckleGuard);
+
+    // 2. Opposable Thumb on the LATERAL side (side * +0.040, pointing forward and inward toward +Z)
+    const thumbRoot = new THREE.Group();
+    thumbRoot.position.set(side * 0.040, -0.026, 0.012);
+    thumbRoot.rotation.z = side * 0.45;
+    thumbRoot.rotation.y = side * -0.35;
+    thumbRoot.rotation.x = -0.20;
+    handGroup.add(thumbRoot);
+
+    const thumbProximal = new THREE.Mesh(
+      new THREE.CapsuleGeometry(0.015, 0.032, 4, 8),
+      redMat
+    );
+    thumbProximal.position.y = -0.020;
+    thumbRoot.add(thumbProximal);
+
+    const thumbDistal = new THREE.Group();
+    thumbDistal.position.y = -0.038;
+    thumbRoot.add(thumbDistal);
+
+    const thumbDistalMesh = new THREE.Mesh(
+      new THREE.CapsuleGeometry(0.013, 0.026, 4, 8),
+      redMat
+    );
+    thumbDistalMesh.position.y = -0.016;
+    thumbDistal.add(thumbDistalMesh);
+
+    // 3. Four Articulated Fingers (Lateral to Medial: Index -> Middle -> Ring -> Pinky)
+    const fingerConfigs = [
+      { name: 'index', xOffset: side * 0.025, length: 0.072, thickness: 0.015 },
+      { name: 'middle', xOffset: side * 0.008, length: 0.078, thickness: 0.016 },
+      { name: 'ring', xOffset: side * -0.010, length: 0.072, thickness: 0.015 },
+      { name: 'pinky', xOffset: side * -0.026, length: 0.060, thickness: 0.014 }
+    ];
+
+    const fingers = [];
+    fingerConfigs.forEach(fc => {
+      const fingerRoot = new THREE.Group();
+      fingerRoot.position.set(fc.xOffset, -0.082, 0);
+      handGroup.add(fingerRoot);
+
+      // Proximal Phalanx (Knuckle joint)
+      const proxH = fc.length * 0.54;
+      const proximal = new THREE.Mesh(
+        new THREE.CapsuleGeometry(fc.thickness, proxH - fc.thickness * 2, 4, 8),
+        redMat
+      );
+      proximal.position.y = -proxH * 0.5;
+      fingerRoot.add(proximal);
+
+      // Distal Phalanx (Middle/tip joint)
+      const distH = fc.length * 0.46;
+      const distalJoint = new THREE.Group();
+      distalJoint.position.y = -proxH;
+      fingerRoot.add(distalJoint);
+
+      const distal = new THREE.Mesh(
+        new THREE.CapsuleGeometry(fc.thickness * 0.85, distH - fc.thickness * 1.7, 4, 8),
+        redMat
+      );
+      distal.position.y = -distH * 0.5;
+      distalJoint.add(distal);
+
+      fingers.push({
+        name: fc.name,
+        root: fingerRoot,
+        distal: distalJoint
+      });
+    });
+
+    return { root: handGroup, fingers, thumb: thumbRoot, thumbDistal };
+  }
+
   buildModel() {
     // --- Masterpiece Cinematic Materials ---
-    // Deep crimson suit fabric with subtle specular sheen
+    const webMaskMat = this.createWebbedSuitMaterial(true);
+    const webSuitMat = this.createWebbedSuitMaterial(false);
+
+    // Deep crimson suit fabric
     const redMat = new THREE.MeshStandardMaterial({
       color: 0xbe123c,
       roughness: 0.38,
@@ -82,50 +274,72 @@ export class SpiderMan {
 
     // Contoured athletic hips
     const hips = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.24, 0.20, 0.22, 12),
+      new THREE.CapsuleGeometry(0.19, 0.12, 6, 12),
       blueMat
     );
+    hips.scale.set(1.15, 1.0, 0.92);
     this.pelvis.add(hips);
 
-    // Red suit belt
+    // Red suit belt with webbed pattern
     const belt = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.245, 0.245, 0.05, 12),
-      redMat
+      new THREE.CylinderGeometry(0.24, 0.24, 0.05, 14),
+      webSuitMat
     );
     belt.position.y = 0.08;
     this.pelvis.add(belt);
 
-    // --- 2. HEROIC V-TAPER TORSO ---
+    // --- 2. HEROIC ATHLETIC V-TAPER TORSO ---
     this.torso = new THREE.Group();
     this.torso.position.y = 0.16;
     this.pelvis.add(this.torso);
 
     // Tapered muscular waist
     const waist = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.23, 0.21, 0.20, 12),
+      new THREE.CapsuleGeometry(0.18, 0.10, 6, 12),
       blueMat
     );
     waist.position.y = 0.10;
+    waist.scale.set(1.15, 1.0, 0.85);
     this.torso.add(waist);
 
-    // Muscular chest & broad shoulders
-    const chest = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.28, 0.23, 0.32, 12),
-      redMat
+    // Ribcage & upper torso core
+    const ribcage = new THREE.Mesh(
+      new THREE.CapsuleGeometry(0.22, 0.16, 6, 12),
+      webSuitMat
     );
-    chest.position.y = 0.26;
-    chest.scale.set(1.15, 1.0, 0.88);
-    this.torso.add(chest);
+    ribcage.position.y = 0.26;
+    ribcage.scale.set(1.22, 1.0, 0.88);
+    this.torso.add(ribcage);
 
-    // Navy blue side rib contour panels
+    // Sculpted Pectoral Slabs (Left & Right Pectoralis Major with Center Sternum Cleft)
     [-1, 1].forEach(side => {
-      const ribPanel = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.08, 0.06, 0.26, 8),
+      const pec = new THREE.Mesh(
+        new THREE.CapsuleGeometry(0.085, 0.11, 6, 10),
+        webSuitMat
+      );
+      pec.position.set(side * 0.11, 0.32, 0.11);
+      pec.rotation.z = side * 0.22;
+      pec.rotation.x = 0.10;
+      pec.scale.set(1.1, 0.85, 0.65);
+      this.torso.add(pec);
+
+      // Latissimus Dorsi V-Taper Back Muscle Wings
+      const lat = new THREE.Mesh(
+        new THREE.CapsuleGeometry(0.065, 0.18, 6, 8),
         blueMat
       );
-      ribPanel.position.set(side * 0.21, 0.24, 0);
-      ribPanel.scale.set(1.0, 1.0, 0.9);
-      this.torso.add(ribPanel);
+      lat.position.set(side * 0.21, 0.24, -0.04);
+      lat.rotation.z = side * -0.22;
+      this.torso.add(lat);
+
+      // Trapezius muscles sloping from neck to shoulders
+      const trap = new THREE.Mesh(
+        new THREE.CapsuleGeometry(0.048, 0.10, 4, 8),
+        webSuitMat
+      );
+      trap.position.set(side * 0.14, 0.44, -0.02);
+      trap.rotation.z = side * 0.65;
+      this.torso.add(trap);
     });
 
     // Embossed black Spider-Man emblem on chest
@@ -154,14 +368,14 @@ export class SpiderMan {
     backSpider.position.set(0, 0.26, -0.14);
     this.torso.add(backSpider);
 
-    // --- 3. HEAD & MASK ---
+    // --- 3. HEAD & MASK WITH RADIAL WEBBING ---
     this.head = new THREE.Group();
     this.head.position.y = 0.48;
     this.torso.add(this.head);
 
     const headMesh = new THREE.Mesh(
       new THREE.SphereGeometry(0.19, 16, 16),
-      redMat
+      webMaskMat
     );
     headMesh.scale.set(0.92, 1.12, 0.96);
     this.head.add(headMesh);
@@ -169,7 +383,7 @@ export class SpiderMan {
     // Jawline mask taper
     const maskJaw = new THREE.Mesh(
       new THREE.ConeGeometry(0.12, 0.16, 10),
-      redMat
+      webMaskMat
     );
     maskJaw.position.set(0, -0.14, 0.04);
     maskJaw.rotation.x = Math.PI;
@@ -199,7 +413,7 @@ export class SpiderMan {
       eyeGroup.add(lens);
     });
 
-    // --- 4. MUSCULAR ARMS & SILVER WEB-SHOOTERS ---
+    // --- 4. MUSCULAR ARMS & ARTICULATED HANDS (Smooth Capsule Limbs) ---
     this.arms = {};
     [-1, 1].forEach(side => {
       const isLeft = side === -1;
@@ -209,19 +423,20 @@ export class SpiderMan {
       shoulder.position.set(side * 0.30, 0.38, 0);
       this.torso.add(shoulder);
 
-      // Muscular deltoid
+      // Muscular deltoid cap with web pattern
       const deltoid = new THREE.Mesh(
-        new THREE.SphereGeometry(0.08, 10, 10),
-        redMat
+        new THREE.SphereGeometry(0.082, 12, 12),
+        webSuitMat
       );
+      deltoid.scale.set(1.0, 1.15, 1.0);
       shoulder.add(deltoid);
 
       const upperArm = new THREE.Group();
       shoulder.add(upperArm);
 
-      // Muscular bicep/tricep
+      // Muscular bicep/tricep (Smooth Capsule)
       const upperMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.075, 0.065, 0.30, 8),
+        new THREE.CapsuleGeometry(0.068, 0.18, 6, 12),
         redMat
       );
       upperMesh.position.y = -0.15;
@@ -231,9 +446,9 @@ export class SpiderMan {
       forearm.position.y = -0.30;
       upperArm.add(forearm);
 
-      // Navy blue forearm
+      // Navy blue muscular forearm (Smooth Capsule)
       const foreMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.068, 0.058, 0.28, 8),
+        new THREE.CapsuleGeometry(0.060, 0.16, 6, 12),
         blueMat
       );
       foreMesh.position.y = -0.14;
@@ -241,7 +456,7 @@ export class SpiderMan {
 
       // Chrome silver web-shooter gauntlet ring
       const shooterRing = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.069, 0.069, 0.04, 10),
+        new THREE.CylinderGeometry(0.068, 0.068, 0.04, 12),
         silverMat
       );
       shooterRing.position.y = -0.22;
@@ -255,22 +470,27 @@ export class SpiderMan {
       nozzle.position.set(0, -0.22, 0.07);
       forearm.add(nozzle);
 
-      // Red glove
+      // Red glove gauntlet with webbed pattern
       const glove = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.065, 0.055, 0.12, 8),
-        redMat
+        new THREE.CapsuleGeometry(0.058, 0.06, 6, 10),
+        webSuitMat
       );
       glove.position.y = -0.24;
       forearm.add(glove);
 
-      const hand = new THREE.Mesh(new THREE.SphereGeometry(0.052, 8, 8), redMat);
-      hand.position.y = -0.30;
-      forearm.add(hand);
+      // Wrist joint for precise anatomical orientation
+      const wrist = new THREE.Group();
+      wrist.position.y = -0.28;
+      forearm.add(wrist);
 
-      this.arms[key] = { shoulder, upperArm, forearm, hand };
+      // Fully Articulated Superhero Hand with Palm, Thumb & 4 Fingers!
+      const handObj = this.createSpiderHand(side, redMat, webSuitMat);
+      wrist.add(handObj.root);
+
+      this.arms[key] = { shoulder, upperArm, forearm, wrist, hand: handObj.root, handObj };
     });
 
-    // --- 5. MUSCULAR LEGS & ATHLETIC BOOTS ---
+    // --- 5. MUSCULAR LEGS & WEBBED ATHLETIC BOOTS (Smooth Capsule Limbs) ---
     this.legs = {};
     [-1, 1].forEach(side => {
       const isLeft = side === -1;
@@ -280,35 +500,44 @@ export class SpiderMan {
       hip.position.set(side * 0.14, -0.06, 0);
       this.pelvis.add(hip);
 
-      // Muscular thigh
+      // Muscular thigh (Smooth Capsule Quadricep)
       const thigh = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.105, 0.085, 0.40, 10),
+        new THREE.CapsuleGeometry(0.092, 0.22, 8, 14),
         blueMat
       );
       thigh.position.y = -0.20;
       hip.add(thigh);
 
+      // Anatomical Patella (Kneecap)
+      const patella = new THREE.Mesh(
+        new THREE.SphereGeometry(0.042, 8, 8),
+        blueMat
+      );
+      patella.position.set(0, -0.38, 0.08);
+      patella.scale.set(0.9, 1.2, 0.6);
+      hip.add(patella);
+
       const calfGroup = new THREE.Group();
       calfGroup.position.y = -0.40;
       hip.add(calfGroup);
 
-      // Muscular calf
+      // Muscular calf (Smooth Capsule Gastrocnemius)
       const calf = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.085, 0.072, 0.40, 10),
+        new THREE.CapsuleGeometry(0.078, 0.22, 8, 14),
         blueMat
       );
       calf.position.y = -0.20;
       calfGroup.add(calf);
 
-      // Red boots with defined athletic soles
+      // Red boots with webbed pattern
       const boot = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.088, 0.076, 0.24, 10),
-        redMat
+        new THREE.CapsuleGeometry(0.076, 0.12, 6, 12),
+        webSuitMat
       );
       boot.position.y = -0.26;
       calfGroup.add(boot);
 
-      const foot = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.075, 0.24), redMat);
+      const foot = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.075, 0.24), webSuitMat);
       foot.position.set(0, -0.38, 0.05);
       calfGroup.add(foot);
 
@@ -328,16 +557,40 @@ export class SpiderMan {
     halo.rotation.x = -Math.PI / 2;
     halo.position.y = 0.03;
     this.root.add(halo);
+
+    // Enable soft shadow casting & receiving on every mesh
+    this.root.traverse(child => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
   }
 
   setPerchPose() {
-    this.arms.left.upperArm.rotation.set(0.3, 0, 0.4);
-    this.arms.left.forearm.rotation.set(0.8, 0, 0);
-    this.arms.right.upperArm.rotation.set(0.3, 0, -0.4);
-    this.arms.right.forearm.rotation.set(0.8, 0, 0);
+    // Heroic athletic resting stance: arms relaxed, palms resting naturally facing inward
+    this.arms.left.upperArm.rotation.set(0.25, 0.1, 0.35);
+    this.arms.left.forearm.rotation.set(0.65, 0.15, 0);
+    this.arms.left.wrist.rotation.set(-0.15, -0.65, 0.1);
+
+    this.arms.right.upperArm.rotation.set(0.25, -0.1, -0.35);
+    this.arms.right.forearm.rotation.set(0.65, -0.15, 0);
+    this.arms.right.wrist.rotation.set(-0.15, 0.65, -0.1);
+
     this.pelvis.position.y = 0.95;
     this.torso.rotation.set(0, 0, 0);
     this.head.rotation.set(0, 0, 0);
+
+    // Natural finger curl forward into the anterior palm
+    ['left', 'right'].forEach(side => {
+      const arm = this.arms[side];
+      if (arm && arm.handObj && arm.handObj.fingers) {
+        arm.handObj.fingers.forEach(f => {
+          f.root.rotation.x = -0.28;
+          f.distal.rotation.x = -0.36;
+        });
+      }
+    });
   }
 
   setPosition(worldPos) {
@@ -374,10 +627,20 @@ export class SpiderMan {
     // Left hand resting proud on hip
     this.arms.left.upperArm.rotation.set(-0.25, 0.35, 0.65);
     this.arms.left.forearm.rotation.set(1.4, -0.2, 0);
+    this.arms.left.wrist.rotation.set(0.2, -0.8, -0.2);
 
     // Right arm extends down and outward to interlock hands with MJ!
     this.arms.right.upperArm.rotation.set(0.20, 0, -0.32);
     this.arms.right.forearm.rotation.set(0.15, 0.08, -0.12);
+    this.arms.right.wrist.rotation.set(-0.1, 0.4, 0.1);
+
+    // Naturally curl fingers to gently hold MJ's hand
+    if (this.arms.right.handObj && this.arms.right.handObj.fingers) {
+      this.arms.right.handObj.fingers.forEach(f => {
+        f.root.rotation.x = -0.16;
+        f.distal.rotation.x = -0.22;
+      });
+    }
 
     // Head turns slightly toward MJ with a friendly tilt
     this.head.rotation.set(0, -0.20, 0);
@@ -387,12 +650,8 @@ export class SpiderMan {
       targetMJ.animator.setState('holding_hands');
     }
 
-    // Play chime & celebrate team-up!
+    // Play subtle friendly chime without any distracting text banners on screen
     this.audioManager.playHeroicCatch();
-    const bannerPos = centerPos.clone();
-    bannerPos.y += 2.5;
-    this.comicFX.spawnAt(bannerPos, 'TEAM UP!', '#be123c', '#ffffff', 2.2);
-    this.comicFX.showBanner('SPIDER-MAN & MJ TEAM UP!');
   }
 
   releaseHands() {
@@ -415,15 +674,29 @@ export class SpiderMan {
     this.root.lookAt(mjPos.x, this.root.position.y, mjPos.z);
 
     // 2. Raise arm straight out in iconic web-shooter pose
-    this.arms.right.upperArm.rotation.set(-1.55, 0, -0.15);
-    this.arms.right.forearm.rotation.set(0, 0, 0);
+    this.arms.right.upperArm.rotation.set(-1.45, 0, -0.12);
+    this.arms.right.forearm.rotation.set(0.08, 0, 0);
+    // Hyperextend wrist backward so palm faces target MJ directly!
+    this.arms.right.wrist.rotation.set(1.15, 0, 0);
+
+    // Iconic Thwip hand: middle & ring fingers curled tightly into the palm button!
+    if (this.arms.right.handObj && this.arms.right.handObj.fingers) {
+      this.arms.right.handObj.fingers.forEach(f => {
+        if (f.name === 'middle' || f.name === 'ring') {
+          f.root.rotation.x = -1.35;
+          f.distal.rotation.x = -1.35;
+        } else {
+          f.root.rotation.x = -0.12;
+          f.distal.rotation.x = -0.08;
+        }
+      });
+    }
 
     this.audioManager.playThwip();
 
     const spideyHeadPos = this.root.position.clone();
     spideyHeadPos.y += 2.6;
     this.comicFX.spawnAt(spideyHeadPos, 'THWIP!', '#be123c', '#ffffff', 1.8);
-    this.comicFX.showBanner('SPIDER-MAN WEB LINE DEPLOYED!');
 
     targetMJ.animator.setState('web_pull');
 

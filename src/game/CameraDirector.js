@@ -175,15 +175,26 @@ export class CameraDirector {
 
   // Dynamic real-time aerial flight camera tracking for Green Goblin kidnapping
   trackFlyingGoblin(goblinPos, destinationPos, progress = 0) {
-    // Elevate camera high enough to see both the Goblin soaring in the sky AND the destination tile
-    const midTarget = new THREE.Vector3().lerpVectors(goblinPos, destinationPos, 0.4);
+    // Relative Z offset ensures perfect framing across all tiles (including top rows 7-9 / tiles 70-100)
+    const camX = goblinPos.x * 0.6;
+    const camY = Math.max(goblinPos.y + 8.5, 14.0);
+    const camZ = goblinPos.z + 13.5;
 
-    // Follow camera positioned behind/above the trajectory
-    this.targetPosition.set(goblinPos.x * 0.5 + 8, Math.max(goblinPos.y + 10, 18), goblinPos.z * 0.5 + 22);
-    this.targetLookAt.copy(midTarget);
-    this.targetLookAt.y = Math.max(1, goblinPos.y * 0.5);
+    this.targetPosition.set(camX, camY, camZ);
 
-    this.posDamp = 5.0; // Responsive camera tracking
+    // Look at a target point between goblin and destination
+    const lookTarget = new THREE.Vector3().lerpVectors(goblinPos, destinationPos, 0.35);
+    lookTarget.y = Math.max(1.0, goblinPos.y * 0.5);
+    this.targetLookAt.copy(lookTarget);
+
+    this.posDamp = 6.0;
+    this.lookDamp = 7.0;
+  }
+
+  focusOnDestinationTile(destPos) {
+    this.targetPosition.set(destPos.x, destPos.y + 9.5, destPos.z + 13.0);
+    this.targetLookAt.set(destPos.x, destPos.y + 0.8, destPos.z);
+    this.posDamp = 5.0;
     this.lookDamp = 6.0;
   }
 

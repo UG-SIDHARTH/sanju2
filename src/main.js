@@ -34,17 +34,23 @@ class App {
     );
     this.camera.position.set(0, 26, 26);
 
-    // 3. Renderer with high DPI support for razor-sharp clarity
+    // 3. Renderer with high DPI, filmic tone mapping & soft shadows
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
       powerPreference: 'high-performance'
     });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
 
-    // Dynamic DPR clamping to eliminate all blurriness while maintaining 60 FPS
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Crisp DPR scaling for ultra-sharp rendering
+    const dpr = Math.min(Math.max(window.devicePixelRatio || 1, 1.25), 2);
     this.renderer.setPixelRatio(dpr);
-    this.renderer.shadowMap.enabled = false;
+
+    // Cinematic Realistic Lighting & Color Pipeline
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.02;
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     this.container.appendChild(this.renderer.domElement);
   }
@@ -56,8 +62,13 @@ class App {
     // Comic FX Popups
     this.comicFX = new ComicFX(this.scene, this.camera);
 
-    // Fast Comic Rooftop Backdrop
-    this.environment = new Environment(this.scene);
+    // Living Manhattan Penthouse Sky-Garden & Interactive Environment
+    this.environment = new Environment(
+      this.scene,
+      this.camera,
+      this.renderer.domElement,
+      this.audioManager
+    );
 
     // High-Clarity 100-Tile Board with Anisotropy
     const maxAnisotropy = this.renderer.capabilities.getMaxAnisotropy() || 8;
@@ -85,7 +96,7 @@ class App {
       this.camera.aspect = w / h;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(w, h);
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      this.renderer.setPixelRatio(Math.min(Math.max(window.devicePixelRatio || 1, 1.25), 2));
     });
   }
 
