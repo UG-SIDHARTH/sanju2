@@ -1,12 +1,14 @@
 // ==========================================================================
-// BOARD - High-Visibility 100-Tile Serpentine Grid (Peak 2.5D Clarity)
+// BOARD - High-Visibility, Razor-Sharp 100-Tile Serpentine Grid
+// Rendered at 512x512 resolution with anisotropic filtering for zero blur
 // ==========================================================================
 
 import * as THREE from 'three';
 
 export class Board {
-  constructor(scene) {
+  constructor(scene, maxAnisotropy = 8) {
     this.scene = scene;
+    this.maxAnisotropy = maxAnisotropy;
     this.tiles = [];
     this.tileMeshes = [];
     this.tileSize = 2.8;
@@ -32,7 +34,7 @@ export class Board {
     baseMesh.position.y = -0.4;
     this.boardGroup.add(baseMesh);
 
-    // Cyan glowing rim
+    // Glowing cyan rim
     const rimGeo = new THREE.BoxGeometry(baseWidth + 0.3, 0.15, baseWidth + 0.3);
     const rimMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
     const rimMesh = new THREE.Mesh(rimGeo, rimMat);
@@ -40,70 +42,101 @@ export class Board {
     this.boardGroup.add(rimMesh);
   }
 
+  // 512x512 ultra-sharp tile textures
   createTileTexture(number, isSpideyTrigger = false, isGoblin = false, isGoal = false) {
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256;
+    canvas.width = 512;
+    canvas.height = 512;
     const ctx = canvas.getContext('2d');
+
+    // Enable high quality rendering
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     const isEven = (Math.floor((number - 1) / 10) + ((number - 1) % 10)) % 2 === 0;
 
+    // Tile Background
     if (isGoal) {
-      ctx.fillStyle = '#b45309'; // Gold
+      const grad = ctx.createRadialGradient(256, 256, 40, 256, 256, 256);
+      grad.addColorStop(0, '#f59e0b');
+      grad.addColorStop(1, '#78350f');
+      ctx.fillStyle = grad;
     } else if (isSpideyTrigger) {
-      ctx.fillStyle = '#0369a1'; // Deep Spidey Sky Blue
+      ctx.fillStyle = '#0284c7'; // Vibrant comic sky blue
     } else if (isGoblin) {
-      ctx.fillStyle = '#581c87'; // Sinister Goblin Purple
+      ctx.fillStyle = '#6b21a8'; // Menacing deep purple
     } else {
       ctx.fillStyle = isEven ? '#1e293b' : '#0f172a';
     }
-    ctx.fillRect(0, 0, 256, 256);
+    ctx.fillRect(0, 0, 512, 512);
 
-    // High-contrast border
-    ctx.lineWidth = 8;
+    // Crisp high-contrast borders
+    ctx.lineWidth = 16;
     if (isGoal) {
       ctx.strokeStyle = '#fef08a';
     } else if (isSpideyTrigger) {
       ctx.strokeStyle = '#38bdf8';
     } else if (isGoblin) {
-      ctx.strokeStyle = '#c084fc';
+      ctx.strokeStyle = '#d8b4fe';
     } else {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
     }
-    ctx.strokeRect(6, 6, 244, 244);
+    ctx.strokeRect(12, 12, 488, 488);
 
-    // Prominent labels for triggers
+    // Inner bevel highlight
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.strokeRect(26, 26, 460, 460);
+
+    // Badges / Header labels
     if (isSpideyTrigger) {
       ctx.fillStyle = '#38bdf8';
-      ctx.font = '900 24px "Outfit", sans-serif';
+      ctx.font = '900 42px "Outfit", -apple-system, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('🕷️ SPIDER TRIGGER', 128, 42);
+      ctx.fillText('🕷️ SPIDER TRIGGER', 256, 86);
+
+      // Web icon decorative grid
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+        ctx.moveTo(256, 280);
+        ctx.lineTo(256 + Math.cos(a) * 140, 280 + Math.sin(a) * 140);
+      }
+      ctx.stroke();
     } else if (isGoblin) {
       ctx.fillStyle = '#fde047';
-      ctx.font = '900 24px "Outfit", sans-serif';
+      ctx.font = '900 42px "Outfit", -apple-system, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('🎃 GOBLIN HAZARD', 128, 42);
+      ctx.fillText('🎃 GOBLIN HAZARD', 256, 86);
     } else if (isGoal) {
       ctx.fillStyle = '#fef08a';
-      ctx.font = '900 24px "Bangers", sans-serif';
+      ctx.font = '900 48px "Bangers", Impact, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('❓ SECRET 100', 128, 42);
+      ctx.fillText('❓ SECRET MULTIVERSE', 256, 86);
     }
 
-    // Huge clear high-contrast numeral in center
-    ctx.font = isGoal ? '900 120px "Bangers", Impact, sans-serif' : '900 100px "Outfit", sans-serif';
+    // Main Tile Number (Crisp, huge font)
+    ctx.font = isGoal ? '900 240px "Bangers", Impact, sans-serif' : '900 200px "Outfit", -apple-system, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Black drop shadow outline
-    ctx.lineWidth = 10;
+    const textY = isSpideyTrigger || isGoblin || isGoal ? 300 : 256;
+
+    // Solid black drop shadow outline for razor-sharp legibility
+    ctx.lineWidth = 20;
     ctx.strokeStyle = '#000000';
-    ctx.strokeText(`${number}`, 128, isSpideyTrigger || isGoblin || isGoal ? 142 : 128);
+    ctx.strokeText(`${number}`, 256, textY);
 
     ctx.fillStyle = isGoal ? '#ffffff' : isSpideyTrigger ? '#ffffff' : isGoblin ? '#ffffff' : '#f8fafc';
-    ctx.fillText(`${number}`, 128, isSpideyTrigger || isGoblin || isGoal ? 142 : 128);
+    ctx.fillText(`${number}`, 256, textY);
 
     const texture = new THREE.CanvasTexture(canvas);
+    texture.generateMipmaps = true;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.anisotropy = this.maxAnisotropy;
+    texture.needsUpdate = true;
     return texture;
   }
 
@@ -149,7 +182,7 @@ export class Board {
     }
 
     // Glowing halo on Tile 100
-    const goalRingGeo = new THREE.RingGeometry(1.5, 1.8, 24);
+    const goalRingGeo = new THREE.RingGeometry(1.5, 1.8, 32);
     const goalRingMat = new THREE.MeshBasicMaterial({
       color: 0xf59e0b,
       side: THREE.DoubleSide

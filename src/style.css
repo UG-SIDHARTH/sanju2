@@ -31,6 +31,9 @@
   padding: 0;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 html, body {
@@ -51,6 +54,11 @@ html, body {
   width: 100%;
   height: 100%;
   z-index: 1;
+}
+
+canvas {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 /* ==========================================================================

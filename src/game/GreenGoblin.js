@@ -1,6 +1,6 @@
 // ==========================================================================
 // GREEN GOBLIN - 6 Goblins on Gliders (High-Visibility & Fast Performance)
-// Crystal-Clear Aerial Kidnapping Sequence
+// Full Aerial Kidnapping Sequence with Continuous Flight Camera Tracking
 // ==========================================================================
 
 import * as THREE from 'three';
@@ -26,12 +26,11 @@ export class GreenGoblin {
   }
 
   buildModel() {
-    // High-performance, high-contrast materials
-    const skinMat = new THREE.MeshLambertMaterial({ color: 0x16a34a }); // Emerald green
-    const purpleMat = new THREE.MeshLambertMaterial({ color: 0x7e22ce }); // Royal purple
-    const gliderMat = new THREE.MeshLambertMaterial({ color: 0x334155 }); // Slate dark metal
-    const thrusterGlowMat = new THREE.MeshBasicMaterial({ color: 0xf97316 }); // Orange jet
-    const eyeMat = new THREE.MeshBasicMaterial({ color: 0xfde047 }); // Sinister yellow
+    const skinMat = new THREE.MeshLambertMaterial({ color: 0x16a34a });
+    const purpleMat = new THREE.MeshLambertMaterial({ color: 0x7e22ce });
+    const gliderMat = new THREE.MeshLambertMaterial({ color: 0x334155 });
+    const thrusterGlowMat = new THREE.MeshBasicMaterial({ color: 0xf97316 });
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0xfde047 });
 
     // --- 1. THE HOVERBOARD / GLIDER ---
     this.gliderGroup = new THREE.Group();
@@ -103,13 +102,11 @@ export class GreenGoblin {
     headMesh.scale.set(0.9, 1.15, 0.95);
     this.head.add(headMesh);
 
-    // Purple cowl hat
     const cowl = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.4, 8), purpleMat);
     cowl.position.set(0, 0.18, -0.1);
     cowl.rotation.x = -0.6;
     this.head.add(cowl);
 
-    // Pointed ears
     [-1, 1].forEach(side => {
       const ear = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.22, 6), skinMat);
       ear.position.set(side * 0.2, 0.05, -0.05);
@@ -117,7 +114,6 @@ export class GreenGoblin {
       this.head.add(ear);
     });
 
-    // Sinister yellow eyes
     [-1, 1].forEach(side => {
       const eye = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 6), eyeMat);
       eye.position.set(side * 0.07, 0.04, 0.17);
@@ -173,7 +169,6 @@ export class GreenGoblin {
     this.arms.right.upperArm.rotation.set(-0.3, 0, -0.4);
     this.torso.rotation.x = 0.15;
 
-    // Menacing hazard ring on tile
     const hazardRing = new THREE.Mesh(
       new THREE.RingGeometry(0.8, 1.0, 16),
       new THREE.MeshBasicMaterial({ color: 0xa855f7, side: THREE.DoubleSide })
@@ -188,9 +183,8 @@ export class GreenGoblin {
     this.root.position.y = this.baseY;
   }
 
-  // Clear, unmistakable kidnapping sequence:
-  // Catches MJ -> soars into sky with glider -> flies to random destination tile -> drops MJ -> flies back!
-  triggerKidnapping(targetMJ, destinationWorldPos, onComplete) {
+  // Full 3D kidnapping sequence with real-time camera tracking callback
+  triggerKidnapping(targetMJ, destinationWorldPos, onComplete, onFlightUpdate) {
     if (this.isKidnapping) return;
     this.isKidnapping = true;
 
@@ -199,7 +193,6 @@ export class GreenGoblin {
     this.comicFX.spawnAt(this.root.position, 'HAHAHA!', '#8e44ad', '#fde047', 1.8);
     this.comicFX.showBanner('GREEN GOBLIN HOVERBOARD KIDNAPPING!');
 
-    // Head cackle pose
     this.head.rotation.x = -0.4;
     this.arms.left.upperArm.rotation.set(-1.2, 0, 0.7);
     this.arms.right.upperArm.rotation.set(-1.2, 0, -0.7);
@@ -209,13 +202,13 @@ export class GreenGoblin {
       const originalGoblinPos = this.root.position.clone();
 
       targetMJ.animator.setState('kidnapped');
-      this.audioManager.playGliderRoar(3.2);
+      this.audioManager.playGliderRoar(3.5);
 
-      const flightDuration = 3.2; // 3.2 seconds of clearly visible flight
+      const flightDuration = 3.4; // 3.4 seconds for a clear, suspenseful flight
       const startTime = performance.now();
 
       // Parabolic flight arc
-      const peakY = 11.0;
+      const peakY = 12.0;
       const midPoint = new THREE.Vector3()
         .addVectors(originalGoblinPos, destinationWorldPos)
         .multiplyScalar(0.5);
@@ -239,23 +232,28 @@ export class GreenGoblin {
           this.root.lookAt(currentPos.clone().add(tangent));
           this.gliderGroup.rotation.z = Math.sin(progress * Math.PI * 2) * 0.45;
 
-          // MJ is visibly hanging/carried under the glider!
+          // MJ is visibly hanging/carried under the glider
           targetMJ.root.position.copy(currentPos);
-          targetMJ.root.position.y -= 0.7; // Suspended visibly in mid-air
+          targetMJ.root.position.y -= 0.7;
           targetMJ.root.rotation.copy(this.root.rotation);
+
+          // Update camera in real time so the user sees the flight and destination!
+          if (onFlightUpdate) {
+            onFlightUpdate(currentPos, destinationWorldPos, progress);
+          }
 
           requestAnimationFrame(animateFlight);
         } else {
-          // 3. Drop MJ onto destination tile!
+          // 3. Drop MJ onto destination tile
           targetMJ.root.position.set(destinationWorldPos.x, 0.1, destinationWorldPos.z);
           targetMJ.root.rotation.set(0, 0, 0);
           targetMJ.animator.setState('idle');
 
-          this.comicFX.spawnAt(destinationWorldPos, 'BONK!', '#f97316', '#ffffff', 1.6);
+          this.comicFX.spawnAt(destinationWorldPos, 'BONK!', '#f97316', '#ffffff', 1.8);
           this.audioManager.playFootstep();
 
           // 4. Return to post
-          this.returnToPost(originalGoblinPos, onComplete);
+          this.returnToPost(originalGoblinPos, onComplete, onFlightUpdate);
         }
       };
 
@@ -263,9 +261,9 @@ export class GreenGoblin {
     }, 600);
   }
 
-  returnToPost(originalPos, onComplete) {
+  returnToPost(originalPos, onComplete, onFlightUpdate) {
     const startPos = this.root.position.clone();
-    const returnDuration = 1.4;
+    const returnDuration = 1.2;
     const startTime = performance.now();
 
     const animateReturn = () => {
@@ -278,6 +276,10 @@ export class GreenGoblin {
         p.y += Math.sin(progress * Math.PI) * 4.5;
         this.root.position.copy(p);
         this.root.lookAt(originalPos.x, p.y, originalPos.z);
+
+        if (onFlightUpdate) {
+          onFlightUpdate(p, originalPos, progress);
+        }
 
         requestAnimationFrame(animateReturn);
       } else {

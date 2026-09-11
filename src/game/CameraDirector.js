@@ -1,5 +1,6 @@
 // ==========================================================================
 // CAMERA DIRECTOR - High-Clarity 2.5D / Isometric Cinematic Camera
+// Full aerial flight tracking, Spidey action framing & board overview
 // ==========================================================================
 
 import * as THREE from 'three';
@@ -16,7 +17,6 @@ export class CameraDirector {
     this.domElement = domElement;
 
     this.mode = CAMERA_MODES.CINEMATIC;
-    // Crisp elevated angle (peak visibility across all 100 tiles)
     this.targetPosition = new THREE.Vector3(0, 26, 26);
     this.targetLookAt = new THREE.Vector3(0, 0, 0);
     this.currentLookAt = new THREE.Vector3(0, 0, 0);
@@ -86,14 +86,12 @@ export class CameraDirector {
 
   focusOnBoard() {
     if (this.mode === CAMERA_MODES.OVERVIEW) {
-      // Direct Top-Down 2D board perspective
       this.targetPosition.set(0, 36, 1);
       this.targetLookAt.set(0, 0, 0);
     } else if (this.mode === CAMERA_MODES.CLOSEUP) {
       this.targetPosition.set(0, 16, 18);
       this.targetLookAt.set(0, 0, 0);
     } else {
-      // 2.5D Clear Isometric View
       this.targetPosition.set(0, 26, 25);
       this.targetLookAt.set(0, 0.5, 0);
     }
@@ -114,21 +112,28 @@ export class CameraDirector {
     this.targetLookAt.y += 0.8;
   }
 
-  // Framing both Spider-Man and MJ clearly during the web pull
   focusOnSpiderManAction(spideyPos, mjPos) {
     const midpoint = new THREE.Vector3().addVectors(spideyPos, mjPos).multiplyScalar(0.5);
     const spanDist = spideyPos.distanceTo(mjPos);
-    const camDist = Math.max(16, spanDist * 1.2);
+    const camDist = Math.max(16, spanDist * 1.15);
 
     this.targetPosition.set(midpoint.x, midpoint.y + 14, midpoint.z + camDist);
     this.targetLookAt.copy(midpoint);
     this.targetLookAt.y += 1.2;
   }
 
-  // Framing Green Goblin and MJ during aerial kidnapping
-  focusOnGoblinAction(goblinPos, mjPos) {
-    this.targetPosition.set(goblinPos.x + 8, goblinPos.y + 16, goblinPos.z + 18);
-    this.targetLookAt.copy(goblinPos);
+  // Dynamic real-time aerial flight camera tracking for Green Goblin kidnapping
+  trackFlyingGoblin(goblinPos, destinationPos, progress = 0) {
+    // Elevate camera high enough to see both the Goblin soaring in the sky AND the destination tile
+    const midTarget = new THREE.Vector3().lerpVectors(goblinPos, destinationPos, 0.4);
+
+    // Follow camera positioned behind/above the trajectory
+    this.targetPosition.set(goblinPos.x * 0.5 + 8, Math.max(goblinPos.y + 10, 18), goblinPos.z * 0.5 + 22);
+    this.targetLookAt.copy(midTarget);
+    this.targetLookAt.y = Math.max(1, goblinPos.y * 0.5);
+
+    this.posDamp = 5.0; // Responsive camera tracking
+    this.lookDamp = 6.0;
   }
 
   focusOnTile100(tile100Pos) {

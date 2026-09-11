@@ -1,6 +1,5 @@
 // ==========================================================================
-// MAIN BOOTSTRAP - Optimized for Intel Pentium, 4GB DDR3 & Integrated Graphics
-// Locked 60 FPS, High-Visibility 2.5D Comic Presentation
+// MAIN BOOTSTRAP - Crisp High-DPI Rendering & Smooth 60 FPS Engine
 // ==========================================================================
 
 import * as THREE from 'three';
@@ -26,7 +25,7 @@ class App {
     // 1. Scene
     this.scene = new THREE.Scene();
 
-    // 2. Camera (Clear, crisp perspective for 2.5D view)
+    // 2. Camera
     this.camera = new THREE.PerspectiveCamera(
       45,
       window.innerWidth / window.innerHeight,
@@ -35,20 +34,23 @@ class App {
     );
     this.camera.position.set(0, 26, 26);
 
-    // 3. Renderer - Max performance for Intel Pentium (pixel ratio clamped to 1.0, shadows off)
+    // 3. Renderer with high DPI support for razor-sharp clarity
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
       powerPreference: 'high-performance'
     });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(1.0); // Clamped for Intel Pentium GPU fill-rate efficiency
-    this.renderer.shadowMap.enabled = false; // Disabled for maximum FPS on integrated graphics
+
+    // Dynamic DPR clamping to eliminate all blurriness while maintaining 60 FPS
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.renderer.setPixelRatio(dpr);
+    this.renderer.shadowMap.enabled = false;
 
     this.container.appendChild(this.renderer.domElement);
   }
 
   initGame() {
-    // Procedural Audio Engine (zero network/disk asset stalls)
+    // Procedural Audio Engine
     this.audioManager = new AudioManager();
 
     // Comic FX Popups
@@ -57,8 +59,9 @@ class App {
     // Fast Comic Rooftop Backdrop
     this.environment = new Environment(this.scene);
 
-    // High-Clarity 100-Tile Board
-    this.board = new Board(this.scene);
+    // High-Clarity 100-Tile Board with Anisotropy
+    const maxAnisotropy = this.renderer.capabilities.getMaxAnisotropy() || 8;
+    this.board = new Board(this.scene, maxAnisotropy);
 
     // Game Manager with 5 Classic Spider-Men & 6 Green Goblins
     this.gameManager = new GameManager(
@@ -82,6 +85,7 @@ class App {
       this.camera.aspect = w / h;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(w, h);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     });
   }
 
