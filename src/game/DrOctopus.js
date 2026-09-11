@@ -547,4 +547,19 @@ export class DrOctopus {
 
     requestAnimationFrame(animateEscape);
   }
+
+  update(delta) {
+    if (!this.root.visible || this.isAbducting) return;
+    this.animTime = (this.animTime || 0) + delta;
+
+    // Organic mechanical tentacle writhing while standing at Tile 100
+    if (this.tentacles) {
+      this.tentacles.forEach((tObj, tIdx) => {
+        tObj.joints.forEach((j, jIdx) => {
+          const wave = Math.sin(this.animTime * 2.2 + tIdx * 1.5 + jIdx * 0.8) * 0.04;
+          j.rotation.z += wave * 0.1;
+        });
+      });
+    }
+  }
 }

@@ -44,7 +44,7 @@ export class Board {
   }
 
   // 512x512 ultra-sharp tile textures
-  createTileTexture(number, isSpideyTrigger = false, isGoblin = false, isGoal = false) {
+  createTileTexture(number, isSpideyTrigger = false, isGoblin = false, isGoal = false, isPortal = false, portalDest = null) {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 512;
@@ -62,8 +62,14 @@ export class Board {
       grad.addColorStop(0, '#f59e0b');
       grad.addColorStop(1, '#78350f');
       ctx.fillStyle = grad;
+    } else if (isPortal) {
+      const grad = ctx.createRadialGradient(256, 256, 30, 256, 256, 256);
+      grad.addColorStop(0, '#3b0764'); // Deep cosmic violet
+      grad.addColorStop(0.7, '#0f172a');
+      grad.addColorStop(1, '#020617');
+      ctx.fillStyle = grad;
     } else if (isSpideyTrigger) {
-      ctx.fillStyle = '#0284c7'; // Vibrant comic sky blue
+      ctx.fillStyle = '#0284c7'; // Vibrant sky blue
     } else if (isGoblin) {
       ctx.fillStyle = '#6b21a8'; // Menacing deep purple
     } else {
@@ -75,6 +81,8 @@ export class Board {
     ctx.lineWidth = 16;
     if (isGoal) {
       ctx.strokeStyle = '#fef08a';
+    } else if (isPortal) {
+      ctx.strokeStyle = '#c084fc'; // Glowing quantum purple
     } else if (isSpideyTrigger) {
       ctx.strokeStyle = '#38bdf8';
     } else if (isGoblin) {
@@ -86,11 +94,25 @@ export class Board {
 
     // Inner bevel highlight
     ctx.lineWidth = 4;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.strokeStyle = isPortal ? 'rgba(192, 132, 252, 0.6)' : 'rgba(255, 255, 255, 0.35)';
     ctx.strokeRect(26, 26, 460, 460);
 
     // Badges / Header labels
-    if (isSpideyTrigger) {
+    if (isPortal) {
+      ctx.fillStyle = '#e9d5ff';
+      ctx.font = '900 38px "Outfit", -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`🌀 PORTAL ➔ ${portalDest}`, 256, 86);
+
+      // Swirling energy vortex rings
+      ctx.strokeStyle = 'rgba(192, 132, 252, 0.35)';
+      ctx.lineWidth = 4;
+      for (let r = 50; r <= 160; r += 35) {
+        ctx.beginPath();
+        ctx.arc(256, 280, r, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    } else if (isSpideyTrigger) {
       ctx.fillStyle = '#38bdf8';
       ctx.font = '900 42px "Outfit", -apple-system, sans-serif';
       ctx.textAlign = 'center';
@@ -112,24 +134,24 @@ export class Board {
       ctx.fillText('🎃 GOBLIN HAZARD', 256, 86);
     } else if (isGoal) {
       ctx.fillStyle = '#fef08a';
-      ctx.font = '900 48px "Bangers", Impact, sans-serif';
+      ctx.font = '900 48px "Outfit", Impact, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('❓ SECRET MULTIVERSE', 256, 86);
     }
 
     // Main Tile Number (Crisp, huge font)
-    ctx.font = isGoal ? '900 240px "Bangers", Impact, sans-serif' : '900 200px "Outfit", -apple-system, sans-serif';
+    ctx.font = isGoal ? '900 240px "Outfit", Impact, sans-serif' : '900 200px "Outfit", -apple-system, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    const textY = isSpideyTrigger || isGoblin || isGoal ? 300 : 256;
+    const textY = isSpideyTrigger || isGoblin || isGoal || isPortal ? 300 : 256;
 
     // Solid black drop shadow outline for razor-sharp legibility
     ctx.lineWidth = 20;
     ctx.strokeStyle = '#000000';
     ctx.strokeText(`${number}`, 256, textY);
 
-    ctx.fillStyle = isGoal ? '#ffffff' : isSpideyTrigger ? '#ffffff' : isGoblin ? '#ffffff' : '#f8fafc';
+    ctx.fillStyle = isGoal ? '#ffffff' : isPortal ? '#f3e8ff' : isSpideyTrigger ? '#ffffff' : isGoblin ? '#ffffff' : '#f8fafc';
     ctx.fillText(`${number}`, 256, textY);
 
     const texture = new THREE.CanvasTexture(canvas);
@@ -204,20 +226,24 @@ export class Board {
     this.boardGroup.add(this.goalRing);
   }
 
-  setSpecialTiles(spideyTriggers, goblinPositions) {
+  setSpecialTiles(spideyTriggers, goblinPositions, portalMap = {}) {
     this.specialMarkers.spideyTriggers = spideyTriggers;
     this.specialMarkers.goblins = goblinPositions;
+    this.specialMarkers.portalMap = portalMap;
 
     for (let n = 1; n <= 100; n++) {
       const isSpidey = spideyTriggers.includes(n);
       const isGoblin = goblinPositions.includes(n);
       const isGoal = n === 100;
+      const isPortal = Boolean(portalMap[n]);
+      const portalDest = portalMap[n] || null;
 
       const tile = this.tiles[n];
       tile.isSpideyTrigger = isSpidey;
       tile.isGoblin = isGoblin;
+      tile.isPortal = isPortal;
 
-      const newTex = this.createTileTexture(n, isSpidey, isGoblin, isGoal);
+      const newTex = this.createTileTexture(n, isSpidey, isGoblin, isGoal, isPortal, portalDest);
       tile.topMat.map.dispose();
       tile.topMat.map = newTex;
       tile.topMat.needsUpdate = true;

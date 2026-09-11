@@ -198,6 +198,30 @@ export class CameraDirector {
     this.lookDamp = 6.0;
   }
 
+  // Dynamic cinematic dimensional camera tracking for Quantum Portal Warp
+  trackPortalWarp(startPos, destPos, progress = 0) {
+    const p = Math.min(1.0, Math.max(0.0, progress));
+
+    if (p < 0.3) {
+      // Focus on entrance portal
+      this.targetPosition.set(startPos.x, startPos.y + 6.0, startPos.z + 8.5);
+      this.targetLookAt.set(startPos.x, startPos.y + 1.2, startPos.z);
+    } else if (p < 0.7) {
+      // High-speed wormhole transit arc
+      const transitP = (p - 0.3) / 0.4;
+      const curMid = new THREE.Vector3().lerpVectors(startPos, destPos, transitP);
+      this.targetPosition.set(curMid.x, curMid.y + 15.0, curMid.z + 14.0);
+      this.targetLookAt.set(curMid.x, curMid.y + 1.2, curMid.z);
+    } else {
+      // Focus on exit portal
+      this.targetPosition.set(destPos.x, destPos.y + 6.5, destPos.z + 9.0);
+      this.targetLookAt.set(destPos.x, destPos.y + 0.8, destPos.z);
+    }
+
+    this.posDamp = 7.0;
+    this.lookDamp = 8.0;
+  }
+
   focusOnTile100(tile100Pos) {
     this.targetPosition.set(tile100Pos.x, tile100Pos.y + 4.0, tile100Pos.z + 8.0);
     this.targetLookAt.set(tile100Pos.x, tile100Pos.y + 1.2, tile100Pos.z);

@@ -568,29 +568,33 @@ export class SpiderMan {
   }
 
   setPerchPose() {
-    // Heroic athletic resting stance: arms relaxed, palms resting naturally facing inward
-    this.arms.left.upperArm.rotation.set(0.25, 0.1, 0.35);
-    this.arms.left.forearm.rotation.set(0.65, 0.15, 0);
-    this.arms.left.wrist.rotation.set(-0.15, -0.65, 0.1);
+    // Lifelike superhero standing stance: Left hand rested on hip, right hand relaxed & ready at thigh
+    this.arms.left.upperArm.rotation.set(-0.32, 0.22, 0.52);
+    this.arms.left.forearm.rotation.set(1.22, -0.18, 0);
+    this.arms.left.wrist.rotation.set(0.12, -0.42, -0.12);
 
-    this.arms.right.upperArm.rotation.set(0.25, -0.1, -0.35);
-    this.arms.right.forearm.rotation.set(0.65, -0.15, 0);
-    this.arms.right.wrist.rotation.set(-0.15, 0.65, -0.1);
+    this.arms.right.upperArm.rotation.set(0.18, -0.10, -0.26);
+    this.arms.right.forearm.rotation.set(0.38, -0.08, 0);
+    this.arms.right.wrist.rotation.set(-0.08, 0.32, -0.05);
 
     this.pelvis.position.y = 0.95;
     this.torso.rotation.set(0, 0, 0);
     this.head.rotation.set(0, 0, 0);
 
-    // Natural finger curl forward into the anterior palm
-    ['left', 'right'].forEach(side => {
-      const arm = this.arms[side];
-      if (arm && arm.handObj && arm.handObj.fingers) {
-        arm.handObj.fingers.forEach(f => {
-          f.root.rotation.x = -0.28;
-          f.distal.rotation.x = -0.36;
-        });
-      }
-    });
+    // Natural finger curl: thumb hooked / resting, fingers relaxed forward into palm
+    if (this.arms.left?.handObj?.fingers) {
+      this.arms.left.handObj.fingers.forEach(f => {
+        f.root.rotation.x = -0.32;
+        f.distal.rotation.x = -0.42;
+      });
+    }
+
+    if (this.arms.right?.handObj?.fingers) {
+      this.arms.right.handObj.fingers.forEach(f => {
+        f.root.rotation.x = -0.22;
+        f.distal.rotation.x = -0.28;
+      });
+    }
   }
 
   setPosition(worldPos) {
@@ -913,7 +917,24 @@ export class SpiderMan {
       this.pelvis.position.y = 0.95 + sway;
       this.head.rotation.y = -0.20 + Math.sin(this.animTime * 1.2) * 0.04;
     } else if (this.head && !this.webGroup) {
-      this.head.rotation.y = Math.sin(this.animTime * 1.5) * 0.15;
+      // Subtle realistic breathing while standing still on station tile
+      const breath = Math.sin(this.animTime * 2.2) * 0.015;
+      this.pelvis.position.y = 0.95 + breath * 0.4;
+      if (this.torso) {
+        this.torso.scale.set(1.0 + breath * 0.3, 1.0 + breath * 0.2, 1.0 + breath * 0.4);
+      }
+
+      // Gentle natural head scan
+      this.head.rotation.y = Math.sin(this.animTime * 1.2) * 0.14;
+      this.head.rotation.x = Math.sin(this.animTime * 1.8) * 0.03;
+
+      // Alive hand breathing: subtle natural finger flex
+      const fingerFlex = Math.sin(this.animTime * 2.2) * 0.04;
+      if (this.arms.right?.handObj?.fingers) {
+        this.arms.right.handObj.fingers.forEach(f => {
+          f.root.rotation.x = -0.22 + fingerFlex;
+        });
+      }
     }
   }
 }

@@ -507,5 +507,72 @@ export class AudioManager {
     gain.connect(this.masterGain);
     noise.start(t);
   }
+
+  // Quantum Multiverse Portal Warp In
+  playPortalEnter() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    const t = this.ctx.currentTime;
+
+    // Resonant sub-bass sweep & frequency riser
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(60, t);
+    osc.frequency.exponentialRampToValueAtTime(720, t + 0.6);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(200, t);
+    filter.frequency.exponentialRampToValueAtTime(1800, t + 0.6);
+
+    gain.gain.setValueAtTime(0.05, t);
+    gain.gain.linearRampToValueAtTime(0.45, t + 0.4);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.65);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+    osc.start(t);
+    osc.stop(t + 0.7);
+  }
+
+  // Quantum Multiverse Portal Warp Emergence & Touchdown
+  playPortalExit() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    const t = this.ctx.currentTime;
+
+    // Dimensional release burst & deep touchdown punch
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(440, t);
+    osc.frequency.exponentialRampToValueAtTime(45, t + 0.45);
+
+    gain.gain.setValueAtTime(0.65, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+
+    osc.connect(gain);
+    gain.connect(this.masterGain);
+    osc.start(t);
+    osc.stop(t + 0.55);
+
+    // Chime resonance
+    [587.33, 880, 1174.66].forEach((f, idx) => {
+      const cOsc = this.ctx.createOscillator();
+      const cGain = this.ctx.createGain();
+      const st = t + idx * 0.05;
+      cOsc.type = 'triangle';
+      cOsc.frequency.setValueAtTime(f, st);
+      cGain.gain.setValueAtTime(0.25, st);
+      cGain.gain.exponentialRampToValueAtTime(0.001, st + 0.5);
+      cOsc.connect(cGain);
+      cGain.connect(this.masterGain);
+      cOsc.start(st);
+      cOsc.stop(st + 0.55);
+    });
+  }
 }
 

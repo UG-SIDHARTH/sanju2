@@ -13,51 +13,56 @@ export class ComicFX {
     this.bannerTimer = null;
   }
 
-  // Generate dynamic 2D canvas texture for comic sound badge
-  createComicTexture(text, bgColor = '#e62429', textColor = '#ffeb3b') {
+  // Generate sleek cinematic holographic HUD badge (realistic style, non-cartoon)
+  createComicTexture(text, bgColor = '#0f172a', textColor = '#ffffff') {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
-    canvas.height = 256;
+    canvas.height = 160;
     const ctx = canvas.getContext('2d');
 
-    // Comic explosion burst background shape
+    // Rounded holographic pill container
     ctx.save();
-    ctx.translate(256, 128);
+    const x = 32;
+    const y = 20;
+    const w = 448;
+    const h = 120;
+    const r = 24;
 
-    const spikes = 14;
-    const outerRadius = 110;
-    const innerRadius = 70;
-
+    // Dark sleek glassmorphism background
     ctx.beginPath();
-    for (let i = 0; i < spikes * 2; i++) {
-      const r = i % 2 === 0 ? outerRadius : innerRadius;
-      const angle = (i * Math.PI) / spikes;
-      const x = Math.cos(angle) * r;
-      const y = Math.sin(angle) * r * 0.7; // slight elliptical
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.closePath();
-
-    ctx.fillStyle = bgColor;
+    ctx.roundRect(x, y, w, h, r);
+    ctx.fillStyle = 'rgba(11, 17, 30, 0.92)';
     ctx.fill();
-    ctx.lineWidth = 8;
-    ctx.strokeStyle = '#000000';
+
+    // High-tech glowing perimeter border
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = bgColor;
+    ctx.shadowColor = bgColor;
+    ctx.shadowBlur = 18;
     ctx.stroke();
 
-    // Text rendering with comic typography
-    ctx.font = '900 64px "Bangers", Impact, sans-serif';
+    // Subtle inner cyan highlight line
+    ctx.shadowBlur = 0;
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.beginPath();
+    ctx.roundRect(x + 4, y + 4, w - 8, h - 8, r - 4);
+    ctx.stroke();
+
+    // Crisp modern typography
+    ctx.font = '900 48px "Outfit", -apple-system, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Black shadow/outline
-    ctx.lineWidth = 12;
-    ctx.strokeStyle = '#000000';
-    ctx.strokeText(text, 0, 0);
+    // Black drop shadow
+    ctx.fillStyle = '#000000';
+    ctx.fillText(text, 258, 82);
 
-    // Colored fill
+    // Glowing main text
     ctx.fillStyle = textColor;
-    ctx.fillText(text, 0, 0);
+    ctx.shadowColor = bgColor;
+    ctx.shadowBlur = 10;
+    ctx.fillText(text, 256, 80);
 
     ctx.restore();
 

@@ -87,6 +87,26 @@ class App {
     // HUD UI Manager
     this.hud = new HUD(this.gameManager);
     this.gameManager.setHUD(this.hud);
+
+    this.setupNavigationGuards();
+  }
+
+  setupNavigationGuards() {
+    // Prevent accidental browser back-navigation via Backspace or Alt+Left
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
+        e.preventDefault();
+      }
+      if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        e.preventDefault();
+      }
+    });
+
+    // Lock history state so browser back button doesn't leave the active game session
+    window.history.pushState(null, '', window.location.href);
+    window.addEventListener('popstate', () => {
+      window.history.pushState(null, '', window.location.href);
+    });
   }
 
   setupResize() {
@@ -103,14 +123,18 @@ class App {
   animate() {
     requestAnimationFrame(() => this.animate());
 
-    const delta = Math.min(this.clock.getDelta(), 0.1);
+    try {
+      const delta = Math.min(this.clock.getDelta(), 0.1);
 
-    if (this.environment) this.environment.update(delta);
-    if (this.board) this.board.update(delta);
-    if (this.comicFX) this.comicFX.update(delta);
-    if (this.gameManager) this.gameManager.update(delta);
+      if (this.environment?.update) this.environment.update(delta);
+      if (this.board?.update) this.board.update(delta);
+      if (this.comicFX?.update) this.comicFX.update(delta);
+      if (this.gameManager?.update) this.gameManager.update(delta);
 
-    this.renderer.render(this.scene, this.camera);
+      this.renderer.render(this.scene, this.camera);
+    } catch (err) {
+      console.error('Animation frame caught error:', err);
+    }
   }
 }
 

@@ -9,6 +9,7 @@ import { GreenGoblin } from './GreenGoblin.js';
 import { Dice3D } from './Dice3D.js';
 import { CameraDirector } from './CameraDirector.js';
 import { DrOctopus } from './DrOctopus.js';
+import { Portal } from './Portal.js';
 
 export class GameManager {
   constructor(scene, camera, renderer, audioManager, comicFX) {
@@ -35,46 +36,44 @@ export class GameManager {
     // Secret 100 Rule: true = WIN, false = LOSE (elimination)
     this.secret100IsWin = true;
 
-    // Entities: 5 Spider-Men & 6 Green Goblins
+    // Entities: 4 Spider-Men, 4 Green Goblins & 4 Quantum Portals
     this.spiderMen = [];
     this.greenGoblins = [];
+    this.portals = [];
 
     this.activeMovement = null;
 
-    this.spideyFixedTiles = [32, 52, 70, 85, 94];
-    this.spideyTriggerTiles = [14, 36, 56, 72, 82];
-    this.goblinFixedTiles = [26, 46, 64, 78, 89, 96];
-    // Guaranteed 100% safe non-special drop tiles (never equal to any Spidey trigger or fixed station)
-    this.goblinDropTiles = [10, 24, 44, 60, 68, 76];
-  }
+    // 4 Spider-Man Stations & Triggers
+    this.spideyFixedTiles = [92, 77, 41, 25];
+    this.spideyTriggerTiles = [64, 44, 19, 8];
 
-  // Strictly enforce that Green Goblin NEVER drops MJ onto any Spider-Man trigger or station tile
-  getSafeGoblinDropTile(goblinTile) {
-    const defaultDropMap = {
-      26: 10,
-      46: 24,
-      64: 44,
-      78: 60,
-      89: 68,
-      96: 76
+    // 4 Green Goblin Ambush Hazards & Destinations
+    this.goblinFixedTiles = [95, 73, 28, 40];
+    this.goblinDropMap = {
+      95: 57,
+      73: 21,
+      28: 4,
+      40: 15
     };
 
-    let target = defaultDropMap[goblinTile] || Math.max(2, goblinTile - 16);
+    // 4 Quantum Multiverse Portals
+    this.portalConfigs = [
+      { id: 1, start: 14, dest: 30, theme: 'amber' },
+      { id: 2, start: 36, dest: 7, theme: 'crimson' },
+      { id: 3, start: 61, dest: 69, theme: 'cyan' },
+      { id: 4, start: 89, dest: 79, theme: 'violet' }
+    ];
 
-    // Strict blacklist: Spidey triggers, Spidey fixed stations, Goblin hazards, and Goal
-    const forbidden = new Set([
-      ...this.spideyTriggerTiles,
-      ...this.spideyFixedTiles,
-      ...this.goblinFixedTiles,
-      100
-    ]);
+    this.portalMap = {
+      14: 30,
+      36: 7,
+      61: 69,
+      89: 79
+    };
+  }
 
-    // If target collides with any special tile, step down until a completely clean tile is found
-    while (target > 1 && forbidden.has(target)) {
-      target--;
-    }
-
-    return Math.max(1, target);
+  getSafeGoblinDropTile(goblinTile) {
+    return this.goblinDropMap[goblinTile] || Math.max(1, goblinTile - 15);
   }
 
   setBoard(board) {
@@ -115,6 +114,9 @@ export class GameManager {
     this.greenGoblins.forEach(g => this.scene.remove(g.root));
     this.greenGoblins = [];
 
+    this.portals.forEach(p => p.dispose());
+    this.portals = [];
+
     if (this.drOctopus) {
       this.drOctopus.root.visible = false;
       this.drOctopus.isAbducting = false;
@@ -129,7 +131,7 @@ export class GameManager {
       this.players.push(char);
     }
 
-    // Spawn 5 Spider-Men with 5 Balanced Progressive Rescue Ladders (+12 to +18 tiles)
+    // Spawn 4 Spider-Mans with heroic web-rescue ladders
     this.spideyFixedTiles.forEach((fixedTile, idx) => {
       const spidey = new SpiderMan(this.scene, idx + 1, fixedTile, this.audioManager, this.comicFX, this.board);
       const pos = this.board.getTileWorldPosition(fixedTile);
@@ -140,7 +142,7 @@ export class GameManager {
       this.spiderMen.push(spidey);
     });
 
-    // Spawn 6 Green Goblins on Hoverboards
+    // Spawn 4 Green Goblins on Hoverboards (95->57, 73->21, 28->4, 40->15)
     this.goblinFixedTiles.forEach((fixedTile, idx) => {
       const goblin = new GreenGoblin(this.scene, idx + 1, fixedTile, this.audioManager, this.comicFX);
       const pos = this.board.getTileWorldPosition(fixedTile);
@@ -148,9 +150,27 @@ export class GameManager {
       this.greenGoblins.push(goblin);
     });
 
-    // Update board visuals
+    // Spawn 4 Quantum Multiverse Portals (14->30, 36->7, 61->69, 89->79)
+    this.portalConfigs.forEach(cfg => {
+      const startPos = this.board.getTileWorldPosition(cfg.start);
+      const destPos = this.board.getTileWorldPosition(cfg.dest);
+      const portal = new Portal(
+        this.scene,
+        cfg.id,
+        cfg.start,
+        cfg.dest,
+        startPos,
+        destPos,
+        this.audioManager,
+        this.comicFX,
+        cfg.theme
+      );
+      this.portals.push(portal);
+    });
+
+    // Update board visuals with Spider-Man triggers, Goblin hazards & Portals
     const spideyTriggers = this.spiderMen.map(s => s.triggerTileNumber);
-    this.board.setSpecialTiles(spideyTriggers, this.goblinFixedTiles);
+    this.board.setSpecialTiles(spideyTriggers, this.goblinFixedTiles, this.portalMap);
 
     this.updatePlayerPositionsOnTile(1);
 
@@ -161,7 +181,7 @@ export class GameManager {
     this.hud.renderPlayersList(this.players, this.activePlayerIndex);
     this.hud.updateTurnDisplay(this.getActivePlayer(), false);
     this.hud.setRollButtonEnabled(true);
-    this.hud.logEvent(`Match started! 5 Spider-Men & 6 Green Goblins active.`);
+    this.hud.logEvent(`Match started! 4 Spider-Men, 4 Green Goblins & 4 Quantum Portals active.`);
 
     this.cameraDirector.focusOnBoard();
   }
@@ -345,6 +365,31 @@ export class GameManager {
       stationedSpidey.holdHands(player);
     }
 
+    // 2.75 Quantum Multiverse Dimensional Portal Warp
+    const triggeredPortal = this.portals.find(p => p.startTile === landedTile);
+    if (triggeredPortal) {
+      this.hud.logEvent(`🌀 QUANTUM PORTAL ACTIVATED on Tile ${landedTile}! Warping ${player.config.name} to Tile ${triggeredPortal.destTile}!`, true);
+
+      triggeredPortal.warpPlayer(
+        player,
+        // onCameraTrack:
+        (startP, destP, progress) => {
+          this.cameraDirector.trackPortalWarp(startP, destP, progress);
+        },
+        // onComplete:
+        () => {
+          player.currentTile = triggeredPortal.destTile;
+          this.updatePlayerPositionsOnTile(player.currentTile);
+          this.hud.renderPlayersList(this.players, this.activePlayerIndex);
+          this.hud.updateTurnDisplay(player, bonusRoll);
+          this.hud.logEvent(`✨ ${player.config.name} emerged through the dimensional rift onto Tile ${player.currentTile}!`);
+
+          this.checkCollisionAndFinish(player, bonusRoll);
+        }
+      );
+      return;
+    }
+
     // 3. Green Goblin Hazard
     const triggeredGoblin = this.greenGoblins.find(g => g.fixedTileNumber === landedTile);
     if (triggeredGoblin) {
@@ -521,10 +566,11 @@ export class GameManager {
 
   update(delta) {
     this.updateMovement(delta);
-    this.cameraDirector.update(delta);
-    this.players.forEach(p => p.animator.update(delta));
-    this.spiderMen.forEach(s => s.update(delta));
-    this.greenGoblins.forEach(g => g.update(delta));
-    if (this.drOctopus) this.drOctopus.update(delta);
+    this.cameraDirector?.update?.(delta);
+    this.players.forEach(p => p.animator?.update?.(delta));
+    this.spiderMen.forEach(s => s?.update?.(delta));
+    this.greenGoblins.forEach(g => g?.update?.(delta));
+    this.portals.forEach(p => p?.update?.(delta));
+    if (this.drOctopus) this.drOctopus?.update?.(delta);
   }
 }
