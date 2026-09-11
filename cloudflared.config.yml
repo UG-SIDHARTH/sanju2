@@ -10,8 +10,8 @@ ingress:
   - hostname: sanju.ugsidharth.in
     service: http://localhost:8099
 
-  # New Spider-Man Snakes & Ladders game (port 9000)
-  - hostname: sanju2.ugsidharth.in
+  # Spider-Man Snakes & Ladders game (port 9000)
+  - hostname: shadow.ugsidharth.in
     service: http://localhost:9000
 
   # Catch-all rule (must always be last)
