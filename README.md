@@ -98,7 +98,6 @@ npm run preview
 
 **Diagrams**:
 
-![Workflow](https://raw.githubusercontent.com/UG-SIDHARTH/sanju2/main/dist/assets/workflow.png)  
 *Game Architecture & Turn Workflow:*
 
 ```mermaid
@@ -154,7 +153,9 @@ flowchart TD
 ### Project Demo
 
 **Video**:  
-[Add your demo video link here]  
+[![Watch Gameplay Demo Video](https://img.shields.io/badge/Google_Drive-Watch_Gameplay_Demo-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1pII2Ph5zqPMMzu-IdNoXqqxA6Ay4c_qh/view?usp=sharing)  
+🔗 **Direct Video Link**: [https://drive.google.com/file/d/1pII2Ph5zqPMMzu-IdNoXqqxA6Ay4c_qh/view?usp=sharing](https://drive.google.com/file/d/1pII2Ph5zqPMMzu-IdNoXqqxA6Ay4c_qh/view?usp=sharing)  
+
 *Video demonstrates 2P, 3P, and 4P pass-and-play modes, 3D dice physics, Spider-Man web pulls, Green Goblin hoverboard kidnapping, dark singularity portal warps, the Doctor Octopus 1st-player abduction, and the 2nd-player Tile 100 championship victory.*
 
 **Additional Demos**:  
