@@ -87,13 +87,13 @@ npm run preview
 
 **Screenshots**:
 
-![Start Screen - 2P, 3P, 4P Pass & Play](https://raw.githubusercontent.com/UG-SIDHARTH/sanju2/main/dist/assets/screenshot1.png)  
+![Start Screen - 2P, 3P, 4P Pass & Play](./public/assets/screenshot1.png)  
 *Start Screen: Interactive 2-Player, 3-Player, and 4-Player mode selection with real-time previews of all 4 MJ twins (Auburn Red, Electric Cyan, Golden Blonde, Toxic Emerald) and multiverse rules.*
 
-![3D Physical Board & Cinematic Gameplay](https://raw.githubusercontent.com/UG-SIDHARTH/sanju2/main/dist/assets/screenshot2.png)  
+![3D Physical Board & Cinematic Gameplay](./public/assets/screenshot2.png)  
 *3D Serpentine Board: Real physical 100-tile environment atop a Manhattan rooftop with 6 Spider-Men (gold legs) and 3 Green Goblins (hoverboards).*
 
-![Tile 100 Dual Climax: 1st Captured, 2nd Wins](https://raw.githubusercontent.com/UG-SIDHARTH/sanju2/main/dist/assets/screenshot3.png)  
+![Tile 100 Dual Climax: 1st Captured, 2nd Wins](./public/assets/screenshot3.png)  
 *Tile 100 Dual Climax: 1st player is ambushed and abducted into the skyline by Doc Ock; Tile 100 dynamically transforms into the golden WIN TILE 100 where the 2nd player claims victory.*
 
 **Diagrams**:
