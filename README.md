@@ -57,10 +57,10 @@ We built a completely physical 3D anime universe in the browser! Players choose 
 **Installation**:
 ```bash
 # Clone the repository
-git clone https://github.com/UG-SIDHARTH/useless_project_temp.git
+git clone https://github.com/UG-SIDHARTH/sanju2.git
 
 # Navigate to project directory
-cd useless_project_temp
+cd sanju2
 
 # Install dependencies
 npm install
@@ -161,7 +161,7 @@ flowchart TD
 *Video demonstrates 2P, 3P, and 4P pass-and-play modes, 3D dice physics, Spider-Man web pulls, Green Goblin hoverboard kidnapping, dark singularity portal warps, the Doctor Octopus 1st-player abduction, and the 2nd-player Tile 100 championship victory.*
 
 **Additional Demos**:  
-- **GitHub Repository**: [https://github.com/UG-SIDHARTH/useless_project_temp](https://github.com/UG-SIDHARTH/useless_project_temp)  
+- **GitHub Repository**: [https://github.com/UG-SIDHARTH/sanju2](https://github.com/UG-SIDHARTH/sanju2)  
 - **Live Local URL**: `http://localhost:9000/`
 
 ---
