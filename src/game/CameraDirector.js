@@ -163,39 +163,66 @@ export class CameraDirector {
     this.targetLookAt.y += 0.8;
   }
 
-  focusOnSpiderManAction(spideyPos, mjPos) {
-    const midpoint = new THREE.Vector3().addVectors(spideyPos, mjPos).multiplyScalar(0.5);
-    const spanDist = spideyPos.distanceTo(mjPos);
-    const camDist = Math.max(16, spanDist * 1.15);
+  // --- PEAK CINEMATIC CLOSE-UP: SPIDER-MAN WEB PULL ---
+  focusOnSpiderManAction(spideyPos, mjPos, phase = 'start') {
+    if (phase === 'start') {
+      // Dramatic over-the-shoulder close-up behind Spider-Man looking at MJ
+      const dir = new THREE.Vector3().subVectors(mjPos, spideyPos).normalize();
+      const right = new THREE.Vector3(-dir.z, 0, dir.x).normalize();
 
-    this.targetPosition.set(midpoint.x, midpoint.y + 14, midpoint.z + camDist);
-    this.targetLookAt.copy(midpoint);
-    this.targetLookAt.y += 1.2;
+      // Position camera closely behind and slightly to the side of Spider-Man
+      const camPos = spideyPos.clone()
+        .addScaledVector(dir, -3.2)
+        .addScaledVector(right, 1.2);
+      camPos.y += 2.2;
+
+      this.targetPosition.copy(camPos);
+      this.targetLookAt.set(mjPos.x, mjPos.y + 1.2, mjPos.z);
+      this.posDamp = 8.0;
+      this.lookDamp = 8.5;
+    } else {
+      // Dynamic medium close-up framing both Spider-Man and MJ team-up
+      const midpoint = new THREE.Vector3().addVectors(spideyPos, mjPos).multiplyScalar(0.5);
+      this.targetPosition.set(midpoint.x, midpoint.y + 3.8, midpoint.z + 5.5);
+      this.targetLookAt.set(midpoint.x, midpoint.y + 1.2, midpoint.z);
+      this.posDamp = 6.0;
+      this.lookDamp = 6.5;
+    }
   }
 
-  // Dynamic real-time aerial flight camera tracking for Green Goblin kidnapping
+  // --- PEAK CINEMATIC CLOSE-UP: GREEN GOBLIN KIDNAPPING & FLIGHT ---
   trackFlyingGoblin(goblinPos, destinationPos, progress = 0) {
-    // Relative Z offset ensures perfect framing across all tiles (including top rows 7-9 / tiles 70-100)
-    const camX = goblinPos.x * 0.6;
-    const camY = Math.max(goblinPos.y + 8.5, 14.0);
-    const camZ = goblinPos.z + 13.5;
+    if (progress < 0.15) {
+      // Intense close-up on Goblin grabbing MJ onto hoverboard
+      this.targetPosition.set(goblinPos.x + 2.4, goblinPos.y + 2.0, goblinPos.z + 3.6);
+      this.targetLookAt.set(goblinPos.x, goblinPos.y + 0.5, goblinPos.z);
+      this.posDamp = 9.0;
+      this.lookDamp = 9.5;
+    } else if (progress < 0.85) {
+      // Tight aerial chase camera tracking closely behind hoverboard glider
+      const flightDir = new THREE.Vector3().subVectors(destinationPos, goblinPos).normalize();
+      const camPos = goblinPos.clone().addScaledVector(flightDir, -4.5);
+      camPos.y = Math.max(goblinPos.y + 2.8, 6.0);
+      camPos.x += Math.sin(progress * Math.PI * 4) * 0.8; // subtle dynamic camera sway
 
-    this.targetPosition.set(camX, camY, camZ);
-
-    // Look at a target point between goblin and destination
-    const lookTarget = new THREE.Vector3().lerpVectors(goblinPos, destinationPos, 0.35);
-    lookTarget.y = Math.max(1.0, goblinPos.y * 0.5);
-    this.targetLookAt.copy(lookTarget);
-
-    this.posDamp = 6.0;
-    this.lookDamp = 7.0;
+      this.targetPosition.copy(camPos);
+      this.targetLookAt.set(goblinPos.x, goblinPos.y - 0.2, goblinPos.z);
+      this.posDamp = 7.5;
+      this.lookDamp = 8.0;
+    } else {
+      // Tight touchdown landing shot on the safe drop tile
+      this.targetPosition.set(destinationPos.x, destinationPos.y + 2.8, destinationPos.z + 5.2);
+      this.targetLookAt.set(destinationPos.x, destinationPos.y + 0.8, destinationPos.z);
+      this.posDamp = 7.0;
+      this.lookDamp = 7.5;
+    }
   }
 
   focusOnDestinationTile(destPos) {
-    this.targetPosition.set(destPos.x, destPos.y + 9.5, destPos.z + 13.0);
+    this.targetPosition.set(destPos.x, destPos.y + 2.8, destPos.z + 5.0);
     this.targetLookAt.set(destPos.x, destPos.y + 0.8, destPos.z);
-    this.posDamp = 5.0;
-    this.lookDamp = 6.0;
+    this.posDamp = 6.5;
+    this.lookDamp = 7.0;
   }
 
   // Dynamic cinematic dimensional camera tracking for Quantum Portal Warp
@@ -203,27 +230,27 @@ export class CameraDirector {
     const p = Math.min(1.0, Math.max(0.0, progress));
 
     if (p < 0.3) {
-      // Focus on entrance portal
-      this.targetPosition.set(startPos.x, startPos.y + 6.0, startPos.z + 8.5);
+      // Close-up on entrance portal
+      this.targetPosition.set(startPos.x, startPos.y + 3.2, startPos.z + 4.8);
       this.targetLookAt.set(startPos.x, startPos.y + 1.2, startPos.z);
     } else if (p < 0.7) {
       // High-speed wormhole transit arc
       const transitP = (p - 0.3) / 0.4;
       const curMid = new THREE.Vector3().lerpVectors(startPos, destPos, transitP);
-      this.targetPosition.set(curMid.x, curMid.y + 15.0, curMid.z + 14.0);
+      this.targetPosition.set(curMid.x, curMid.y + 9.0, curMid.z + 8.0);
       this.targetLookAt.set(curMid.x, curMid.y + 1.2, curMid.z);
     } else {
-      // Focus on exit portal
-      this.targetPosition.set(destPos.x, destPos.y + 6.5, destPos.z + 9.0);
+      // Close-up on exit portal emergence
+      this.targetPosition.set(destPos.x, destPos.y + 3.2, destPos.z + 4.8);
       this.targetLookAt.set(destPos.x, destPos.y + 0.8, destPos.z);
     }
 
-    this.posDamp = 7.0;
+    this.posDamp = 7.5;
     this.lookDamp = 8.0;
   }
 
   focusOnTile100(tile100Pos) {
-    this.targetPosition.set(tile100Pos.x, tile100Pos.y + 4.0, tile100Pos.z + 8.0);
+    this.targetPosition.set(tile100Pos.x, tile100Pos.y + 3.5, tile100Pos.z + 6.2);
     this.targetLookAt.set(tile100Pos.x, tile100Pos.y + 1.2, tile100Pos.z);
   }
 

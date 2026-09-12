@@ -13,60 +13,102 @@ export class ComicFX {
     this.bannerTimer = null;
   }
 
-  // Generate sleek cinematic holographic HUD badge (realistic style, non-cartoon)
-  createComicTexture(text, bgColor = '#0f172a', textColor = '#ffffff') {
+  // Generate authentic Anime / Manga Action Burst bubble with speedlines & ink contours
+  createComicTexture(text, bgColor = '#e11d48', textColor = '#fef08a') {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
-    canvas.height = 160;
+    canvas.height = 200;
     const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
 
-    // Rounded holographic pill container
     ctx.save();
-    const x = 32;
-    const y = 20;
-    const w = 448;
-    const h = 120;
-    const r = 24;
+    const cx = 256;
+    const cy = 100;
+    const rx = 230;
+    const ry = 80;
 
-    // Dark sleek glassmorphism background
+    // 1. Draw Multi-Pointed Jagged Anime Manga Starburst Bubble
+    const points = 24;
     ctx.beginPath();
-    ctx.roundRect(x, y, w, h, r);
-    ctx.fillStyle = 'rgba(11, 17, 30, 0.92)';
+    for (let i = 0; i < points; i++) {
+      const angle = (i / points) * Math.PI * 2;
+      // Alternate between outer spikes and inner notches with slight random jaggedness
+      const isSpike = i % 2 === 0;
+      const radFactor = isSpike ? 1.05 : 0.72;
+      const px = cx + Math.cos(angle) * rx * radFactor;
+      const py = cy + Math.sin(angle) * ry * radFactor;
+
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+
+    // Solid dark drop-shadow for high-impact manga cel effect
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetX = 6;
+    ctx.shadowOffsetY = 6;
+
+    // Vibrant anime action gradient fill
+    const grad = ctx.createLinearGradient(0, 20, 0, 180);
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(0.3, bgColor);
+    grad.addColorStop(1, '#090d16');
+    ctx.fillStyle = grad;
     ctx.fill();
 
-    // High-tech glowing perimeter border
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = bgColor;
-    ctx.shadowColor = bgColor;
-    ctx.shadowBlur = 18;
-    ctx.stroke();
-
-    // Subtle inner cyan highlight line
+    // Reset shadow for crisp ink outlines
+    ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-    ctx.beginPath();
-    ctx.roundRect(x + 4, y + 4, w - 8, h - 8, r - 4);
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+
+    // Thick black manga ink contour border
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = '#05070d';
+    ctx.lineJoin = 'miter';
+    ctx.miterLimit = 4;
     ctx.stroke();
 
-    // Crisp modern typography
-    ctx.font = '900 48px "Outfit", -apple-system, sans-serif';
+    // 2. Anime Radial Speedlines
+    ctx.save();
+    ctx.clip(); // Clip inside starburst
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.lineWidth = 2.5;
+    for (let a = 0; a < Math.PI * 2; a += Math.PI / 12) {
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a) * 30, cy + Math.sin(a) * 20);
+      ctx.lineTo(cx + Math.cos(a) * rx * 1.3, cy + Math.sin(a) * ry * 1.3);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // 3. Bold Anime / Manga Typography
+    ctx.font = '900 50px "Bangers", "Outfit", Impact, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Black drop shadow
-    ctx.fillStyle = '#000000';
-    ctx.fillText(text, 258, 82);
+    // Black heavy manga ink drop outline
+    ctx.lineWidth = 14;
+    ctx.strokeStyle = '#05070d';
+    ctx.lineJoin = 'round';
+    ctx.strokeText(text, cx + 2, cy + 4);
 
-    // Glowing main text
+    // Thick sharp inner border
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = '#000000';
+    ctx.strokeText(text, cx, cy);
+
+    // Glowing vibrant text fill
     ctx.fillStyle = textColor;
-    ctx.shadowColor = bgColor;
-    ctx.shadowBlur = 10;
-    ctx.fillText(text, 256, 80);
+    ctx.fillText(text, cx, cy);
 
     ctx.restore();
 
     const texture = new THREE.CanvasTexture(canvas);
+    texture.generateMipmaps = false;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
     texture.needsUpdate = true;
     return texture;
   }

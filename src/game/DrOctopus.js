@@ -1,7 +1,7 @@
 // ==========================================================================
-// DR. OCTOPUS (DOCTOR OTTO OCTAVIUS) - Iconic Spider-Man Arch-Nemesis
-// 4 Articulated Segmented Mechanical Tentacles with 3-Pronged Steel Claws.
-// Dramatic ambush sequence at Tile 100: "JUST LIKE I PLANNED!"
+// DOCTOR OCTOPUS - Masterpiece Ditko/Romita Comic & Anime 3D Boss Model
+// Articulated Tentacles, Cybernetic Claws, Yellow Goggles & Bowl Cut
+// Dramatic Tile 100 Multiverse Climax: Doctor Octopus Throw-Down & 6 Spider-Men Battle
 // ==========================================================================
 
 import * as THREE from 'three';
@@ -83,18 +83,50 @@ export class DrOctopus {
     });
     const goggleLensMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
 
+    // Classic comic vibrant yellow gloves, boots & harness
+    const yellowMat = new THREE.MeshStandardMaterial({
+      color: 0xfacc15, // Classic comic bright yellow
+      roughness: 0.35,
+      metalness: 0.15
+    });
+
     // --- 1. BODY & COAT ---
     this.bodyGroup = new THREE.Group();
     this.bodyGroup.position.y = 1.0;
     this.root.add(this.bodyGroup);
 
-    // Sturdy torso
+    // Sturdy torso in emerald green jumpsuit
     const chest = new THREE.Mesh(
       new THREE.BoxGeometry(0.55, 0.58, 0.38),
       suitMat
     );
     chest.position.y = 0.29;
     this.bodyGroup.add(chest);
+
+    // Classic Comic Yellow Chest Harness Bands
+    [-1, 1].forEach(side => {
+      const strap = new THREE.Mesh(
+        new THREE.BoxGeometry(0.08, 0.54, 0.04),
+        yellowMat
+      );
+      strap.position.set(side * 0.16, 0.29, 0.18);
+      this.bodyGroup.add(strap);
+    });
+
+    // Classic Comic Yellow Utility Belt with buckle
+    const yellowBelt = new THREE.Mesh(
+      new THREE.BoxGeometry(0.57, 0.09, 0.40),
+      yellowMat
+    );
+    yellowBelt.position.y = 0.04;
+    this.bodyGroup.add(yellowBelt);
+
+    const buckle = new THREE.Mesh(
+      new THREE.BoxGeometry(0.12, 0.11, 0.04),
+      new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9, roughness: 0.2 })
+    );
+    buckle.position.set(0, 0.04, 0.21);
+    this.bodyGroup.add(buckle);
 
     // Coat tails / lower jacket
     const coatTails = new THREE.Mesh(
@@ -201,11 +233,19 @@ export class DrOctopus {
       foreMesh.position.y = -0.14;
       forearm.add(foreMesh);
 
-      const glove = new THREE.Mesh(
-        new THREE.BoxGeometry(0.08, 0.10, 0.06),
-        harnessMat
+      // Classic Comic Bright Yellow Gauntlet Glove
+      const gloveCuff = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.088, 0.07, 0.08, 8),
+        yellowMat
       );
-      glove.position.y = -0.30;
+      gloveCuff.position.y = -0.25;
+      forearm.add(gloveCuff);
+
+      const glove = new THREE.Mesh(
+        new THREE.BoxGeometry(0.085, 0.10, 0.065),
+        yellowMat
+      );
+      glove.position.y = -0.32;
       forearm.add(glove);
 
       this.arms[key] = { shoulder, forearm };
@@ -224,11 +264,19 @@ export class DrOctopus {
       thigh.position.y = -0.22;
       hip.add(thigh);
 
-      const boot = new THREE.Mesh(
-        new THREE.BoxGeometry(0.14, 0.40, 0.24),
-        harnessMat
+      // Classic Comic Bright Yellow Boots with Cuffs
+      const bootCuff = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.12, 0.10, 0.08, 8),
+        yellowMat
       );
-      boot.position.set(0, -0.55, 0.04);
+      bootCuff.position.y = -0.40;
+      hip.add(bootCuff);
+
+      const boot = new THREE.Mesh(
+        new THREE.BoxGeometry(0.14, 0.36, 0.24),
+        yellowMat
+      );
+      boot.position.set(0, -0.57, 0.04);
       hip.add(boot);
     });
 
@@ -396,8 +444,8 @@ export class DrOctopus {
     }
   }
 
-  // --- DRAMATIC TILE 100 AMBUSH & ABDUCTION SEQUENCE ---
-  triggerAbduction(targetMJ, onComplete, onCameraUpdate) {
+  // --- DRAMATIC TILE 100 CLIMAX: THROW DOWN & MULTIVERSE SHOWDOWN ---
+  triggerAbduction(targetMJ, onThrown, onCameraUpdate) {
     this.isAbducting = true;
     this.root.visible = true;
 
@@ -410,7 +458,7 @@ export class DrOctopus {
     this.audioManager.playDocOckEmergence();
 
     // 2. Descend smoothly from the sky onto Tile 100
-    const descentDuration = 1.4;
+    const descentDuration = 1.3;
     const descentStart = performance.now();
 
     const animateDescent = () => {
@@ -422,49 +470,37 @@ export class DrOctopus {
       this.root.position.y = THREE.MathUtils.lerp(14.0, 0.2, t);
 
       if (onCameraUpdate) {
-        onCameraUpdate(this.root.position, targetMJ.root.position, p * 0.5);
+        onCameraUpdate(this.root.position, targetMJ.root.position, p * 0.4);
       }
 
       if (p < 1.0) {
         requestAnimationFrame(animateDescent);
       } else {
         // Landed on Tile 100!
-        this.executeClawGrab(targetMJ, onComplete, onCameraUpdate);
+        this.executeClawGrabAndThrow(targetMJ, onThrown, onCameraUpdate);
       }
     };
 
     requestAnimationFrame(animateDescent);
   }
 
-  executeClawGrab(targetMJ, onComplete, onCameraUpdate) {
-    // 1. Dramatic Sinister Banner & Speech Bubble: "JUST LIKE I PLANNED"
-    this.comicFX.spawnAt(this.root.position, 'JUST LIKE I PLANNED', '#15803d', '#fef08a', 3.0);
-    this.comicFX.showBanner('DR. OCTOPUS: "JUST LIKE I PLANNED!"', 3000);
-    this.audioManager.playDocOckVoiceChime();
-
-    // 2. Extend Upper & Lower Tentacles to Wrap Around MJ's Waist & Torso!
-    const grabDuration = 0.8;
+  executeClawGrabAndThrow(targetMJ, onThrown, onCameraUpdate) {
+    // 1. Claws clamp around MJ
+    const grabDuration = 0.7;
     const grabStart = performance.now();
 
     const animateGrab = () => {
       const now = performance.now();
       const p = Math.min(1.0, (now - grabStart) / (grabDuration * 1000));
 
-      // Wrap tentacles forward and clamp around MJ
       this.tentacles.forEach(t => {
         if (t.config.isUpper) {
-          t.joints.forEach((j, jIdx) => {
+          t.joints.forEach((j) => {
             j.rotation.x = THREE.MathUtils.lerp(-0.45, -0.92, p);
             j.rotation.z = THREE.MathUtils.lerp(t.config.side * 0.25, t.config.side * 0.40, p);
           });
-          // Clamp steel pincers firmly shut around MJ
           t.fingers.forEach(f => {
             f.rotation.x = THREE.MathUtils.lerp(0, -0.55, p);
-          });
-        } else {
-          // Lower tentacles anchor to ground to prepare for rocket leap
-          t.joints.forEach((j, jIdx) => {
-            j.rotation.x = THREE.MathUtils.lerp(0.35, 0.65, p);
           });
         }
       });
@@ -472,80 +508,157 @@ export class DrOctopus {
       if (p < 1.0) {
         requestAnimationFrame(animateGrab);
       } else {
-        // Claws firmly clamped! Switch MJ to shocked struggling abducted state
         targetMJ.animator.setState('abducted');
         this.comicFX.spawnAt(targetMJ.root.position, 'CLANK!', '#e62429', '#ffffff', 1.8);
         this.audioManager.playDocOckEmergence();
 
+        // 2. Lift MJ high above head and THROW HER DOWN!
         setTimeout(() => {
-          this.executeAscentAndEscape(targetMJ, onComplete, onCameraUpdate);
-        }, 600);
+          this.executeThrowDown(targetMJ, onThrown, onCameraUpdate);
+        }, 500);
       }
     };
 
     requestAnimationFrame(animateGrab);
   }
 
-  executeAscentAndEscape(targetMJ, onComplete, onCameraUpdate) {
-    // 3. Dr. Octopus and his tentacles lift MJ high into the sky and carry her away
-    const escapeDuration = 3.2;
-    const escapeStart = performance.now();
-    const startY = this.root.position.y;
+  executeThrowDown(targetMJ, onThrown, onCameraUpdate) {
+    const liftDuration = 1.0;
+    const liftStart = performance.now();
 
-    const animateEscape = () => {
+    const animateLift = () => {
       const now = performance.now();
-      const p = Math.min(1.0, (now - escapeStart) / (escapeDuration * 1000));
+      const p = Math.min(1.0, (now - liftStart) / (liftDuration * 1000));
+      const ease = p * p * (3 - 2 * p);
 
-      // Ease in cubic for powerful rocket-like tentacle leap into the sky
-      const t = p * p * (3 - 2 * p);
+      // Lift MJ up into the air
+      targetMJ.root.position.y = 0.1 + ease * 6.5;
+      targetMJ.root.position.x = this.root.position.x + Math.sin(p * Math.PI) * 0.4;
+      targetMJ.root.position.z = this.root.position.z + 0.5;
 
-      const curY = THREE.MathUtils.lerp(startY, 34.0, t);
-      this.root.position.y = curY;
-      this.root.position.x += Math.sin(p * Math.PI) * 0.05;
-
-      // Mechanical tentacles hold and carry MJ right in front of Dr. Octopus!
-      this.tentacles.forEach(tObj => {
-        if (tObj.config.isUpper) {
-          tObj.joints.forEach((j, jIdx) => {
-            j.rotation.x = -0.92 + Math.sin(p * 12 + jIdx) * 0.04;
-            j.rotation.z = tObj.config.side * (0.38 + Math.cos(p * 10) * 0.03);
-          });
-          // Pincers remain tightly clamped around MJ's body
-          tObj.fingers.forEach(f => {
-            f.rotation.x = -0.55;
-          });
-        } else {
-          // Lower tentacles trailing downward and flexing dynamically
-          tObj.joints.forEach((j, jIdx) => {
-            j.rotation.x = 0.65 + Math.sin(p * 14 + jIdx) * 0.08;
-            j.rotation.z = tObj.config.side * 0.42;
+      // Tentacles raise upward
+      this.tentacles.forEach(t => {
+        if (t.config.isUpper) {
+          t.joints.forEach((j) => {
+            j.rotation.x = THREE.MathUtils.lerp(-0.92, 0.45, ease);
           });
         }
       });
 
-      // MJ is physically carried by Dr. Octopus's mechanical claws
-      targetMJ.root.position.y = curY + 1.1;
-      targetMJ.root.position.x = this.root.position.x;
-      targetMJ.root.position.z = this.root.position.z + 0.65;
-      targetMJ.root.lookAt(this.root.position.x, targetMJ.root.position.y, this.root.position.z);
-
       if (onCameraUpdate) {
-        onCameraUpdate(this.root.position, targetMJ.root.position, 0.5 + p * 0.5);
+        onCameraUpdate(this.root.position, targetMJ.root.position, 0.5 + p * 0.3);
       }
 
       if (p < 1.0) {
-        requestAnimationFrame(animateEscape);
+        requestAnimationFrame(animateLift);
       } else {
-        // Escaped into unknown skies!
-        this.root.visible = false;
-        targetMJ.root.visible = false;
-        this.isAbducting = false;
+        // HURL MJ DOWN!
+        this.comicFX.spawnAt(targetMJ.root.position, 'HURL!', '#ef4444', '#fef08a', 2.2);
+        this.comicFX.showBanner('DR. OCTOPUS THROWS MJ DOWN! SPIDER-MEN ASSEMBLE!');
+        this.audioManager.playSuspenseHeartbeat();
 
-        if (onComplete) onComplete();
+        // Open claws wide
+        this.tentacles.forEach(t => {
+          if (t.config.isUpper) {
+            t.fingers.forEach(f => {
+              f.rotation.x = 0.45; // open claws
+            });
+          }
+        });
+
+        // MJ falls rapidly downward
+        const fallStart = performance.now();
+        const fallDuration = 1.6;
+        const initialY = targetMJ.root.position.y;
+
+        const animateFall = () => {
+          const fNow = performance.now();
+          const fp = Math.min(1.0, (fNow - fallStart) / (fallDuration * 1000));
+          // Acceleration due to gravity
+          const gravityT = fp * fp;
+
+          targetMJ.root.position.y = initialY - gravityT * 12.0;
+          targetMJ.root.position.z += 0.08;
+          targetMJ.root.rotation.x += 0.05;
+          targetMJ.root.rotation.z += 0.03;
+
+          if (fp < 1.0) {
+            requestAnimationFrame(animateFall);
+          }
+        };
+        requestAnimationFrame(animateFall);
+
+        // Notify that MJ has been thrown down! All Spider-Men must assemble!
+        if (onThrown) onThrown(targetMJ);
       }
     };
 
-    requestAnimationFrame(animateEscape);
+    requestAnimationFrame(animateLift);
+  }
+
+  // React violently to Spider-Man team attack strikes
+  takeHit(damageVector, comicText = 'SMASH!') {
+    this.comicFX.spawnAt(this.root.position, comicText, '#f59e0b', '#ffffff', 2.0);
+    this.audioManager.playBonusChime();
+
+    const origPos = this.root.position.clone();
+    const recoilX = (Math.random() - 0.5) * 1.2;
+    const recoilZ = (Math.random() - 0.5) * 1.2;
+
+    this.root.position.x += recoilX;
+    this.root.position.z += recoilZ;
+
+    // Tentacles fling backward in pain
+    this.tentacles.forEach(t => {
+      t.joints.forEach(j => {
+        j.rotation.x += (Math.random() - 0.5) * 0.8;
+        j.rotation.z += (Math.random() - 0.5) * 0.8;
+      });
+    });
+
+    setTimeout(() => {
+      this.root.position.lerp(origPos, 0.5);
+    }, 150);
+  }
+
+  // Defeated: sparks fly, tentacles collapse, and Doc Ock falls off the rooftop
+  defeatCollapse(onDefeated) {
+    this.comicFX.spawnAt(this.root.position, 'K.O.!', '#dc2626', '#fef08a', 3.0);
+    this.comicFX.showBanner('DOCTOR OCTOPUS DEFEATED BY ALL 6 SPIDER-MEN!');
+    this.audioManager.playDefeatGong();
+
+    const defeatDuration = 2.4;
+    const startY = this.root.position.y;
+    const startZ = this.root.position.z;
+    const startTime = performance.now();
+
+    const animateDefeat = () => {
+      const now = performance.now();
+      const p = Math.min(1.0, (now - startTime) / (defeatDuration * 1000));
+      const t = p * p; // plunging acceleration
+
+      this.root.position.y = startY - t * 24.0;
+      this.root.position.z = startZ - t * 16.0;
+      this.root.rotation.x -= 0.05;
+      this.root.rotation.z += 0.03;
+
+      // Tentacles go limp and flail
+      this.tentacles.forEach(tent => {
+        tent.joints.forEach((j, idx) => {
+          j.rotation.x = Math.sin(p * 18 + idx) * 0.6;
+        });
+      });
+
+      if (p < 1.0) {
+        requestAnimationFrame(animateDefeat);
+      } else {
+        this.root.visible = false;
+        this.isAbducting = false;
+        if (onDefeated) onDefeated();
+      }
+    };
+
+    requestAnimationFrame(animateDefeat);
   }
 
   update(delta) {

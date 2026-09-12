@@ -31,19 +31,31 @@ export class GreenGoblin {
     canvas.height = 256;
     const ctx = canvas.getContext('2d');
 
-    // Rich villainous emerald green
-    ctx.fillStyle = '#15803d';
+    // Vibrant Anime Comic Emerald Green Base
+    const bgGrad = ctx.createLinearGradient(0, 0, 256, 256);
+    bgGrad.addColorStop(0, '#16a34a'); // Vivid anime emerald
+    bgGrad.addColorStop(0.5, '#22c55e'); // Bright lime
+    bgGrad.addColorStop(1, '#15803d');
+    ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, 256, 256);
 
-    // Goblin scale texture
-    ctx.strokeStyle = '#052e16';
-    ctx.lineWidth = 1.8;
+    // Goblin scale texture with bright neon-lime glints
     const scaleSize = 16;
     for (let y = 0; y <= 256; y += scaleSize) {
       const rowOffset = (y / scaleSize) % 2 === 0 ? 0 : scaleSize / 2;
       for (let x = -scaleSize; x <= 256 + scaleSize; x += scaleSize) {
+        // Dark scale contour
+        ctx.strokeStyle = '#052e16';
+        ctx.lineWidth = 1.8;
         ctx.beginPath();
         ctx.arc(x + rowOffset, y, scaleSize * 0.65, 0, Math.PI);
+        ctx.stroke();
+
+        // Anime bright lime scale glint
+        ctx.strokeStyle = '#86efac';
+        ctx.lineWidth = 1.0;
+        ctx.beginPath();
+        ctx.arc(x + rowOffset, y - 1, scaleSize * 0.45, 0, Math.PI);
         ctx.stroke();
       }
     }
@@ -55,17 +67,27 @@ export class GreenGoblin {
 
     return new THREE.MeshStandardMaterial({
       map: tex,
-      roughness: 0.42,
-      metalness: 0.18
+      roughness: 0.35,
+      metalness: 0.12,
+      emissive: 0x14532d,
+      emissiveIntensity: 0.28
     });
   }
 
   buildModel() {
-    // --- Authentic Classic Green Goblin Materials ---
+    // --- Authentic Classic Green Goblin Materials (Unmistakably Bright Green) ---
     const greenScalyMat = this.createScalyMaterial();
 
+    const greenSkinMat = new THREE.MeshStandardMaterial({
+      color: 0x22c55e,
+      roughness: 0.38,
+      metalness: 0.10,
+      emissive: 0x166534,
+      emissiveIntensity: 0.26
+    });
+
     const purpleMat = new THREE.MeshStandardMaterial({
-      color: 0x7e22ce, // Classic royal villain purple
+      color: 0x7e22ce, // Classic royal villain purple accent
       roughness: 0.38,
       metalness: 0.22
     });
@@ -85,7 +107,7 @@ export class GreenGoblin {
     const eyeYellowMat = new THREE.MeshStandardMaterial({
       color: 0xfef08a,
       emissive: 0xeab308,
-      emissiveIntensity: 1.2,
+      emissiveIntensity: 1.3,
       roughness: 0.1
     });
 
@@ -107,6 +129,14 @@ export class GreenGoblin {
       color: 0xcfd8dc,
       roughness: 0.15,
       metalness: 0.95
+    });
+
+    const emeraldEnergyMat = new THREE.MeshStandardMaterial({
+      color: 0x22c55e,
+      emissive: 0x22c55e,
+      emissiveIntensity: 0.85,
+      roughness: 0.2,
+      metalness: 0.4
     });
 
     const pumpkinMat = new THREE.MeshStandardMaterial({
@@ -139,11 +169,23 @@ export class GreenGoblin {
     nose.position.set(0, 0, 1.1);
     this.gliderGroup.add(nose);
 
-    // Twin forward scythe cutting blades
+    // Classic Comic Bat-Ears on Glider Prow
+    [-1, 1].forEach(side => {
+      const batEar = new THREE.Mesh(
+        new THREE.ConeGeometry(0.075, 0.32, 4),
+        gliderChromeMat
+      );
+      batEar.position.set(side * 0.16, 0.18, 0.96);
+      batEar.rotation.x = -0.32;
+      batEar.rotation.z = side * -0.35;
+      this.gliderGroup.add(batEar);
+    });
+
+    // Twin forward scythe cutting blades with emerald energy edges
     [-1, 1].forEach(side => {
       const blade = new THREE.Mesh(
         new THREE.BoxGeometry(0.04, 0.18, 0.75),
-        gliderChromeMat
+        emeraldEnergyMat
       );
       blade.position.set(side * 0.28, -0.02, 1.15);
       blade.rotation.x = 0.2;
@@ -166,20 +208,19 @@ export class GreenGoblin {
       wing.rotation.z = side * -0.12;
       wingRoot.add(wing);
 
-      // Polished leading edge blade
-      const leadingEdge = new THREE.Mesh(
-        new THREE.BoxGeometry(1.10, 0.05, 0.12),
-        gliderChromeMat
+      // Emerald energy leading edge
+      const edge = new THREE.Mesh(
+        new THREE.BoxGeometry(1.02, 0.07, 0.08),
+        emeraldEnergyMat
       );
-      leadingEdge.position.set(side * 0.54, 0.03, 0.30);
-      leadingEdge.rotation.y = side * 0.28;
-      leadingEdge.rotation.z = side * -0.12;
-      wingRoot.add(leadingEdge);
+      edge.position.set(side * 0.52, 0.02, 0.32);
+      edge.rotation.y = side * 0.28;
+      wingRoot.add(edge);
 
       // Wingtip vertical fin
       const tipFin = new THREE.Mesh(
         new THREE.BoxGeometry(0.08, 0.34, 0.65),
-        gliderChromeMat
+        emeraldEnergyMat
       );
       tipFin.position.set(side * 1.20, 0.12, -0.22);
       tipFin.rotation.z = side * 0.25;
@@ -200,16 +241,16 @@ export class GreenGoblin {
 
       const nozzleRing = new THREE.Mesh(
         new THREE.CylinderGeometry(0.145, 0.145, 0.08, 12),
-        purpleDarkMat
+        emeraldEnergyMat
       );
       nozzleRing.rotation.x = Math.PI / 2;
       nozzleRing.position.set(side * 0.26, 0.02, -0.98);
       this.gliderGroup.add(nozzleRing);
 
-      // Inner glowing core
+      // Inner glowing core (Toxic Green Goblin Energy)
       const plasma = new THREE.Mesh(
         new THREE.CylinderGeometry(0.11, 0.06, 0.22, 10),
-        new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
+        new THREE.MeshBasicMaterial({ color: 0x22c55e })
       );
       plasma.rotation.x = Math.PI / 2;
       plasma.position.set(side * 0.26, 0.02, -1.08);
@@ -238,9 +279,10 @@ export class GreenGoblin {
     auraCanvas.height = 256;
     const aCtx = auraCanvas.getContext('2d');
     const aGrad = aCtx.createRadialGradient(128, 128, 20, 128, 128, 128);
-    aGrad.addColorStop(0, 'rgba(168, 85, 247, 0.85)'); // Vibrant purple core
-    aGrad.addColorStop(0.5, 'rgba(34, 197, 94, 0.55)');  // Electric green halo
-    aGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');     // Fading cyan edge
+    aGrad.addColorStop(0, 'rgba(34, 197, 94, 0.95)'); // Vibrant toxic green core
+    aGrad.addColorStop(0.5, 'rgba(74, 222, 128, 0.60)');  // Electric green halo
+    aGrad.addColorStop(0.85, 'rgba(126, 34, 206, 0.35)'); // Classic purple edge
+    aGrad.addColorStop(1, 'rgba(34, 197, 94, 0)');     // Fading edge
     aCtx.fillStyle = aGrad;
     aCtx.fillRect(0, 0, 256, 256);
 
@@ -316,14 +358,29 @@ export class GreenGoblin {
     chestPlate.scale.set(1.22, 1.0, 0.90);
     this.torso.add(chestPlate);
 
-    // Classic Purple Sleeveless Tunic / Vest with jagged scalloped bottom
-    const purpleVest = new THREE.Mesh(
-      new THREE.CapsuleGeometry(0.23, 0.15, 6, 12),
-      purpleMat
-    );
-    purpleVest.position.set(0, 0.27, 0.02);
-    purpleVest.scale.set(1.24, 1.0, 0.92);
-    this.torso.add(purpleVest);
+    // Classic comic purple shoulder harness straps (leaving muscular scaly green chest & abs boldly exposed)
+    [-1, 1].forEach(side => {
+      const strapMesh = new THREE.Mesh(
+        new THREE.BoxGeometry(0.06, 0.36, 0.28),
+        purpleMat
+      );
+      strapMesh.position.set(side * 0.16, 0.28, 0.02);
+      strapMesh.rotation.z = side * -0.15;
+      this.torso.add(strapMesh);
+    });
+
+    // Comic jagged scalloped triangular hem points around waist
+    for (let p = 0; p < 8; p++) {
+      const angle = (p / 8) * Math.PI * 2;
+      const scallop = new THREE.Mesh(
+        new THREE.ConeGeometry(0.045, 0.12, 3),
+        purpleMat
+      );
+      scallop.position.set(Math.cos(angle) * 0.22, 0.14, Math.sin(angle) * 0.16 + 0.02);
+      scallop.rotation.x = Math.PI;
+      scallop.rotation.z = Math.cos(angle) * 0.25;
+      this.torso.add(scallop);
+    }
 
     // Brown Leather Satchel with Shoulder Strap (for Pumpkin Bombs)
     const strap = new THREE.Mesh(
@@ -343,7 +400,15 @@ export class GreenGoblin {
     pouch.rotation.z = 0.15;
     this.torso.add(pouch);
 
-    // --- 3. CLASSIC GREEN GOBLIN HEAD WITH PURPLE HOODED COWL ---
+    // Extra glowing pumpkin bomb nestled inside satchel
+    const satchelBomb = new THREE.Mesh(
+      new THREE.SphereGeometry(0.065, 8, 8),
+      pumpkinMat
+    );
+    satchelBomb.position.set(-0.24, 0.12, 0.06);
+    this.torso.add(satchelBomb);
+
+    // --- 3. CLASSIC GREEN GOBLIN HEAD WITH GREEN SCALES & PURPLE COWL TAIL ---
     this.head = new THREE.Group();
     this.head.position.y = 0.52;
     this.torso.add(this.head);
@@ -356,14 +421,23 @@ export class GreenGoblin {
     headMesh.scale.set(0.95, 1.15, 1.05);
     this.head.add(headMesh);
 
-    // Classic Purple Cowl / Hood covering crown and forehead
+    // Scaly green hood crown with purple brow rim
     const cowlHood = new THREE.Mesh(
-      new THREE.SphereGeometry(0.21, 12, 12),
-      purpleMat
+      new THREE.SphereGeometry(0.205, 12, 12),
+      greenScalyMat
     );
     cowlHood.position.set(0, 0.04, -0.04);
     cowlHood.scale.set(1.02, 1.12, 1.08);
     this.head.add(cowlHood);
+
+    // Purple cowl brow headband
+    const browAccent = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.21, 0.21, 0.035, 12),
+      purpleMat
+    );
+    browAccent.position.set(0, 0.10, 0.02);
+    browAccent.scale.set(0.95, 1.0, 1.04);
+    this.head.add(browAccent);
 
     // Long Drooping Pointed Cowl Tail hanging down back!
     const cowlTail = new THREE.Mesh(
@@ -461,24 +535,24 @@ export class GreenGoblin {
       forearm.position.y = -0.30;
       upperArm.add(forearm);
 
-      // Purple Glove with flared cuff
+      // Classic Purple Flared Pirate Gauntlet Glove
       const gloveCuff = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.085, 0.07, 0.08, 10),
+        new THREE.CylinderGeometry(0.105, 0.068, 0.11, 10),
         purpleMat
       );
-      gloveCuff.position.y = -0.05;
+      gloveCuff.position.y = -0.04;
       forearm.add(gloveCuff);
 
       const foreMesh = new THREE.Mesh(
         new THREE.CapsuleGeometry(0.062, 0.16, 6, 10),
-        purpleMat
+        greenScalyMat
       );
       foreMesh.position.y = -0.15;
       forearm.add(foreMesh);
 
       const fist = new THREE.Mesh(
         new THREE.SphereGeometry(0.055, 8, 8),
-        purpleMat
+        greenScalyMat
       );
       fist.position.y = -0.28;
       forearm.add(fist);
@@ -487,7 +561,7 @@ export class GreenGoblin {
       for (let f = -1; f <= 1; f++) {
         const finger = new THREE.Mesh(
           new THREE.ConeGeometry(0.015, 0.05, 4),
-          purpleMat
+          greenSkinMat
         );
         finger.position.set(f * 0.025, -0.32, 0.02);
         finger.rotation.x = 0.5;
@@ -537,7 +611,7 @@ export class GreenGoblin {
       this.arms[key] = { shoulder, upperArm, forearm };
     });
 
-    // --- 5. GREEN LEGS & POINTED PURPLE ELF BOOTS (CURLED TOES) ---
+    // --- 5. GREEN LEGS & POINTED GREEN GOBLIN BOOTS (CURLED TOES) ---
     [-1, 1].forEach(side => {
       const hipJoint = new THREE.Group();
       hipJoint.position.set(side * 0.16, -0.06, 0);
@@ -559,18 +633,26 @@ export class GreenGoblin {
       calf.position.set(0, -0.42, 0);
       hipJoint.add(calf);
 
-      // Purple pointed elf boot with curled-upward toe tip!
+      // Green goblin pointed elf boot with purple ankle cuff and curled-upward toe tip
       const boot = new THREE.Mesh(
         new THREE.BoxGeometry(0.13, 0.16, 0.26),
-        purpleMat
+        greenSkinMat
       );
       boot.position.set(0, -0.60, 0.04);
       hipJoint.add(boot);
 
-      // Curled upward pointed toe
+      // Purple ankle cuff
+      const bootCuff = new THREE.Mesh(
+        new THREE.BoxGeometry(0.145, 0.04, 0.23),
+        purpleMat
+      );
+      bootCuff.position.set(0, -0.52, 0.02);
+      hipJoint.add(bootCuff);
+
+      // Curled upward pointed green toe
       const curledToe = new THREE.Mesh(
         new THREE.ConeGeometry(0.06, 0.18, 6),
-        purpleMat
+        greenSkinMat
       );
       curledToe.position.set(0, -0.64, 0.22);
       curledToe.rotation.x = -Math.PI / 4;

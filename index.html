@@ -28,6 +28,9 @@
       </div>
 
       <div class="top-controls">
+        <button id="btn-turbo-mode" class="ui-btn ui-btn-icon ui-btn-turbo" title="Toggle Turbo Speed (Fast Gameplay)">
+          <span class="icon">⚡</span> <span class="label">Turbo: OFF</span>
+        </button>
         <button id="btn-camera-mode" class="ui-btn ui-btn-icon" title="Toggle Camera View">
           <span class="icon">🎥</span> <span class="label">Cinematic</span>
         </button>
@@ -108,64 +111,91 @@
   <!-- Start Screen Modal -->
   <div id="start-screen" class="modal-overlay">
     <div class="start-modal">
-      <div class="spider-badge">🕷️ MARVEL MULTIVERSE</div>
+      <div class="spider-badge">🕷️ MARVEL ANIME MULTIVERSE</div>
       <h1 class="start-title">SPIDER-MAN<br><span class="highlight-title">SNAKES & LADDERS</span></h1>
       <p class="start-desc">
-        Welcome to an absurdly cinematic 3D board game. Climb the 100 tiles of the Manhattan penthouse. 
-        Rescue by 3 Spider-Men! Kidnappings by 4 Green Goblins on hoverboards! 
-        And beware the mysterious <strong>Secret 100 Rule</strong>...
+        Absurdly cinematic 3D board game. Climb the 100 tiles of the Manhattan penthouse. 
+        6 Spider-Men web pulls! 3 Green Goblins on hoverboards! 2 Dark Void Portals!
+        Reach <strong>Tile 100 with an exact roll</strong> for the epic Multiverse showdown!
       </p>
 
-      <div class="player-select-container">
-        <label class="select-label">SELECT NUMBER OF PLAYERS:</label>
-        <div class="player-buttons" id="player-count-btns">
-          <button class="player-count-btn" data-count="2">
-            <span class="count-num">2</span>
-            <span class="count-txt">Players</span>
+      <!-- Game Mode Selection: Local 2-Player vs Online Multiplayer -->
+      <div class="game-mode-tabs">
+        <button id="tab-local" class="mode-tab-btn active">
+          <span class="tab-icon">👥</span> Local 2-Player
+        </button>
+        <button id="tab-online" class="mode-tab-btn">
+          <span class="tab-icon">🌐</span> Online Multiplayer
+        </button>
+      </div>
+
+      <!-- Local 2-Player Info Box -->
+      <div id="local-info-box" class="local-info-box">
+        <span class="badge-tag">🎮 2-PLAYER PASS & PLAY</span>
+        <p>Both players play sequentially on this screen. Take turns rolling the 3D dice to reach Tile 100!</p>
+      </div>
+
+      <!-- Online Multiplayer Lobby Box -->
+      <div id="online-lobby-panel" class="online-lobby-panel hidden">
+        <div class="online-sub-actions">
+          <button id="btn-net-host" class="net-action-btn active">
+            <span>👑 Host Room</span>
           </button>
-          <button class="player-count-btn active" data-count="3">
-            <span class="count-num">3</span>
-            <span class="count-txt">Players</span>
+          <button id="btn-net-join-tab" class="net-action-btn">
+            <span>🔗 Join Friend's Room</span>
           </button>
-          <button class="player-count-btn" data-count="4">
-            <span class="count-num">4</span>
-            <span class="count-txt">Players</span>
-          </button>
+        </div>
+
+        <!-- Host View -->
+        <div id="net-host-view" class="net-view-card">
+          <p class="net-desc">Share this Room Code or Link with your friend on their phone, laptop, or tablet:</p>
+          <div class="room-code-display-group">
+            <span class="room-code-label">ROOM CODE:</span>
+            <span id="display-room-code" class="room-code-val">CREATING...</span>
+            <button id="btn-copy-code" class="ui-btn-copy" title="Copy Code">📋 Copy Code</button>
+            <button id="btn-copy-link" class="ui-btn-copy" title="Copy Invite Link">🔗 Copy Link</button>
+          </div>
+          <div id="host-status-msg" class="net-status-pulse">
+            <span class="spinner-dot"></span> Waiting for Player 2 to join...
+          </div>
+          <button id="btn-cancel-online" class="ui-btn-cancel-online">⬅️ Switch to Local 2-Player Mode</button>
+        </div>
+
+        <!-- Join View -->
+        <div id="net-join-view" class="net-view-card hidden">
+          <p class="net-desc">Enter your friend's 6-character Room Code:</p>
+          <div class="join-input-group">
+            <input type="text" id="input-room-code" class="room-input" placeholder="e.g. SPY-ABCD" maxlength="10" />
+            <button id="btn-net-connect" class="btn-primary-confirm">CONNECT & PLAY</button>
+          </div>
+          <div id="join-status-msg" class="net-status-text"></div>
+          <button id="btn-cancel-online-join" class="ui-btn-cancel-online">⬅️ Switch to Local 2-Player Mode</button>
         </div>
       </div>
 
-      <!-- Character Preview Cards -->
-      <div class="character-preview-grid" id="character-preview-grid">
+      <!-- 2 Character Preview Cards (2-Player Mode Only) -->
+      <div class="character-preview-grid two-player-grid" id="character-preview-grid">
         <div class="char-card active" data-char="1">
           <div class="char-hair-swatch hair-mj1"></div>
           <span class="char-name">MJ-1</span>
-          <span class="char-hair-label">Auburn Red</span>
+          <span class="char-hair-label">Player 1 (Auburn)</span>
         </div>
         <div class="char-card active" data-char="2">
           <div class="char-hair-swatch hair-mj2"></div>
           <span class="char-name">MJ-2</span>
-          <span class="char-hair-label">Neon Blue</span>
-        </div>
-        <div class="char-card active" data-char="3">
-          <div class="char-hair-swatch hair-mj3"></div>
-          <span class="char-name">MJ-3</span>
-          <span class="char-hair-label">Golden Blonde</span>
-        </div>
-        <div class="char-card inactive" data-char="4">
-          <div class="char-hair-swatch hair-mj4"></div>
-          <span class="char-name">MJ-4</span>
-          <span class="char-hair-label">Toxic Emerald</span>
+          <span class="char-hair-label">Player 2 (Neon Cyan)</span>
         </div>
       </div>
 
       <div class="start-meta">
-        <div class="meta-item"><span class="meta-icon">🕸️</span> 5 Classic Spider-Men</div>
-        <div class="meta-item"><span class="meta-icon">🎃</span> 6 Flying Goblins</div>
-        <div class="meta-item"><span class="meta-icon">❓</span> Secret Tile 100</div>
+        <div class="meta-item"><span class="meta-icon">🕷️</span> 6 Spider-Men (Spider Legs)</div>
+        <div class="meta-item"><span class="meta-icon">🎃</span> 3 Comic Green Goblins</div>
+        <div class="meta-item"><span class="meta-icon">🌀</span> 2 Dark Void Portals</div>
+        <div class="meta-item"><span class="meta-icon">🎯</span> Exact 100 Win Rule</div>
       </div>
 
       <button id="btn-start-game" class="btn-start-action">
-        <span>ENTER THE MULTIVERSE</span> ➔
+        <span id="btn-start-text">START 2-PLAYER MATCH</span> ➔
       </button>
     </div>
   </div>
@@ -174,51 +204,59 @@
   <div id="rules-modal" class="modal-overlay hidden">
     <div class="rules-card">
       <div class="rules-header">
-        <h2>HOW TO PLAY</h2>
+        <h2>HOW TO PLAY - ANIME MULTIVERSE</h2>
         <button id="btn-close-rules" class="close-btn">✕</button>
       </div>
       <div class="rules-body">
         <div class="rule-box">
-          <div class="rule-icon">🎲</div>
+          <div class="rule-icon">🎯</div>
           <div class="rule-text">
-            <h3>Standard Rolling</h3>
-            <p>Roll the 3D dice to advance across the 100 numbered tiles. Rolling a <strong>6</strong> grants an immediate <strong>BONUS ROLL</strong>!</p>
+            <h3>Exact 100 Rule</h3>
+            <p>To win, you must land <strong>EXACTLY on Tile 100</strong>! If you are on Tile 99, you need an exact roll of 1. If your roll exceeds 100, you cannot move!</p>
           </div>
         </div>
 
         <div class="rule-box">
-          <div class="rule-icon">💥</div>
+          <div class="rule-icon">🌐</div>
           <div class="rule-text">
-            <h3>Player Collisions</h3>
-            <p>Multiple MJs can occupy the same tile! If you land on another player's square, you receive a <strong>BONUS ROLL</strong>!</p>
+            <h3>Online & Local 2-Player</h3>
+            <p>Play locally or connect with your friend across different devices (phones, laptops, tablets) using instant WebRTC Room Codes!</p>
+          </div>
+        </div>
+
+        <div class="rule-box">
+          <div class="rule-icon">🌀</div>
+          <div class="rule-text">
+            <h3>2 Dark Void Portals</h3>
+            <p>Two dark quantum rifts with swirling event horizons warp space. Step into a portal to vanish into a singularity and erupt at the destination tile!</p>
           </div>
         </div>
 
         <div class="rule-box">
           <div class="rule-icon">🕸️</div>
           <div class="rule-text">
-            <h3>5 Spider-Men Web Pulls</h3>
-            <p>There are 5 Classic Blue & Red Spider-Men standing on the board. Each has a secret trigger tile randomized each game. Land on it, and Spidey shoots a visible 3D web line to reel you up to him!</p>
+            <h3>6 Spider-Men Web Pulls</h3>
+            <p>6 mechanical Spider-Men watch over the 100 tiles. Land on a trigger to be pulled up in an automatic cinematic close-up!</p>
           </div>
         </div>
 
         <div class="rule-box">
           <div class="rule-icon">🎃</div>
           <div class="rule-text">
-            <h3>6 Green Goblin Hoverboard Kidnappings</h3>
-            <p>There are 6 Green Goblins hovering on high-tech gliders. Land directly on a Goblin, and he scoops you onto his hoverboard, flies you across the sky, and drops you at a random lower tile!</p>
+            <h3>3 Green Goblin Hazards</h3>
+            <p>3 Green Goblins patrol on bat gliders. Step on a hazard and he swoops in with an intense cinematic chase to drop you down!</p>
           </div>
         </div>
 
         <div class="rule-box rule-mystery">
-          <div class="rule-icon">❓</div>
+          <div class="rule-icon">⚡</div>
           <div class="rule-text">
-            <h3>The Secret 100 Rule</h3>
-            <p>At the start of every match, the multiverse decides in secret: Does reaching 100 mean <strong>VICTORY</strong> or <strong>TOTAL DEFEAT</strong>? You will only find out when someone reaches it!</p>
+            <h3>Tile 100 Climax: The Multiverse Battle</h3>
+            <p>When Tile 100 is reached, Doctor Octopus descends and throws MJ down into the skyline! But all 6 Spider-Men assemble to defeat Doc Ock, 5 swing off, and hero Spider-Man dives down to rescue MJ as the ultimate Champion!</p>
           </div>
         </div>
       </div>
-      <button id="btn-ok-rules" class="btn-primary-confirm">GOT IT, LET'S PLAY</button>
+      <button id="btn-ok-rules" class="btn-primary-confirm">LET'S BATTLE</button>
     </div>
   </div>
 
@@ -226,9 +264,9 @@
   <div id="reveal-screen" class="reveal-overlay hidden">
     <div class="reveal-backdrop"></div>
     <div class="reveal-content" id="reveal-content">
-      <div class="reveal-badge" id="reveal-badge">TILE 100 REACHED!</div>
-      <h1 class="reveal-title" id="reveal-title">DECIDING YOUR FATE...</h1>
-      <p class="reveal-subtitle" id="reveal-subtitle">The Multiverse is evaluating...</p>
+      <div class="reveal-badge" id="reveal-badge">🏆 MULTIVERSE CHAMPION!</div>
+      <h1 class="reveal-title" id="reveal-title">VICTORY RESCUE!</h1>
+      <p class="reveal-subtitle" id="reveal-subtitle">Rescued by Spider-Man after defeating Doctor Octopus!</p>
       <div class="reveal-player-card" id="reveal-player-card">
         <!-- Player card rendered here -->
       </div>

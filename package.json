@@ -9,8 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "three": "^0.160.0",
-    "canvas-confetti": "^1.9.2"
+    "canvas-confetti": "^1.9.2",
+    "peerjs": "^1.5.5",
+    "three": "^0.160.0"
   },
   "devDependencies": {
     "vite": "^5.1.0"

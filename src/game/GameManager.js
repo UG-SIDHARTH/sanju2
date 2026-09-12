@@ -1,5 +1,6 @@
 // ==========================================================================
-// GAME MANAGER - 5 Spider-Men, 6 Goblins, High-Entropy RNG & Exact 100 Rule
+// GAME MANAGER - 6 Spider-Men, 3 Goblins, 2 Dark Portals, Exact 100 & Online P2P
+// Japanese/Chinese Anime Aesthetics, Flowing Aura, Peak Cinematic Climax
 // ==========================================================================
 
 import * as THREE from 'three';
@@ -10,6 +11,8 @@ import { Dice3D } from './Dice3D.js';
 import { CameraDirector } from './CameraDirector.js';
 import { DrOctopus } from './DrOctopus.js';
 import { Portal } from './Portal.js';
+import { AuraManager } from './AuraManager.js';
+import { NetworkManager } from './NetworkManager.js';
 
 export class GameManager {
   constructor(scene, camera, renderer, audioManager, comicFX) {
@@ -24,7 +27,13 @@ export class GameManager {
     this.dice = new Dice3D(scene, audioManager);
     this.hud = null;
 
-    // Doctor Octopus (Tile 100 Ambush)
+    // Flowing Anime Aura & Speed Lines
+    this.auraManager = new AuraManager(scene, camera);
+
+    // Online Multiplayer via WebRTC PeerJS
+    this.networkManager = new NetworkManager(this);
+
+    // Doctor Octopus (Tile 100 Climax)
     this.drOctopus = new DrOctopus(scene, audioManager, comicFX);
 
     // Game state
@@ -33,47 +42,26 @@ export class GameManager {
     this.isTurnProcessing = false;
     this.bonusRollEarned = false;
 
-    // Secret 100 Rule: true = WIN, false = LOSE (elimination)
-    this.secret100IsWin = true;
-
-    // Entities: 4 Spider-Men, 4 Green Goblins & 4 Quantum Portals
+    // Entities: Exactly 6 Spider-Men, 3 Green Goblins & 2 Dark Portals
     this.spiderMen = [];
     this.greenGoblins = [];
     this.portals = [];
 
+    this.spideyConfig = [];
+    this.goblinConfig = [];
+    this.portalConfigs = [];
+    this.portalMap = {};
+    this.goblinDropMap = {};
+
     this.activeMovement = null;
-
-    // 4 Spider-Man Stations & Triggers
-    this.spideyFixedTiles = [92, 77, 41, 25];
-    this.spideyTriggerTiles = [64, 44, 19, 8];
-
-    // 4 Green Goblin Ambush Hazards & Destinations
-    this.goblinFixedTiles = [95, 73, 28, 40];
-    this.goblinDropMap = {
-      95: 57,
-      73: 21,
-      28: 4,
-      40: 15
-    };
-
-    // 4 Quantum Multiverse Portals
-    this.portalConfigs = [
-      { id: 1, start: 14, dest: 30, theme: 'amber' },
-      { id: 2, start: 36, dest: 7, theme: 'crimson' },
-      { id: 3, start: 61, dest: 69, theme: 'cyan' },
-      { id: 4, start: 89, dest: 79, theme: 'violet' }
-    ];
-
-    this.portalMap = {
-      14: 30,
-      36: 7,
-      61: 69,
-      89: 79
-    };
+    this.isTurbo = false;
   }
 
-  getSafeGoblinDropTile(goblinTile) {
-    return this.goblinDropMap[goblinTile] || Math.max(1, goblinTile - 15);
+  setTurboMode(isTurbo) {
+    this.isTurbo = isTurbo;
+    if (this.activeMovement) {
+      this.activeMovement.stepDuration = this.isTurbo ? 0.20 : 0.38;
+    }
   }
 
   setBoard(board) {
@@ -84,25 +72,97 @@ export class GameManager {
     this.hud = hud;
   }
 
-  // Multi-source cryptographically secure, unpredictable random integer with rejection sampling
+  // Multi-source cryptographically secure, unpredictable random integer
   getRandomInt(min, max) {
     const range = max - min + 1;
-    const maxValid = Math.floor(0xFFFFFFFF / range) * range;
-    const buf = new Uint32Array(4);
-
-    let val;
-    do {
-      window.crypto.getRandomValues(buf);
-      const microTime = (Math.floor(performance.now() * 1000000) ^ Date.now()) >>> 0;
-      val = (buf[0] ^ (buf[1] << 7) ^ (buf[2] >>> 3) ^ (buf[3] << 13) ^ microTime) >>> 0;
-    } while (val >= maxValid);
-
-    return min + (val % range);
+    const cryptoObj = (typeof window !== 'undefined' && window.crypto) || (typeof crypto !== 'undefined' ? crypto : null);
+    if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
+      try {
+        const maxValid = Math.floor(0xFFFFFFFF / range) * range;
+        const buf = new Uint32Array(4);
+        let val;
+        do {
+          cryptoObj.getRandomValues(buf);
+          const microTime = (Math.floor(performance.now() * 1000000) ^ Date.now()) >>> 0;
+          val = (buf[0] ^ (buf[1] << 7) ^ (buf[2] >>> 3) ^ (buf[3] << 13) ^ microTime) >>> 0;
+        } while (val >= maxValid);
+        return min + (val % range);
+      } catch (e) {}
+    }
+    return min + Math.floor(Math.random() * range);
   }
 
-  startNewMatch(playerCount = 3) {
-    // Secretly decide 100 = WIN or LOSE
-    this.secret100IsWin = this.getRandomInt(0, 1) === 1;
+  // --- PROCEDURAL GENERATOR: 6 SPIDER-MEN, 3 GOBLINS, 2 DARK PORTALS ---
+  generateRandomBoardLayout() {
+    const usedTiles = new Set([1, 100]);
+
+    // Helper: pick random unused tile in [min, max]
+    const pickTile = (min, max) => {
+      let attempts = 0;
+      while (attempts < 200) {
+        const t = this.getRandomInt(min, max);
+        if (!usedTiles.has(t)) {
+          usedTiles.add(t);
+          return t;
+        }
+        attempts++;
+      }
+      return min;
+    };
+
+    // 1. Generate 6 Spider-Man ladders (station > trigger, well distributed across tiers)
+    // Tiers: [12-28], [29-45], [46-62], [63-76], [77-88], [89-98]
+    const spideyTiers = [
+      { triggerMin: 3, triggerMax: 15, stationMin: 22, stationMax: 34 },
+      { triggerMin: 18, triggerMax: 30, stationMin: 38, stationMax: 50 },
+      { triggerMin: 32, triggerMax: 44, stationMin: 52, stationMax: 65 },
+      { triggerMin: 48, triggerMax: 60, stationMin: 68, stationMax: 78 },
+      { triggerMin: 62, triggerMax: 74, stationMin: 80, stationMax: 89 },
+      { triggerMin: 72, triggerMax: 84, stationMin: 91, stationMax: 97 }
+    ];
+
+    this.spideyConfig = spideyTiers.map((tier, idx) => {
+      const trigger = pickTile(tier.triggerMin, tier.triggerMax);
+      const station = pickTile(Math.max(trigger + 8, tier.stationMin), tier.stationMax);
+      return { id: idx + 1, trigger, station };
+    });
+
+    // 2. Generate 3 Green Goblin hazards (station > drop)
+    // Tiers: mid-tier [35-55], upper-mid [60-78], high-tier [82-96]
+    const goblinTiers = [
+      { stationMin: 35, stationMax: 52, dropMin: 14, dropMax: 28 },
+      { stationMin: 64, stationMax: 79, dropMin: 36, dropMax: 56 },
+      { stationMin: 86, stationMax: 96, dropMin: 60, dropMax: 80 }
+    ];
+
+    this.goblinDropMap = {};
+    this.goblinConfig = goblinTiers.map((tier, idx) => {
+      const station = pickTile(tier.stationMin, tier.stationMax);
+      const drop = pickTile(tier.dropMin, Math.min(station - 10, tier.dropMax));
+      this.goblinDropMap[station] = drop;
+      return { id: idx + 1, station, drop };
+    });
+
+    // 3. Exactly 2 Dark Void Portals (Reversible / Bidirectional)
+    this.portalMap = {};
+    const portalTiers = [
+      { startMin: 20, startMax: 45, destMin: 65, destMax: 85, theme: 'dark_void' },
+      { startMin: 46, startMax: 64, destMin: 6, destMax: 24, theme: 'dark_crimson' }
+    ];
+
+    this.portalConfigs = portalTiers.map((tier, idx) => {
+      const start = pickTile(tier.startMin, tier.startMax);
+      const dest = pickTile(tier.destMin, tier.destMax);
+      this.portalMap[start] = dest;
+      this.portalMap[dest] = start;
+      return { id: idx + 1, start, dest, theme: tier.theme };
+    });
+  }
+
+  // --- START NEW 2-PLAYER MATCH ---
+  startNewMatch(playerCount = 2) {
+    // Only 2-player mode
+    const count = 2;
 
     // Clear old entities
     this.players.forEach(p => this.scene.remove(p.root));
@@ -122,35 +182,72 @@ export class GameManager {
       this.drOctopus.isAbducting = false;
     }
 
-    // Spawn Players (MJs)
-    for (let i = 0; i < playerCount; i++) {
+    // Spawn 2 Players (MJ-1 and MJ-2)
+    for (let i = 0; i < count; i++) {
       const char = CharacterFactory.createMJ(i);
       char.currentTile = 1;
       char.isEliminated = false;
       this.scene.add(char.root);
       this.players.push(char);
+
+      // Add flowing celestial anime aura to players
+      this.auraManager.createCharacterAura(char.root, i === 0 ? 0xef4444 : 0x06b6d4, 0.9);
     }
 
-    // Spawn 4 Spider-Mans with heroic web-rescue ladders
-    this.spideyFixedTiles.forEach((fixedTile, idx) => {
-      const spidey = new SpiderMan(this.scene, idx + 1, fixedTile, this.audioManager, this.comicFX, this.board);
-      const pos = this.board.getTileWorldPosition(fixedTile);
-      spidey.setPosition(pos);
+    // Generate fresh, completely randomized board if host or local
+    if (!this.networkManager.isOnline() || this.networkManager.mode === 'host') {
+      this.generateRandomBoardLayout();
+    }
 
-      const triggerTile = this.spideyTriggerTiles[idx];
-      spidey.setTriggerTile(triggerTile);
+    this.spawnEntitiesFromConfig();
+
+    this.updatePlayerPositionsOnTile(1);
+
+    this.activePlayerIndex = 0;
+    this.isTurnProcessing = false;
+    this.bonusRollEarned = false;
+
+    this.hud.renderPlayersList(this.players, this.activePlayerIndex);
+    this.hud.updateTurnDisplay(this.getActivePlayer(), false);
+    this.hud.setRollButtonEnabled(this.networkManager.isMyTurn(this.activePlayerIndex));
+
+    this.hud.logEvent(`Match started! 6 Spider-Men, 3 Green Goblins & 2 Dark Void Portals randomized.`);
+    this.cameraDirector.focusOnBoard();
+
+    // If hosting online multiplayer, broadcast sync to client
+    if (this.networkManager.mode === 'host') {
+      this.networkManager.sendMatchSync();
+    }
+  }
+
+  spawnEntitiesFromConfig() {
+    // 1. Spawn 6 Spider-Men
+    this.spiderMen = [];
+    this.spideyConfig.forEach(cfg => {
+      const spidey = new SpiderMan(this.scene, cfg.id, cfg.station, this.audioManager, this.comicFX, this.board);
+      const pos = this.board.getTileWorldPosition(cfg.station);
+      spidey.setPosition(pos);
+      spidey.setTriggerTile(cfg.trigger);
       this.spiderMen.push(spidey);
+
+      // Heroic anime aura
+      this.auraManager.createCharacterAura(spidey.root, 0x38bdf8, 1.0);
     });
 
-    // Spawn 4 Green Goblins on Hoverboards (95->57, 73->21, 28->4, 40->15)
-    this.goblinFixedTiles.forEach((fixedTile, idx) => {
-      const goblin = new GreenGoblin(this.scene, idx + 1, fixedTile, this.audioManager, this.comicFX);
-      const pos = this.board.getTileWorldPosition(fixedTile);
+    // 2. Spawn 3 Green Goblins
+    this.greenGoblins = [];
+    this.goblinConfig.forEach(cfg => {
+      const goblin = new GreenGoblin(this.scene, cfg.id, cfg.station, this.audioManager, this.comicFX);
+      const pos = this.board.getTileWorldPosition(cfg.station);
       goblin.setPosition(pos);
       this.greenGoblins.push(goblin);
+
+      // Cursed anime toxic aura
+      this.auraManager.createCharacterAura(goblin.root, 0xa855f7, 1.0);
     });
 
-    // Spawn 4 Quantum Multiverse Portals (14->30, 36->7, 61->69, 89->79)
+    // 3. Spawn 2 Dark Void Portals
+    this.portals = [];
     this.portalConfigs.forEach(cfg => {
       const startPos = this.board.getTileWorldPosition(cfg.start);
       const destPos = this.board.getTileWorldPosition(cfg.dest);
@@ -163,83 +260,130 @@ export class GameManager {
         destPos,
         this.audioManager,
         this.comicFX,
-        cfg.theme
+        cfg.theme || 'dark_void'
       );
       this.portals.push(portal);
     });
 
-    // Update board visuals with Spider-Man triggers, Goblin hazards & Portals
-    const spideyTriggers = this.spiderMen.map(s => s.triggerTileNumber);
-    this.board.setSpecialTiles(spideyTriggers, this.goblinFixedTiles, this.portalMap);
+    // Refresh 100-Tile board visuals with exact markers
+    const spideyTriggers = this.spideyConfig.map(s => s.trigger);
+    const goblinHazardTiles = this.goblinConfig.map(g => g.station);
+    this.board.setSpecialTiles(spideyTriggers, goblinHazardTiles, this.portalMap);
+  }
 
-    this.updatePlayerPositionsOnTile(1);
+  // Apply match sync received from Host over WebRTC
+  applyRemoteMatchSync(syncPayload) {
+    this.spideyConfig = syncPayload.spiderMen;
+    this.goblinConfig = syncPayload.goblins;
+    this.portalConfigs = syncPayload.portals;
 
-    this.activePlayerIndex = 0;
-    this.isTurnProcessing = false;
-    this.bonusRollEarned = false;
+    this.goblinDropMap = {};
+    this.goblinConfig.forEach(g => {
+      this.goblinDropMap[g.station] = g.drop;
+    });
 
+    this.portalMap = {};
+    this.portalConfigs.forEach(p => {
+      this.portalMap[p.start] = p.dest;
+      this.portalMap[p.dest] = p.start;
+    });
+
+    this.spawnEntitiesFromConfig();
+    this.activePlayerIndex = syncPayload.activePlayerIndex || 0;
     this.hud.renderPlayersList(this.players, this.activePlayerIndex);
     this.hud.updateTurnDisplay(this.getActivePlayer(), false);
-    this.hud.setRollButtonEnabled(true);
-    this.hud.logEvent(`Match started! 4 Spider-Men, 4 Green Goblins & 4 Quantum Portals active.`);
-
-    this.cameraDirector.focusOnBoard();
+    this.hud.setRollButtonEnabled(this.networkManager.isMyTurn(this.activePlayerIndex));
   }
 
   getActivePlayer() {
     return this.players[this.activePlayerIndex];
   }
 
-  // Roll with completely unpredictable cryptographic RNG
+  // Local or Host Dice Roll Trigger
   handleRollDice() {
     if (this.isTurnProcessing) return;
+    if (!this.networkManager.isMyTurn(this.activePlayerIndex)) return;
+
     this.isTurnProcessing = true;
     this.hud.setRollButtonEnabled(false);
 
     const activePlayer = this.getActivePlayer();
-    // Cryptographically secure dice roll (1 to 6)
     const diceRoll = this.getRandomInt(1, 6);
 
+    if (this.networkManager.isOnline()) {
+      this.networkManager.sendDiceRoll(diceRoll);
+    }
+
+    this.executeDiceRoll(diceRoll, activePlayer);
+  }
+
+  // Remote Opponent Dice Roll
+  applyRemoteDiceRoll(diceRoll, playerIndex) {
+    if (this.isTurnProcessing) return;
+    this.isTurnProcessing = true;
+    this.hud.setRollButtonEnabled(false);
+
+    const activePlayer = this.players[playerIndex] || this.getActivePlayer();
+    this.executeDiceRoll(diceRoll, activePlayer);
+  }
+
+  // --- DICE ROLL EXECUTION & EXACT 100 WIN RULE ---
+  executeDiceRoll(diceRoll, activePlayer) {
     this.hud.logEvent(`${activePlayer.config.name} rolling 3D dice...`);
 
     this.dice.roll(diceRoll, activePlayer.root.position, () => {
       this.hud.logEvent(`${activePlayer.config.name} rolled a ${diceRoll}!`, true);
 
-      // --- EXACT ROLL TO 100 RULE ---
       const startTile = activePlayer.currentTile;
-      const needed = 100 - startTile;
+      const neededToReach100 = 100 - startTile;
 
-      if (diceRoll > needed) {
-        // Roll exceeds 100! Ignore the dice throw!
-        this.audioManager.playDiceClick();
-        this.comicFX.spawnAt(activePlayer.root.position, `TOO HIGH! NEED ${needed}`, '#ef4444', '#ffffff', 2.0);
-        this.comicFX.showBanner(`ROLL ${diceRoll} TOO HIGH! NEED EXACTLY ${needed} TO REACH 100!`);
-        this.hud.logEvent(`⚠️ ${activePlayer.config.name} rolled ${diceRoll}, but needs exactly ${needed} to reach 100! Turn forfeited.`, true);
+      // --- EXACT 100 RULE ---
+      // If at 99, exactly need 1 to reach 100!
+      // If roll > needed, the player CANNOT move!
+      if (startTile + diceRoll > 100) {
+        this.comicFX.spawnAt(
+          activePlayer.root.position,
+          `NEED EXACT ${neededToReach100}!`,
+          '#ef4444',
+          '#ffffff',
+          2.0
+        );
+        this.audioManager.playFootstep();
+        this.hud.logEvent(
+          `🚫 Over-rolled! ${activePlayer.config.name} needs an exact ${neededToReach100} to reach Tile 100!`,
+          true
+        );
 
-        this.bonusRollEarned = false;
+        // Check if rolled 6: still gets bonus roll even if blocked!
+        const getsBonus = (diceRoll === 6);
+        if (getsBonus) {
+          this.comicFX.spawnAt(activePlayer.root.position, 'LUCKY 6!', '#f59e0b', '#ffffff', 1.8);
+          this.audioManager.playBonusChime();
+          this.hud.logEvent(`⚡ BONUS ROLL EARNED FOR ROLLING 6!`, true);
+        }
 
-        // Pause so player sees the roll result, then pass turn to next player
         setTimeout(() => {
-          this.advanceToNextPlayer();
-        }, 1500);
+          this.finishTurn(getsBonus);
+        }, 1200);
         return;
       }
 
-      // Check Bonus Roll for rolling a 6
+      // Valid exact roll or forward progress!
+      const actualSteps = diceRoll;
       let getsBonusFromSix = false;
-      if (diceRoll === 6) {
+      if (diceRoll === 6 && (startTile + actualSteps) < 100) {
         getsBonusFromSix = true;
         this.comicFX.spawnAt(activePlayer.root.position, 'LUCKY 6!', '#f59e0b', '#ffffff', 1.8);
         this.audioManager.playBonusChime();
         this.hud.logEvent(`${activePlayer.config.name} rolled a 6! BONUS TURN!`, true);
       }
 
-      this.startPlayerMovement(activePlayer, diceRoll, getsBonusFromSix);
+      this.startPlayerMovement(activePlayer, actualSteps, getsBonusFromSix);
     });
   }
 
   startPlayerMovement(player, steps, getsBonusFromSix) {
-    // 1. If player was holding hands with Spider-Man, release cleanly before stepping forward
+    // Release hand-holding cleanly before stepping
     this.spiderMen.forEach(s => {
       if (s.partnerMJ === player) {
         s.releaseHands();
@@ -267,12 +411,14 @@ export class GameManager {
     player.root.lookAt(toPos.x, player.root.position.y, toPos.z);
     this.audioManager.playFootstep();
 
+    const baseDuration = this.isTurbo ? 0.20 : 0.38;
+
     this.activeMovement = {
       player,
       path,
       pathIndex: 0,
       stepElapsed: 0,
-      stepDuration: 0.38, // 380ms per step: clean, natural, realistic bipedal walking pace
+      stepDuration: baseDuration,
       fromPos,
       toPos,
       targetTile,
@@ -287,16 +433,13 @@ export class GameManager {
     m.stepElapsed += delta;
     const rawProgress = Math.min(1.0, m.stepElapsed / m.stepDuration);
 
-    // Smoothstep easing for human stepping momentum
     const ease = rawProgress * rawProgress * (3 - 2 * rawProgress);
     m.player.root.position.lerpVectors(m.fromPos, m.toPos, ease);
     m.player.root.lookAt(m.toPos.x, m.player.root.position.y, m.toPos.z);
 
-    // Dynamic camera tracking player walking
     this.cameraDirector.focusOnPlayer(m.player.root.position);
 
     if (rawProgress >= 1.0) {
-      // Step complete onto tile
       m.player.root.position.copy(m.toPos);
       const currentTileNum = m.path[m.pathIndex];
       m.player.currentTile = currentTileNum;
@@ -307,7 +450,6 @@ export class GameManager {
       m.pathIndex++;
 
       if (m.pathIndex < m.path.length) {
-        // Setup next step
         const nextTileNum = m.path[m.pathIndex];
         m.fromPos.copy(m.toPos);
         m.toPos = this.board.getTileWorldPosition(nextTileNum);
@@ -315,7 +457,6 @@ export class GameManager {
         m.player.root.lookAt(m.toPos.x, m.player.root.position.y, m.toPos.z);
         this.audioManager.playFootstep();
       } else {
-        // All steps completed!
         const targetTile = m.targetTile;
         const getsBonusFromSix = m.getsBonusFromSix;
         const player = m.player;
@@ -334,17 +475,20 @@ export class GameManager {
   checkTileEvents(player, landedTile, hadBonusRoll) {
     let bonusRoll = hadBonusRoll;
 
-    // 1. Secret 100 Rule (Doctor Octopus Ambush)
+    // 1. EXACT TILE 100 REACHED: TRIGGER EPIC CLIMAX!
     if (landedTile === 100) {
       this.handleSecret100Reached(player);
       return;
     }
 
-    // 2. Spider-Man Web Trigger
+    // 2. Spider-Man Web Pull Trigger (Automatic Cinematic Close-Up)
     const triggeredSpidey = this.spiderMen.find(s => s.triggerTileNumber === landedTile);
     if (triggeredSpidey) {
       this.hud.logEvent(`🕸️ SPIDER-MAN #${triggeredSpidey.id} TRIGGERED on Tile ${landedTile}! Reeling in ${player.config.name}!`, true);
-      this.cameraDirector.focusOnSpiderManAction(triggeredSpidey.root.position, player.root.position);
+
+      // Automatic dramatic cinematic close-up with anime speed lines!
+      this.auraManager.triggerSpeedLines(1.8, 0.9);
+      this.cameraDirector.focusOnSpiderManAction(triggeredSpidey.root.position, player.root.position, 'start');
 
       triggeredSpidey.triggerWebPull(player, () => {
         player.currentTile = triggeredSpidey.fixedTileNumber;
@@ -353,36 +497,42 @@ export class GameManager {
         this.hud.updateTurnDisplay(player, bonusRoll);
         this.hud.logEvent(`${player.config.name} webbed to Tile ${player.currentTile}!`);
 
-        this.checkCollisionAndFinish(player, bonusRoll);
+        // Close-up framing of Spider-Man and MJ team-up
+        this.cameraDirector.focusOnSpiderManAction(triggeredSpidey.root.position, player.root.position, 'end');
+
+        setTimeout(() => {
+          this.checkCollisionAndFinish(player, bonusRoll);
+        }, 600);
       });
       return;
     }
 
-    // 2.5 Spider-Man Station Tile: Spider-Man and MJ hold hands side-by-side!
+    // 2.5 Spider-Man Station Tile: Spider-Man and MJ hold hands
     const stationedSpidey = this.spiderMen.find(s => s.fixedTileNumber === landedTile);
     if (stationedSpidey) {
       this.audioManager.playHeroicCatch();
       stationedSpidey.holdHands(player);
     }
 
-    // 2.75 Quantum Multiverse Dimensional Portal Warp
-    const triggeredPortal = this.portals.find(p => p.startTile === landedTile);
+    // 2.75 Dark Void Portal Warp
+    const triggeredPortal = this.portals.find(p => p.hasTile(landedTile));
     if (triggeredPortal) {
-      this.hud.logEvent(`🌀 QUANTUM PORTAL ACTIVATED on Tile ${landedTile}! Warping ${player.config.name} to Tile ${triggeredPortal.destTile}!`, true);
+      const destTile = triggeredPortal.getDestination(landedTile);
+      this.hud.logEvent(`🌀 DARK VOID PORTAL ACTIVATED on Tile ${landedTile}! Warping ${player.config.name} to Tile ${destTile}!`, true);
 
+      this.auraManager.triggerSpeedLines(1.5, 0.8);
       triggeredPortal.warpPlayer(
         player,
-        // onCameraTrack:
+        landedTile,
         (startP, destP, progress) => {
           this.cameraDirector.trackPortalWarp(startP, destP, progress);
         },
-        // onComplete:
-        () => {
-          player.currentTile = triggeredPortal.destTile;
+        (finalDestTile) => {
+          player.currentTile = finalDestTile;
           this.updatePlayerPositionsOnTile(player.currentTile);
           this.hud.renderPlayersList(this.players, this.activePlayerIndex);
           this.hud.updateTurnDisplay(player, bonusRoll);
-          this.hud.logEvent(`✨ ${player.config.name} emerged through the dimensional rift onto Tile ${player.currentTile}!`);
+          this.hud.logEvent(`✨ ${player.config.name} emerged through the dark rift onto Tile ${player.currentTile}!`);
 
           this.checkCollisionAndFinish(player, bonusRoll);
         }
@@ -390,42 +540,37 @@ export class GameManager {
       return;
     }
 
-    // 3. Green Goblin Hazard
+    // 3. Green Goblin Hazard (Automatic Cinematic Close-Up)
     const triggeredGoblin = this.greenGoblins.find(g => g.fixedTileNumber === landedTile);
     if (triggeredGoblin) {
-      // Calculate guaranteed safe drop tile (strictly never on any Spider-Man trigger or station)
-      const dropTile = this.getSafeGoblinDropTile(landedTile);
+      const dropTile = this.goblinDropMap[landedTile] || Math.max(2, landedTile - 15);
       const dropPos = this.board.getTileWorldPosition(dropTile);
 
-      this.hud.logEvent(`🎃 GREEN GOBLIN #${triggeredGoblin.id} AMBUSH on Tile ${landedTile}! Flying ${player.config.name} to safe Tile ${dropTile}!`, true);
+      this.hud.logEvent(`🎃 GREEN GOBLIN #${triggeredGoblin.id} ON TILE ${landedTile}! Swooping ${player.config.name} to Tile ${dropTile}!`, true);
 
-      // Trigger kidnapping with full real-time aerial camera tracking & touchdown hold
+      // Automatic cinematic close-up with speed lines!
+      this.auraManager.triggerSpeedLines(2.2, 0.85);
+
       triggeredGoblin.triggerKidnapping(
         player,
         dropPos,
-        // onComplete:
         () => {
           player.currentTile = dropTile;
           this.updatePlayerPositionsOnTile(dropTile);
           this.hud.renderPlayersList(this.players, this.activePlayerIndex);
           this.hud.updateTurnDisplay(player, bonusRoll);
-          this.hud.logEvent(`${player.config.name} is now safe on Tile ${dropTile}!`);
+          this.hud.logEvent(`${player.config.name} is now on Tile ${dropTile}!`);
 
           this.checkCollisionAndFinish(player, bonusRoll);
         },
-        // onFlightUpdate (tracks camera in real time so user sees full flight & destination):
         (curGoblinPos, destWorldPos, progress) => {
-          if (progress >= 1.0) {
-            this.cameraDirector.focusOnDestinationTile(destWorldPos);
-          } else {
-            this.cameraDirector.trackFlyingGoblin(curGoblinPos, destWorldPos, progress);
-          }
+          this.cameraDirector.trackFlyingGoblin(curGoblinPos, destWorldPos, progress);
         }
       );
       return;
     }
 
-    // 4. Player Collision Rule
+    // 4. Player Collision
     this.checkCollisionAndFinish(player, bonusRoll);
   }
 
@@ -439,49 +584,87 @@ export class GameManager {
       bonus = true;
       this.comicFX.spawnAt(player.root.position, 'COLLISION!', '#3b82f6', '#ffffff', 1.8);
       this.audioManager.playBonusChime();
-      this.hud.logEvent(`💥 COLLISION! ${player.config.name} landed on ${otherPlayersOnTile[0].config.name}! BONUS ROLL!`, true);
+      this.hud.logEvent(`💥 COLLISION! ${player.config.name} bumped ${otherPlayersOnTile[0].config.name}! BONUS ROLL!`, true);
     }
 
     this.finishTurn(bonus);
   }
 
+  // --- EPIC TILE 100 CLIMAX: 6 SPIDER-MEN VS DOCTOR OCTOPUS ---
   handleSecret100Reached(player) {
     this.audioManager.playSuspenseHeartbeat();
     const tile100Pos = this.board.getTileWorldPosition(100);
     this.cameraDirector.focusOnTile100(tile100Pos);
-    this.hud.logEvent(`⚡ ${player.config.name} REACHED TILE 100! SOMETHING IS COMING...`, true);
+    this.hud.logEvent(`⚡ ${player.config.name} REACHED TILE 100! THE CLIMAX BEGINS!`, true);
 
     setTimeout(() => {
-      this.hud.logEvent(`🐙 AMBUSH! DOCTOR OCTOPUS DESCENDS UPON TILE 100!`, true);
-
+      // 1. Doctor Octopus descends and grabs MJ, then throws her down!
       this.drOctopus.triggerAbduction(
         player,
-        // onComplete:
-        () => {
-          this.audioManager.playDefeatGong();
-          player.isEliminated = true;
-
-          this.hud.showSecret100Reveal(player, false, () => {
-            const activeSurvivors = this.players.filter(p => !p.isEliminated);
-            if (activeSurvivors.length === 1) {
-              const winner = activeSurvivors[0];
-              this.audioManager.playVictory();
-              winner.animator.setState('victory');
-              this.hud.showSecret100Reveal(winner, true);
-              this.hud.logEvent(`🏆 ${winner.config.name} IS THE SURVIVING MJ! VICTORY!`, true);
-            } else if (activeSurvivors.length === 0) {
-              this.hud.logEvent(`☠️ All MJs were abducted by Doctor Octopus! Multiverse fallen!`, true);
-            } else {
-              this.advanceToNextPlayer();
-            }
-          });
+        // onThrown callback:
+        (thrownMJ) => {
+          this.executeSpiderMenTeamUpShowdown(thrownMJ, tile100Pos);
         },
-        // onCameraUpdate:
         (docPos, mjPos, progress) => {
           this.cameraDirector.trackFlyingGoblin(docPos, mjPos, progress);
         }
       );
-    }, 1200);
+    }, 1000);
+  }
+
+  executeSpiderMenTeamUpShowdown(fallingMJ, tile100Pos) {
+    // 2. Fullscreen Anime Speed Lines & Japanese Kanji Calligraphy Action Flash!
+    this.auraManager.triggerSpeedLines(4.0, 1.0);
+    this.comicFX.showBanner('ALL 6 SPIDER-MEN ASSEMBLE! MULTIVERSE TEAM ATTACK!');
+    this.audioManager.playDocOckEmergence();
+
+    const docPos = this.drOctopus.root.position;
+    const attackWords = ['【轟】', 'SMASH!', '【瞬】', 'ORA!', '【極】', 'IMPACT!'];
+
+    // 3. All 6 Spider-Men simultaneously leap from their stations across the board!
+    let hitsLanded = 0;
+    this.spiderMen.forEach((spidey, idx) => {
+      setTimeout(() => {
+        spidey.leapToAttack(docPos, idx, () => {
+          hitsLanded++;
+          this.drOctopus.takeHit(docPos, attackWords[idx % attackWords.length]);
+
+          // When all 6 strikes have landed:
+          if (hitsLanded === this.spiderMen.length) {
+            this.defeatDocOckAndRescueMJ(fallingMJ, tile100Pos);
+          }
+        });
+      }, idx * 180);
+    });
+  }
+
+  defeatDocOckAndRescueMJ(fallingMJ, tile100Pos) {
+    // 4. Doctor Octopus is defeated, sparks burst, tentacles collapse, and he falls off!
+    this.drOctopus.defeatCollapse(() => {
+      this.hud.logEvent('💥 DOCTOR OCTOPUS DEFEATED! Skyline cleared!');
+    });
+
+    // 5. 5 Spider-Men swing away heroically toward the distant skyscraper skyline!
+    const heroSpidey = this.spiderMen[0];
+    const departingSpideys = this.spiderMen.slice(1);
+
+    departingSpideys.forEach((s, idx) => {
+      setTimeout(() => {
+        const angle = (idx / departingSpideys.length) * Math.PI * 2;
+        s.swingAwayToSkyline(angle);
+      }, 300 + idx * 150);
+    });
+
+    // 6. 1 Hero Spider-Man dives down, catches falling MJ in mid-air, and brings her to safety!
+    setTimeout(() => {
+      this.auraManager.triggerSpeedLines(2.5, 1.0);
+      heroSpidey.diveAndCatchMJ(fallingMJ, tile100Pos, () => {
+        // Crown this MJ as the WINNER!
+        this.audioManager.playVictory();
+        this.hud.showSecret100Reveal(fallingMJ, true);
+        this.hud.logEvent(`🏆 ${fallingMJ.config.name} WAS RESCUED AND CROWNED THE CHAMPION! VICTORY!`, true);
+      });
+    }, 800);
   }
 
   updatePlayerPositionsOnTile(tileNumber) {
@@ -491,11 +674,9 @@ export class GameManager {
 
     if (spideyOnTile) {
       if (playersOnTile.length > 0) {
-        // Spider-Man & MJ hold hands side-by-side! (No carrying)
         const partnerPlayer = playersOnTile[0];
         spideyOnTile.holdHands(partnerPlayer);
 
-        // If additional players are also on this tile, place them safely adjacent so they do not clip
         if (playersOnTile.length > 1) {
           const others = playersOnTile.slice(1);
           others.forEach((p, idx) => {
@@ -507,7 +688,6 @@ export class GameManager {
           });
         }
       } else {
-        // No players on this tile; release hands if Spidey was holding hands
         if (spideyOnTile.isHoldingHands) {
           spideyOnTile.releaseHands();
         }
@@ -535,7 +715,7 @@ export class GameManager {
       this.isTurnProcessing = false;
       this.bonusRollEarned = true;
       this.hud.updateTurnDisplay(activePlayer, true);
-      this.hud.setRollButtonEnabled(true);
+      this.hud.setRollButtonEnabled(this.networkManager.isMyTurn(this.activePlayerIndex));
       this.hud.logEvent(`⚡ ${activePlayer.config.name} has a BONUS ROLL ready!`);
     } else {
       this.advanceToNextPlayer();
@@ -544,22 +724,23 @@ export class GameManager {
 
   advanceToNextPlayer() {
     this.bonusRollEarned = false;
-    let nextIdx = (this.activePlayerIndex + 1) % this.players.length;
-
-    let loops = 0;
-    while (this.players[nextIdx].isEliminated && loops < this.players.length) {
-      nextIdx = (nextIdx + 1) % this.players.length;
-      loops++;
-    }
-
-    this.activePlayerIndex = nextIdx;
+    this.activePlayerIndex = (this.activePlayerIndex + 1) % this.players.length;
     this.isTurnProcessing = false;
 
     const nextPlayer = this.getActivePlayer();
     this.hud.renderPlayersList(this.players, this.activePlayerIndex);
     this.hud.updateTurnDisplay(nextPlayer, false);
-    this.hud.setRollButtonEnabled(true);
-    this.hud.logEvent(`It is now ${nextPlayer.config.name}'s turn. Roll the dice!`);
+    this.hud.setRollButtonEnabled(this.networkManager.isMyTurn(this.activePlayerIndex));
+
+    if (this.networkManager.isOnline()) {
+      if (this.networkManager.isMyTurn(this.activePlayerIndex)) {
+        this.hud.logEvent(`🎮 YOUR TURN! Roll the 3D dice!`);
+      } else {
+        this.hud.logEvent(`⏳ Waiting for Opponent (${nextPlayer.config.name}) to roll...`);
+      }
+    } else {
+      this.hud.logEvent(`It is now ${nextPlayer.config.name}'s turn. Roll the dice!`);
+    }
 
     this.cameraDirector.focusOnBoard();
   }
@@ -567,6 +748,7 @@ export class GameManager {
   update(delta) {
     this.updateMovement(delta);
     this.cameraDirector?.update?.(delta);
+    this.auraManager?.update?.(delta);
     this.players.forEach(p => p.animator?.update?.(delta));
     this.spiderMen.forEach(s => s?.update?.(delta));
     this.greenGoblins.forEach(g => g?.update?.(delta));

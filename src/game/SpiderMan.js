@@ -245,12 +245,12 @@ export class SpiderMan {
       metalness: 0.6
     });
 
-    // White micro-mesh reflective eye lenses
+    // White micro-mesh reflective eye lenses with vibrant anime glow
     const eyeLensMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       emissive: 0xffffff,
-      emissiveIntensity: 0.35,
-      roughness: 0.15,
+      emissiveIntensity: 0.75,
+      roughness: 0.1,
       metalness: 0.05
     });
 
@@ -367,6 +367,156 @@ export class SpiderMan {
     const backSpider = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.20, 0.02), redMat);
     backSpider.position.set(0, 0.26, -0.14);
     this.torso.add(backSpider);
+
+    // --- 2.5 ARTICULATED MECHANICAL SPIDER LEGS ON BACK (IRON SPIDER WALDOES) ---
+    const waldoGoldMat = new THREE.MeshStandardMaterial({
+      color: 0xf59e0b,
+      roughness: 0.2,
+      metalness: 0.88
+    });
+    const waldoRedMat = new THREE.MeshStandardMaterial({
+      color: 0xbe123c,
+      roughness: 0.25,
+      metalness: 0.82
+    });
+    const waldoSteelMat = new THREE.MeshStandardMaterial({
+      color: 0x94a3b8,
+      roughness: 0.18,
+      metalness: 0.92
+    });
+    const waldoClawMat = new THREE.MeshStandardMaterial({
+      color: 0xf8fafc,
+      roughness: 0.1,
+      metalness: 0.98
+    });
+
+    const backHarness = new THREE.Group();
+    backHarness.position.set(0, 0.28, -0.15);
+    this.torso.add(backHarness);
+
+    // Central armored spinal hub
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.09, 0.04, 6), waldoGoldMat);
+    hub.rotation.x = Math.PI / 2;
+    backHarness.add(hub);
+
+    const hubCore = new THREE.Mesh(
+      new THREE.SphereGeometry(0.035, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
+    );
+    hubCore.position.z = -0.025;
+    backHarness.add(hubCore);
+
+    this.waldoes = [];
+
+    // Construct 4 Articulated Waldoes (2 Upper Arching Over Shoulders, 2 Lower Sweeping Flanks)
+    const waldoConfigs = [
+      // Upper Left Waldo (arching up over left shoulder)
+      { id: 'upper_left', side: -1, isUpper: true, phase: 0 },
+      // Upper Right Waldo (arching up over right shoulder)
+      { id: 'upper_right', side: 1, isUpper: true, phase: Math.PI * 0.5 },
+      // Lower Left Waldo (extending laterally and downward)
+      { id: 'lower_left', side: -1, isUpper: false, phase: Math.PI },
+      // Lower Right Waldo (extending laterally and downward)
+      { id: 'lower_right', side: 1, isUpper: false, phase: Math.PI * 1.5 }
+    ];
+
+    waldoConfigs.forEach(cfg => {
+      const waldoRoot = new THREE.Group();
+      waldoRoot.position.set(cfg.side * 0.065, cfg.isUpper ? 0.05 : -0.05, -0.015);
+      backHarness.add(waldoRoot);
+
+      // Ball socket joint
+      const socket = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), waldoSteelMat);
+      waldoRoot.add(socket);
+
+      // Segment 1: Coxa (Base mounting bracket)
+      const coxaGroup = new THREE.Group();
+      waldoRoot.add(coxaGroup);
+
+      const coxaMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.025, 0.16, 8), waldoRedMat);
+      coxaMesh.position.y = 0.08;
+      coxaGroup.add(coxaMesh);
+
+      // Segment 2: Femur (Main arching arm)
+      const femurGroup = new THREE.Group();
+      femurGroup.position.y = 0.16;
+      coxaGroup.add(femurGroup);
+
+      const femurJoint = new THREE.Mesh(new THREE.SphereGeometry(0.028, 8, 8), waldoGoldMat);
+      femurGroup.add(femurJoint);
+
+      const femurLength = cfg.isUpper ? 0.38 : 0.32;
+      const femurMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.019, 0.024, femurLength, 8), waldoGoldMat);
+      femurMesh.position.y = femurLength / 2;
+      femurGroup.add(femurMesh);
+
+      // Hydraulic piston decorative rod
+      const pistonMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, femurLength * 0.7, 6), waldoSteelMat);
+      pistonMesh.position.set(cfg.side * 0.02, femurLength / 2, 0.01);
+      femurGroup.add(pistonMesh);
+
+      // Segment 3: Tibia (Foreleg reaching forward/downward)
+      const tibiaGroup = new THREE.Group();
+      tibiaGroup.position.y = femurLength;
+      femurGroup.add(tibiaGroup);
+
+      const tibiaJoint = new THREE.Mesh(new THREE.SphereGeometry(0.024, 8, 8), waldoRedMat);
+      tibiaGroup.add(tibiaJoint);
+
+      const tibiaLength = cfg.isUpper ? 0.35 : 0.28;
+      const tibiaMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.020, tibiaLength, 8), waldoRedMat);
+      tibiaMesh.position.y = tibiaLength / 2;
+      tibiaGroup.add(tibiaMesh);
+
+      // Segment 4: Razor-sharp predatory talon / claw tip
+      const clawGroup = new THREE.Group();
+      clawGroup.position.y = tibiaLength;
+      tibiaGroup.add(clawGroup);
+
+      const clawCone = new THREE.Mesh(new THREE.ConeGeometry(0.028, 0.14, 4), waldoClawMat);
+      clawCone.position.y = 0.07;
+      clawGroup.add(clawCone);
+
+      // Initial heroic posing of the waldoes
+      if (cfg.isUpper) {
+        // Arch backwards then curl up and over shoulders forward
+        coxaGroup.rotation.x = -0.55;
+        coxaGroup.rotation.z = cfg.side * -0.35;
+
+        femurGroup.rotation.x = -1.45;
+        femurGroup.rotation.z = cfg.side * 0.25;
+
+        tibiaGroup.rotation.x = 2.15;
+        tibiaGroup.rotation.z = cfg.side * -0.15;
+
+        clawGroup.rotation.x = 0.35;
+      } else {
+        // Lower waldoes splay outward laterally and curve forward
+        coxaGroup.rotation.x = 0.45;
+        coxaGroup.rotation.z = cfg.side * -1.15;
+
+        femurGroup.rotation.x = 0.75;
+        femurGroup.rotation.y = cfg.side * 0.65;
+
+        tibiaGroup.rotation.x = -1.25;
+        tibiaGroup.rotation.z = cfg.side * 0.35;
+
+        clawGroup.rotation.x = -0.45;
+      }
+
+      this.waldoes.push({
+        cfg,
+        waldoRoot,
+        coxaGroup,
+        femurGroup,
+        tibiaGroup,
+        clawGroup,
+        baseFemurRotX: femurGroup.rotation.x,
+        baseTibiaRotX: tibiaGroup.rotation.x,
+        baseFemurRotZ: femurGroup.rotation.z,
+        phase: cfg.phase
+      });
+    });
 
     // --- 3. HEAD & MASK WITH RADIAL WEBBING ---
     this.head = new THREE.Group();
@@ -908,6 +1058,174 @@ export class SpiderMan {
     }
   }
 
+  // --- CLIMAX: TEAM-UP ATTACK AGAINST DOCTOR OCTOPUS ---
+  leapToAttack(targetDocPos, attackIdx = 0, onHit = null) {
+    const startPos = this.root.position.clone();
+    const jumpDuration = 0.55;
+    const startTime = performance.now();
+
+    // Attack destination slightly offset around Doc Ock
+    const angle = (attackIdx / 6) * Math.PI * 2;
+    const strikePos = targetDocPos.clone().add(new THREE.Vector3(
+      Math.cos(angle) * 1.8,
+      0.2,
+      Math.sin(angle) * 1.8
+    ));
+
+    // Dynamic leap poses
+    this.root.lookAt(targetDocPos.x, this.root.position.y, targetDocPos.z);
+    if (attackIdx % 2 === 0) {
+      // Flying kick pose
+      this.legs.right.hip.rotation.x = -1.6;
+      this.legs.left.hip.rotation.x = 0.4;
+      this.arms.left.upperArm.rotation.set(0.8, 0, 0.6);
+      this.arms.right.upperArm.rotation.set(-1.2, 0, -0.4);
+    } else {
+      // Dual web-shooter air dive
+      this.arms.left.upperArm.rotation.set(-1.4, 0, 0.2);
+      this.arms.right.upperArm.rotation.set(-1.4, 0, -0.2);
+    }
+
+    const animateLeap = () => {
+      const now = performance.now();
+      const p = Math.min(1.0, (now - startTime) / (jumpDuration * 1000));
+
+      // Parabolic jump arc
+      const curPos = new THREE.Vector3().lerpVectors(startPos, strikePos, p);
+      curPos.y += Math.sin(p * Math.PI) * 5.0; // high acrobatic flip
+      this.root.position.copy(curPos);
+      this.root.lookAt(targetDocPos.x, targetDocPos.y + 1.2, targetDocPos.z);
+
+      if (p < 1.0) {
+        requestAnimationFrame(animateLeap);
+      } else {
+        // IMPACT STRIKE ON DOC OCK!
+        this.root.position.copy(strikePos);
+        this.root.lookAt(targetDocPos.x, this.root.position.y, targetDocPos.z);
+        this.setPerchPose();
+
+        if (onHit) onHit(this);
+      }
+    };
+
+    requestAnimationFrame(animateLeap);
+  }
+
+  // --- CLIMAX: 5 SPIDER-MEN SWING AWAY TO BUILDINGS ---
+  swingAwayToSkyline(directionAngle = 0, onComplete = null) {
+    const startPos = this.root.position.clone();
+    const swingDuration = 2.0;
+    const startTime = performance.now();
+
+    // Target distant skyscraper
+    const targetSkyline = new THREE.Vector3(
+      startPos.x + Math.cos(directionAngle) * 55,
+      startPos.y + 22,
+      startPos.z + Math.sin(directionAngle) * 55
+    );
+
+    // Create swing web line
+    const webStrand = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([startPos, targetSkyline]),
+      new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2.5 })
+    );
+    this.scene.add(webStrand);
+
+    this.audioManager.playThwip();
+    this.audioManager.playWebPull();
+
+    const animateSwing = () => {
+      const now = performance.now();
+      const p = Math.min(1.0, (now - startTime) / (swingDuration * 1000));
+      const t = p * p; // smooth acceleration into distance
+
+      const curPos = new THREE.Vector3().lerpVectors(startPos, targetSkyline, t);
+      curPos.y += Math.sin(p * Math.PI) * 4.0; // pendulum arc
+      this.root.position.copy(curPos);
+      this.root.lookAt(targetSkyline.x, targetSkyline.y, targetSkyline.z);
+
+      if (p < 1.0) {
+        requestAnimationFrame(animateSwing);
+      } else {
+        this.scene.remove(webStrand);
+        this.root.visible = false;
+        if (onComplete) onComplete();
+      }
+    };
+
+    requestAnimationFrame(animateSwing);
+  }
+
+  // --- CLIMAX: HERO SPIDER-MAN DIVES & SAVES FALLING MJ ---
+  diveAndCatchMJ(fallingMJ, victoryTilePos, onSaved = null) {
+    const heroStart = this.root.position.clone();
+    const diveDuration = 1.0;
+    const diveStart = performance.now();
+
+    // 1. Dive off roof edge towards falling MJ
+    this.audioManager.playThwip();
+    this.root.lookAt(fallingMJ.root.position.x, fallingMJ.root.position.y, fallingMJ.root.position.z);
+
+    const animateDive = () => {
+      const now = performance.now();
+      const p = Math.min(1.0, (now - diveStart) / (diveDuration * 1000));
+
+      const targetPos = fallingMJ.root.position.clone();
+      this.root.position.lerpVectors(heroStart, targetPos, p * p);
+      this.root.lookAt(targetPos.x, targetPos.y, targetPos.z);
+
+      if (p < 1.0) {
+        requestAnimationFrame(animateDive);
+      } else {
+        // CATCH MJ IN MID-AIR!
+        this.audioManager.playHeroicCatch();
+        this.comicFX.spawnAt(this.root.position, 'GOTCHA!', '#38bdf8', '#ffffff', 2.5);
+
+        // Web sling back up to victory rooftop!
+        const swingUpStart = performance.now();
+        const swingUpDuration = 1.6;
+        const midAirCatchPos = this.root.position.clone();
+        const finalRoofPos = victoryTilePos.clone().add(new THREE.Vector3(-0.45, 0.1, 0));
+
+        const animateSwingUp = () => {
+          const sNow = performance.now();
+          const sp = Math.min(1.0, (sNow - swingUpStart) / (swingUpDuration * 1000));
+          const easeOut = 1 - Math.pow(1 - sp, 2);
+
+          const curPos = new THREE.Vector3().lerpVectors(midAirCatchPos, finalRoofPos, easeOut);
+          curPos.y += Math.sin(sp * Math.PI) * 3.5;
+          this.root.position.copy(curPos);
+
+          // MJ held securely in hero's arms
+          fallingMJ.root.position.copy(curPos);
+          fallingMJ.root.position.x += 0.45;
+          fallingMJ.root.rotation.set(0, 0, 0);
+
+          if (sp < 1.0) {
+            requestAnimationFrame(animateSwingUp);
+          } else {
+            // Land safely on the rooftop together!
+            this.root.position.copy(finalRoofPos);
+            fallingMJ.root.position.set(finalRoofPos.x + 0.9, 0.1, finalRoofPos.z);
+            fallingMJ.root.rotation.set(0, 0, 0);
+
+            this.holdHands(fallingMJ);
+            fallingMJ.animator.setState('victory');
+
+            this.audioManager.playVictory();
+            this.comicFX.spawnAt(finalRoofPos, 'CHAMPION!', '#f59e0b', '#ffffff', 3.5);
+
+            if (onSaved) onSaved();
+          }
+        };
+
+        requestAnimationFrame(animateSwingUp);
+      }
+    };
+
+    requestAnimationFrame(animateDive);
+  }
+
   update(delta) {
     this.animTime += delta;
 
@@ -935,6 +1253,17 @@ export class SpiderMan {
           f.root.rotation.x = -0.22 + fingerFlex;
         });
       }
+    }
+
+    // Dynamic mechanical spider leg subtle flexion animation
+    if (this.waldoes && this.waldoes.length > 0) {
+      this.waldoes.forEach(w => {
+        const flex1 = Math.sin(this.animTime * 2.2 + w.phase) * 0.04;
+        const flex2 = Math.cos(this.animTime * 1.8 + w.phase) * 0.035;
+        if (w.femurGroup) w.femurGroup.rotation.x = w.baseFemurRotX + flex1;
+        if (w.tibiaGroup) w.tibiaGroup.rotation.x = w.baseTibiaRotX - flex1 * 1.2;
+        if (w.femurGroup) w.femurGroup.rotation.z = w.baseFemurRotZ + flex2 * w.cfg.side;
+      });
     }
   }
 }

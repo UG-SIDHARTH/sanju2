@@ -32,7 +32,6 @@ export class Board {
     const baseMat = new THREE.MeshLambertMaterial({ color: 0x090d16 });
     const baseMesh = new THREE.Mesh(baseGeo, baseMat);
     baseMesh.position.y = -0.4;
-    baseMesh.receiveShadow = true;
     this.boardGroup.add(baseMesh);
 
     // Glowing cyan rim
@@ -43,122 +42,124 @@ export class Board {
     this.boardGroup.add(rimMesh);
   }
 
-  // 512x512 ultra-sharp tile textures
+  // 256x256 high-clarity, lightweight tile textures (Optimized for 4GB RAM & Intel iGPU)
   createTileTexture(number, isSpideyTrigger = false, isGoblin = false, isGoal = false, isPortal = false, portalDest = null) {
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 512;
+    canvas.width = 256;
+    canvas.height = 256;
     const ctx = canvas.getContext('2d');
 
-    // Enable high quality rendering
     ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
 
     const isEven = (Math.floor((number - 1) / 10) + ((number - 1) % 10)) % 2 === 0;
 
     // Tile Background
     if (isGoal) {
-      const grad = ctx.createRadialGradient(256, 256, 40, 256, 256, 256);
+      const grad = ctx.createRadialGradient(128, 128, 20, 128, 128, 128);
       grad.addColorStop(0, '#f59e0b');
       grad.addColorStop(1, '#78350f');
       ctx.fillStyle = grad;
     } else if (isPortal) {
-      const grad = ctx.createRadialGradient(256, 256, 30, 256, 256, 256);
-      grad.addColorStop(0, '#3b0764'); // Deep cosmic violet
+      const grad = ctx.createRadialGradient(128, 128, 15, 128, 128, 128);
+      grad.addColorStop(0, '#3b0764');
       grad.addColorStop(0.7, '#0f172a');
       grad.addColorStop(1, '#020617');
       ctx.fillStyle = grad;
     } else if (isSpideyTrigger) {
-      ctx.fillStyle = '#0284c7'; // Vibrant sky blue
+      ctx.fillStyle = '#0284c7';
     } else if (isGoblin) {
-      ctx.fillStyle = '#6b21a8'; // Menacing deep purple
+      const grad = ctx.createRadialGradient(128, 128, 20, 128, 128, 128);
+      grad.addColorStop(0, '#16a34a');
+      grad.addColorStop(0.65, '#14532d');
+      grad.addColorStop(1, '#052e16');
+      ctx.fillStyle = grad;
     } else {
       ctx.fillStyle = isEven ? '#1e293b' : '#0f172a';
     }
-    ctx.fillRect(0, 0, 512, 512);
+    ctx.fillRect(0, 0, 256, 256);
 
     // Crisp high-contrast borders
-    ctx.lineWidth = 16;
+    ctx.lineWidth = 8;
     if (isGoal) {
       ctx.strokeStyle = '#fef08a';
     } else if (isPortal) {
-      ctx.strokeStyle = '#c084fc'; // Glowing quantum purple
+      ctx.strokeStyle = '#c084fc';
     } else if (isSpideyTrigger) {
       ctx.strokeStyle = '#38bdf8';
     } else if (isGoblin) {
-      ctx.strokeStyle = '#d8b4fe';
+      ctx.strokeStyle = '#22c55e';
     } else {
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
     }
-    ctx.strokeRect(12, 12, 488, 488);
+    ctx.strokeRect(6, 6, 244, 244);
 
     // Inner bevel highlight
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = isPortal ? 'rgba(192, 132, 252, 0.6)' : 'rgba(255, 255, 255, 0.35)';
-    ctx.strokeRect(26, 26, 460, 460);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = isPortal ? 'rgba(192, 132, 252, 0.6)' : isGoblin ? 'rgba(74, 222, 128, 0.5)' : 'rgba(255, 255, 255, 0.35)';
+    ctx.strokeRect(13, 13, 230, 230);
 
     // Badges / Header labels
     if (isPortal) {
       ctx.fillStyle = '#e9d5ff';
-      ctx.font = '900 38px "Outfit", -apple-system, sans-serif';
+      ctx.font = '900 19px "Outfit", -apple-system, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(`🌀 PORTAL ➔ ${portalDest}`, 256, 86);
+      ctx.fillText(`🌀 PORTAL ➔ ${portalDest}`, 128, 43);
 
       // Swirling energy vortex rings
       ctx.strokeStyle = 'rgba(192, 132, 252, 0.35)';
-      ctx.lineWidth = 4;
-      for (let r = 50; r <= 160; r += 35) {
+      ctx.lineWidth = 2;
+      for (let r = 25; r <= 80; r += 18) {
         ctx.beginPath();
-        ctx.arc(256, 280, r, 0, Math.PI * 2);
+        ctx.arc(128, 140, r, 0, Math.PI * 2);
         ctx.stroke();
       }
     } else if (isSpideyTrigger) {
       ctx.fillStyle = '#38bdf8';
-      ctx.font = '900 42px "Outfit", -apple-system, sans-serif';
+      ctx.font = '900 21px "Outfit", -apple-system, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('🕷️ SPIDER TRIGGER', 256, 86);
+      ctx.fillText('🕷️ SPIDER TRIGGER', 128, 43);
 
       // Web icon decorative grid
       ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
-      ctx.lineWidth = 5;
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
       for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
-        ctx.moveTo(256, 280);
-        ctx.lineTo(256 + Math.cos(a) * 140, 280 + Math.sin(a) * 140);
+        ctx.moveTo(128, 140);
+        ctx.lineTo(128 + Math.cos(a) * 70, 140 + Math.sin(a) * 70);
       }
       ctx.stroke();
     } else if (isGoblin) {
-      ctx.fillStyle = '#fde047';
-      ctx.font = '900 42px "Outfit", -apple-system, sans-serif';
+      ctx.fillStyle = '#4ade80';
+      ctx.font = '900 21px "Outfit", -apple-system, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('🎃 GOBLIN HAZARD', 256, 86);
+      ctx.fillText('🎃 GOBLIN HAZARD', 128, 43);
     } else if (isGoal) {
       ctx.fillStyle = '#fef08a';
-      ctx.font = '900 48px "Outfit", Impact, sans-serif';
+      ctx.font = '900 24px "Outfit", Impact, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('❓ SECRET MULTIVERSE', 256, 86);
+      ctx.fillText('❓ SECRET MULTIVERSE', 128, 43);
     }
 
-    // Main Tile Number (Crisp, huge font)
-    ctx.font = isGoal ? '900 240px "Outfit", Impact, sans-serif' : '900 200px "Outfit", -apple-system, sans-serif';
+    // Main Tile Number
+    ctx.font = isGoal ? '900 120px "Outfit", Impact, sans-serif' : '900 100px "Outfit", -apple-system, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    const textY = isSpideyTrigger || isGoblin || isGoal || isPortal ? 300 : 256;
+    const textY = isSpideyTrigger || isGoblin || isGoal || isPortal ? 150 : 128;
 
-    // Solid black drop shadow outline for razor-sharp legibility
-    ctx.lineWidth = 20;
+    // Solid black outline for razor-sharp legibility
+    ctx.lineWidth = 10;
     ctx.strokeStyle = '#000000';
-    ctx.strokeText(`${number}`, 256, textY);
+    ctx.strokeText(`${number}`, 128, textY);
 
     ctx.fillStyle = isGoal ? '#ffffff' : isPortal ? '#f3e8ff' : isSpideyTrigger ? '#ffffff' : isGoblin ? '#ffffff' : '#f8fafc';
-    ctx.fillText(`${number}`, 256, textY);
+    ctx.fillText(`${number}`, 128, textY);
 
     const texture = new THREE.CanvasTexture(canvas);
-    texture.generateMipmaps = true;
-    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.generateMipmaps = false;
+    texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
-    texture.anisotropy = this.maxAnisotropy;
+    texture.anisotropy = 1;
     texture.needsUpdate = true;
     return texture;
   }
@@ -196,8 +197,6 @@ export class Board {
       const materials = [sideMat, sideMat, topMat, sideMat, sideMat, sideMat];
       const mesh = new THREE.Mesh(tileGeo, materials);
       mesh.position.set(x, y, z);
-      mesh.receiveShadow = true;
-
       this.boardGroup.add(mesh);
       this.tiles[n] = {
         number: n,

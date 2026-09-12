@@ -14,192 +14,192 @@ export const MJ_CONFIGS = [
 ];
 
 export class CharacterFactory {
-  static createRealisticFaceTexture(config) {
+  static createAnimeFaceTexture(config) {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 512;
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
 
-    // 1. Warm natural human skin base with soft peach tone
-    const skinGrad = ctx.createRadialGradient(256, 256, 40, 256, 256, 260);
-    skinGrad.addColorStop(0, '#fed7aa'); // Warm highlight
-    skinGrad.addColorStop(0.6, '#fdba74'); // Warm peach skin tone
-    skinGrad.addColorStop(1, '#f97316'); // Subtle subsurface edge warmth
+    // 1. Luminous Anime Porcelain Skin Tone
+    const skinGrad = ctx.createRadialGradient(256, 256, 30, 256, 256, 260);
+    skinGrad.addColorStop(0, '#fff5f0'); // Radiant anime highlight
+    skinGrad.addColorStop(0.65, '#fed7aa'); // Soft anime peach
+    skinGrad.addColorStop(1, '#fdba74'); // Warm anime cel contour
     ctx.fillStyle = skinGrad;
     ctx.fillRect(0, 0, 512, 512);
 
-    // 2. Soft Rosy Cheek Blush
+    // 2. Cute Anime Manga Cheek Blush & Sparkle Dashes
     [-1, 1].forEach(side => {
-      const cx = 256 + side * 115;
+      const cx = 256 + side * 122;
       const cy = 295;
-      const blush = ctx.createRadialGradient(cx, cy, 5, cx, cy, 65);
-      blush.addColorStop(0, 'rgba(244, 63, 94, 0.40)');
-      blush.addColorStop(1, 'rgba(244, 63, 94, 0)');
+      const blush = ctx.createRadialGradient(cx, cy, 4, cx, cy, 55);
+      blush.addColorStop(0, 'rgba(244, 63, 94, 0.45)');
+      blush.addColorStop(0.7, 'rgba(251, 113, 133, 0.22)');
+      blush.addColorStop(1, 'rgba(251, 113, 133, 0)');
       ctx.fillStyle = blush;
       ctx.beginPath();
-      ctx.arc(cx, cy, 65, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 55, 0, Math.PI * 2);
       ctx.fill();
+
+      // Anime diagonal cute blush dashes (///)
+      ctx.strokeStyle = 'rgba(225, 29, 72, 0.65)';
+      ctx.lineWidth = 3.5;
+      for (let d = -1; d <= 1; d++) {
+        ctx.beginPath();
+        ctx.moveTo(cx + d * 14 - 10, cy + 12);
+        ctx.lineTo(cx + d * 14 + 10, cy - 12);
+        ctx.stroke();
+      }
     });
 
-    // 3. Shaded Human Nose Bridge and Soft Nostrils
-    ctx.strokeStyle = 'rgba(194, 65, 12, 0.25)';
-    ctx.lineWidth = 4;
+    // 3. Cute Minimalist Anime Nose (Tiny dot)
+    ctx.fillStyle = 'rgba(225, 29, 72, 0.45)';
     ctx.beginPath();
-    ctx.moveTo(250, 210);
-    ctx.quadraticCurveTo(248, 260, 244, 280);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(262, 210);
-    ctx.quadraticCurveTo(264, 260, 268, 280);
-    ctx.stroke();
-
-    // Nose tip highlight
-    const noseTip = ctx.createRadialGradient(256, 282, 2, 256, 282, 18);
-    noseTip.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
-    noseTip.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    ctx.fillStyle = noseTip;
-    ctx.beginPath();
-    ctx.arc(256, 282, 18, 0, Math.PI * 2);
+    ctx.arc(256, 282, 3.5, 0, Math.PI * 2);
     ctx.fill();
 
-    // Soft Nostrils
-    ctx.fillStyle = 'rgba(124, 45, 18, 0.65)';
-    ctx.beginPath();
-    ctx.ellipse(244, 288, 7, 4, -0.2, 0, Math.PI * 2);
-    ctx.ellipse(268, 288, 7, 4, 0.2, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 4. Photorealistic Human Lips
+    // 4. Cute Stylized Anime Mouth (Sweet smile with anime gloss)
     ctx.save();
-    // Upper lip
-    ctx.fillStyle = '#e11d48';
+    ctx.fillStyle = '#f43f5e';
+    ctx.strokeStyle = '#be123c';
+    ctx.lineWidth = 3.5;
     ctx.beginPath();
-    ctx.moveTo(215, 350);
-    ctx.quadraticCurveTo(238, 335, 250, 342); // Cupid's bow left
-    ctx.quadraticCurveTo(256, 344, 262, 342); // Cupid's bow center
-    ctx.quadraticCurveTo(274, 335, 297, 350); // Cupid's bow right
-    ctx.quadraticCurveTo(256, 358, 215, 350);
+    ctx.moveTo(232, 350);
+    ctx.quadraticCurveTo(256, 370, 280, 350);
+    ctx.quadraticCurveTo(256, 384, 232, 350);
     ctx.fill();
+    ctx.stroke();
 
-    // Lower lip (plump with soft gloss)
-    const lowerGrad = ctx.createRadialGradient(256, 368, 4, 256, 368, 30);
-    lowerGrad.addColorStop(0, '#fb7185');
-    lowerGrad.addColorStop(0.7, '#e11d48');
-    lowerGrad.addColorStop(1, '#be123c');
-    ctx.fillStyle = lowerGrad;
+    // Anime lip gloss specular glint
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
     ctx.beginPath();
-    ctx.moveTo(215, 350);
-    ctx.quadraticCurveTo(256, 386, 297, 350);
-    ctx.quadraticCurveTo(256, 360, 215, 350);
-    ctx.fill();
-
-    // Soft Lip Creases & Specular Gloss
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-    ctx.beginPath();
-    ctx.ellipse(256, 364, 18, 5, 0, 0, Math.PI * 2);
+    ctx.ellipse(256, 360, 10, 3.5, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
-    // 5. Photorealistic Human Eyes
+    // 5. Large, Sparkling Expressive Anime Eyes
     [-1, 1].forEach(side => {
-      const eyeX = 256 + side * 82;
-      const eyeY = 215;
+      const eyeX = 256 + side * 86;
+      const eyeY = 210;
 
       ctx.save();
-      // Eye opening shape (almond)
+
+      // Eye contour: Large vertical anime oval
       ctx.beginPath();
-      ctx.moveTo(eyeX - 44, eyeY);
-      ctx.quadraticCurveTo(eyeX, eyeY - 26, eyeX + 44, eyeY);
-      ctx.quadraticCurveTo(eyeX, eyeY + 24, eyeX - 44, eyeY);
+      ctx.ellipse(eyeX, eyeY, 46, 56, side * 0.05, 0, Math.PI * 2);
       ctx.clip();
 
-      // Sclera (White with subtle gradient)
-      const scleraGrad = ctx.createLinearGradient(eyeX, eyeY - 25, eyeX, eyeY + 25);
-      scleraGrad.addColorStop(0, '#e2e8f0');
-      scleraGrad.addColorStop(0.3, '#f8fafc');
-      scleraGrad.addColorStop(1, '#cbd5e1');
-      ctx.fillStyle = scleraGrad;
-      ctx.fillRect(eyeX - 50, eyeY - 30, 100, 60);
+      // Bright white eye background (Sclera)
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(eyeX - 60, eyeY - 70, 120, 140);
 
-      // Iris with dark limbal ring and radial striations
-      const irisColor = config.eyeColor ? '#' + config.eyeColor.toString(16).padStart(6, '0') : '#059669';
-      const irisRadius = 22;
+      // Soft upper shadow on eye
+      const upperShadow = ctx.createLinearGradient(eyeX, eyeY - 56, eyeX, eyeY - 20);
+      upperShadow.addColorStop(0, 'rgba(148, 163, 184, 0.55)');
+      upperShadow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.fillStyle = upperShadow;
+      ctx.fillRect(eyeX - 60, eyeY - 56, 120, 40);
 
-      // Dark limbal ring
-      ctx.beginPath();
-      ctx.arc(eyeX, eyeY, irisRadius, 0, Math.PI * 2);
+      // Big Sparkling Anime Iris
+      const irisRadiusX = 36;
+      const irisRadiusY = 46;
+      const irisColor = config.eyeColor ? '#' + config.eyeColor.toString(16).padStart(6, '0') : '#06b6d4';
+
+      // Outer limbal ring
       ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.ellipse(eyeX, eyeY + 2, irisRadiusX + 2, irisRadiusY + 2, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Iris body
-      const irisGrad = ctx.createRadialGradient(eyeX, eyeY, 4, eyeX, eyeY, irisRadius);
-      irisGrad.addColorStop(0, '#6ee7b7');
-      irisGrad.addColorStop(0.5, irisColor);
-      irisGrad.addColorStop(1, '#064e3b');
+      // Iris vibrant color gradient
+      const irisGrad = ctx.createLinearGradient(eyeX, eyeY - irisRadiusY, eyeX, eyeY + irisRadiusY);
+      irisGrad.addColorStop(0, '#090d16');
+      irisGrad.addColorStop(0.35, irisColor);
+      irisGrad.addColorStop(0.85, '#ffffff');
       ctx.fillStyle = irisGrad;
       ctx.beginPath();
-      ctx.arc(eyeX, eyeY, irisRadius - 2, 0, Math.PI * 2);
+      ctx.ellipse(eyeX, eyeY + 2, irisRadiusX, irisRadiusY, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Iris radiant fibers
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-      ctx.lineWidth = 1;
-      for (let a = 0; a < Math.PI * 2; a += Math.PI / 8) {
-        ctx.beginPath();
-        ctx.moveTo(eyeX + Math.cos(a) * 6, eyeY + Math.sin(a) * 6);
-        ctx.lineTo(eyeX + Math.cos(a) * 18, eyeY + Math.sin(a) * 18);
-        ctx.stroke();
-      }
-
-      // Deep Black Pupil
-      ctx.fillStyle = '#090d16';
+      // Large anime pupil
+      ctx.fillStyle = '#020617';
       ctx.beginPath();
-      ctx.arc(eyeX, eyeY, 9, 0, Math.PI * 2);
+      ctx.ellipse(eyeX, eyeY - 2, 16, 22, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Cornea Specular Catchlight
+      // Glowing lower anime light ring
+      ctx.fillStyle = irisColor;
+      ctx.beginPath();
+      ctx.ellipse(eyeX, eyeY + 24, 22, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Signature Anime Highlights (Glints/Sparkles)
+      // Primary large highlight (top-left)
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.arc(eyeX + 5, eyeY - 5, 4, 0, Math.PI * 2);
-      ctx.arc(eyeX - 4, eyeY + 4, 2, 0, Math.PI * 2);
+      ctx.ellipse(eyeX - 12 * side, eyeY - 18, 12, 16, -0.3 * side, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Secondary smaller round highlight (bottom-right)
+      ctx.beginPath();
+      ctx.arc(eyeX + 14 * side, eyeY + 16, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Micro star twinkle
+      ctx.beginPath();
+      ctx.arc(eyeX - 4 * side, eyeY + 24, 3, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.restore();
 
-      // Upper Eyelash line (Dark & defined)
+      // Bold Top Anime Eyelash Line with Winged Flick
       ctx.strokeStyle = '#090d16';
-      ctx.lineWidth = 4.5;
+      ctx.lineWidth = 7;
+      ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.moveTo(eyeX - 46, eyeY + 2);
-      ctx.quadraticCurveTo(eyeX, eyeY - 28, eyeX + 46, eyeY + 2);
+      ctx.moveTo(eyeX - side * 50, eyeY - 14);
+      ctx.quadraticCurveTo(eyeX, eyeY - 60, eyeX + side * 54, eyeY - 26);
       ctx.stroke();
 
-      // Delicate individual eyelashes
-      ctx.lineWidth = 1.8;
-      for (let l = -3; l <= 3; l++) {
-        const lx = eyeX + l * 10;
-        const ly = eyeY - 20 - Math.abs(l) * 1.5;
-        ctx.beginPath();
-        ctx.moveTo(lx, ly);
-        ctx.lineTo(lx + side * 4 + l * 2, ly - 8);
-        ctx.stroke();
-      }
-
-      // Natural Feathered Eyebrow
-      ctx.strokeStyle = '#78350f';
-      ctx.lineWidth = 4;
+      // Anime side wing lash
+      ctx.lineWidth = 5;
       ctx.beginPath();
-      ctx.moveTo(eyeX - 42, eyeY - 36);
-      ctx.quadraticCurveTo(eyeX, eyeY - 52, eyeX + 44, eyeY - 40);
+      ctx.moveTo(eyeX + side * 44, eyeY - 32);
+      ctx.lineTo(eyeX + side * 58, eyeY - 42);
+      ctx.stroke();
+
+      // Lower subtle anime lash line
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(15, 23, 42, 0.7)';
+      ctx.beginPath();
+      ctx.moveTo(eyeX - side * 28, eyeY + 54);
+      ctx.quadraticCurveTo(eyeX, eyeY + 60, eyeX + side * 34, eyeY + 48);
+      ctx.stroke();
+
+      // Anime Double-Eyelid Crease
+      ctx.strokeStyle = 'rgba(15, 23, 42, 0.45)';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(eyeX - side * 36, eyeY - 66);
+      ctx.quadraticCurveTo(eyeX, eyeY - 76, eyeX + side * 38, eyeY - 50);
+      ctx.stroke();
+
+      // Elegant Arched Anime Eyebrows
+      ctx.strokeStyle = config.hex || '#d94826';
+      ctx.lineWidth = 4.5;
+      ctx.beginPath();
+      ctx.moveTo(eyeX - side * 44, eyeY - 88);
+      ctx.quadraticCurveTo(eyeX, eyeY - 108, eyeX + side * 48, eyeY - 84);
       ctx.stroke();
     });
 
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.generateMipmaps = true;
-    return tex;
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.generateMipmaps = false;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.needsUpdate = true;
+    return texture;
   }
 
   static createDenimMaterial() {
@@ -292,12 +292,12 @@ export class CharacterFactory {
     const root = new THREE.Group();
     root.name = `Character_${config.name}`;
 
-    // --- Photorealistic PBR Materials ---
-    const faceTex = CharacterFactory.createRealisticFaceTexture(config);
+    // --- Anime Cel-Shaded Materials & Expressive Anime Face ---
+    const faceTex = CharacterFactory.createAnimeFaceTexture(config);
     const headMat = new THREE.MeshStandardMaterial({
       map: faceTex,
-      roughness: 0.50,
-      metalness: 0.04
+      roughness: 0.42,
+      metalness: 0.02
     });
 
     const skinMat = new THREE.MeshStandardMaterial({
@@ -679,9 +679,12 @@ export class CharacterFactory {
     // Glowing rounded pill
     bCtx.fillStyle = 'rgba(15, 23, 42, 0.90)';
     bCtx.strokeStyle = config.hex || '#38bdf8';
-    bCtx.lineWidth = 5;
     bCtx.beginPath();
-    bCtx.roundRect(10, 10, 236, 60, 24);
+    if (typeof bCtx.roundRect === 'function') {
+      bCtx.roundRect(10, 10, 236, 60, 24);
+    } else {
+      bCtx.rect(10, 10, 236, 60);
+    }
     bCtx.fill();
     bCtx.stroke();
 
@@ -866,9 +869,9 @@ export class CharacterAnimator {
     }
   }
 
-  // Realistic Bipedal Human Walking Kinematics:
+  // Natural Human Running Kinematics (stride matched to 0.40s tile step pace):
   // Pelvic drop/tilt, pelvic yaw twist, torso counter-rotation, 3-phase leg cycle
-  updateWalking(delta, speed = 10.5) {
+  updateWalking(delta, speed = 7.8) {
     this.walkCycle += delta * speed;
     const c = this.walkCycle;
 

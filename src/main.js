@@ -34,22 +34,21 @@ class App {
     );
     this.camera.position.set(0, 26, 26);
 
-    // 3. Renderer with high DPI, filmic tone mapping & soft shadows
+    // 3. Renderer highly optimized for low-spec hardware (Intel Pentium / 4GB DDR3)
     this.renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      powerPreference: 'high-performance'
+      antialias: false,
+      powerPreference: 'high-performance',
+      precision: 'mediump'
     });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
 
-    // Crisp DPR scaling for ultra-sharp rendering
-    const dpr = Math.min(Math.max(window.devicePixelRatio || 1, 1.25), 2);
-    this.renderer.setPixelRatio(dpr);
+    // Strict 1.0 DPR cap - prevents massive fragment shading on integrated Intel GPU
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.0));
 
-    // Cinematic Realistic Lighting & Color Pipeline
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // Disable real-time shadow maps for massive framerate boost
+    this.renderer.shadowMap.enabled = false;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.02;
+    this.renderer.toneMappingExposure = 1.15;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     this.container.appendChild(this.renderer.domElement);
@@ -70,8 +69,8 @@ class App {
       this.audioManager
     );
 
-    // High-Clarity 100-Tile Board with Anisotropy
-    const maxAnisotropy = this.renderer.capabilities.getMaxAnisotropy() || 8;
+    // High-Clarity 100-Tile Board (Anisotropy 1 for low memory bandwidth)
+    const maxAnisotropy = 1;
     this.board = new Board(this.scene, maxAnisotropy);
 
     // Game Manager with 5 Classic Spider-Men & 6 Green Goblins
@@ -116,7 +115,7 @@ class App {
       this.camera.aspect = w / h;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(w, h);
-      this.renderer.setPixelRatio(Math.min(Math.max(window.devicePixelRatio || 1, 1.25), 2));
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.0));
     });
   }
 
@@ -139,5 +138,5 @@ class App {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  new App();
+  window.app = new App();
 });
