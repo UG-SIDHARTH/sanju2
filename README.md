@@ -2,15 +2,15 @@
 
 ### Basic Details
 **Team Name**: SHADOWS  
-**Team Members**:
-- **Team Lead**: SIDHARTH D - [Your College Name]
-- **Member 2**: SANJU LAKSHMAN B - [Your College Name]
-- **Member 3**: N/A (2-Member Hackathon Team)
+
+**Team Members**:  
+- **Team Lead**: SIDHARTH D - [College]  
+- **Member 2**: SANJU LAKSHMAN B - [College]  
 
 ---
 
 ### Project Description
-An absurdly over-engineered 3D anime browser game called **"Spider-Man Snakes & Ladders"** that has **strictly ZERO snakes and ZERO ladders**. Built for an 18-hour hackathon, two players pass-and-play locally on a single device as identical Mary Janes (distinguished strictly by hair color) navigating a 100-tile rooftop board guarded by 6 Spider-Men with mechanical gold legs, 3 hoverboard-flying Green Goblins, and 3 dark-singularity black-hole portals—only to discover that reaching Tile 100 is an inescapable Doctor Octopus kidnapping trap!
+An absurdly over-engineered 3D anime browser game called **"Spider-Man Snakes & Ladders"** that has **strictly ZERO snakes and ZERO ladders**. Built for an 18-hour hackathon, two human players pass-and-play locally on a single device as identical Mary Janes (distinguished strictly by hair color) navigating a 100-tile rooftop board guarded by 6 Spider-Men with mechanical gold legs, 3 hoverboard-flying Green Goblins, and 3 dark-singularity black-hole portals—only to discover that reaching Tile 100 is an inescapable Doctor Octopus kidnapping trap!
 
 ---
 
@@ -40,7 +40,9 @@ We built a completely physical 3D anime universe in the browser! Players control
 - **Tools used**: Git, GitHub, Antigravity IDE, Web Audio API (100% procedural sound synthesis — 0 external audio files)
 
 **For Hardware:**
-*N/A — Pure Software WebGL Project running on Laptop, Android, and iPhone browsers with touch & keyboard controls.*
+- *Main components*: N/A (Pure Software 3D WebGL Application)
+- *Specifications*: Runs smoothly in modern browsers on Laptop, Desktop, Android, and iPhone devices.
+- *Tools required*: Web browser with WebGL support (Chrome, Edge, Safari, Firefox).
 
 ---
 
@@ -94,6 +96,9 @@ npm run preview
 
 **Diagrams**:
 
+![Workflow](https://raw.githubusercontent.com/UG-SIDHARTH/sanju2/main/dist/assets/workflow.png)  
+*Game Architecture & Turn Workflow:*
+
 ```mermaid
 flowchart TD
     A[Start 2-Player Match] --> B[Procedural Board Layout: 6 Spideys, 3 Goblins, 3 Portal Pairs]
@@ -126,10 +131,17 @@ flowchart TD
     S --> T[YOU LOSE: You fell right into their trap!]
     T --> U[Restart Match: Fresh Procedural Board]
 ```
-*Architecture & Gameplay State Machine: Turn flow, physical dice rolling, hazard triggers, and Tile 100 Doctor Octopus trap.*
 
-**For Hardware:**  
-*N/A — Pure software web application.*
+#### For Hardware:
+
+**Schematic & Circuit**:
+- *Circuit*: N/A (Pure Software Application)
+- *Schematic*: N/A (Pure Software Application)
+
+**Build Photos**:
+- *Components*: N/A (Pure Software Application)
+- *Build Process*: Vite bundle transformation & Three.js WebGL canvas pipeline.
+- *Final Build*: WebGL canvas embedded in responsive HTML5/CSS3 application shell.
 
 ---
 
@@ -148,9 +160,9 @@ flowchart TD
 ### Team Contributions
 
 - **SIDHARTH D**:
-  - Core 3D engine integration using Three.js and custom shader/render loop.
-  - Procedural board layout generation (randomizing 6 Spider-Men, 3 Goblins, and 3 Portal Pairs with distance safety constraints).
-  - 3D physical dice physics simulation and unpredictable crypto-safe random generation.
+  - Core 3D engine integration using Three.js and custom render loop.
+  - Procedural board layout generation (randomizing 6 Spider-Men, 3 Goblins, and 3 Portal Pairs with safety distance constraints).
+  - 3D physical dice simulation and unpredictable crypto-safe random generation.
   - Turn resolution logic, collision bonus roll system, and exact 100 win/forfeit mechanics.
   - Build optimization, Git architecture, and zero-latency single-device state management.
 
