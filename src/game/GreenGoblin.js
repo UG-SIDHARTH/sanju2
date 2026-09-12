@@ -67,10 +67,8 @@ export class GreenGoblin {
 
     return new THREE.MeshStandardMaterial({
       map: tex,
-      roughness: 0.35,
-      metalness: 0.12,
-      emissive: 0x14532d,
-      emissiveIntensity: 0.28
+      roughness: 0.40,
+      metalness: 0.12
     });
   }
 
@@ -80,10 +78,8 @@ export class GreenGoblin {
 
     const greenSkinMat = new THREE.MeshStandardMaterial({
       color: 0x22c55e,
-      roughness: 0.38,
-      metalness: 0.10,
-      emissive: 0x166534,
-      emissiveIntensity: 0.26
+      roughness: 0.42,
+      metalness: 0.10
     });
 
     const purpleMat = new THREE.MeshStandardMaterial({
@@ -272,33 +268,6 @@ export class GreenGoblin {
       this.flames.push(flame);
     });
 
-    // --- HOVERBOARD GLOWING AURA FIELD ---
-    // Pulsing translucent electromagnetic energy aura hovering beneath and around the glider
-    const auraCanvas = document.createElement('canvas');
-    auraCanvas.width = 256;
-    auraCanvas.height = 256;
-    const aCtx = auraCanvas.getContext('2d');
-    const aGrad = aCtx.createRadialGradient(128, 128, 20, 128, 128, 128);
-    aGrad.addColorStop(0, 'rgba(34, 197, 94, 0.95)'); // Vibrant toxic green core
-    aGrad.addColorStop(0.5, 'rgba(74, 222, 128, 0.60)');  // Electric green halo
-    aGrad.addColorStop(0.85, 'rgba(126, 34, 206, 0.35)'); // Classic purple edge
-    aGrad.addColorStop(1, 'rgba(34, 197, 94, 0)');     // Fading edge
-    aCtx.fillStyle = aGrad;
-    aCtx.fillRect(0, 0, 256, 256);
-
-    const auraTex = new THREE.CanvasTexture(auraCanvas);
-    const auraGeo = new THREE.PlaneGeometry(3.6, 2.6);
-    this.auraMat = new THREE.MeshBasicMaterial({
-      map: auraTex,
-      transparent: true,
-      opacity: 0.75,
-      side: THREE.DoubleSide,
-      depthWrite: false
-    });
-    this.auraMesh = new THREE.Mesh(auraGeo, this.auraMat);
-    this.auraMesh.rotation.x = -Math.PI / 2;
-    this.auraMesh.position.y = -0.15;
-    this.gliderGroup.add(this.auraMesh);
 
     // Magnetic Foot Clamps
     [-1, 1].forEach(side => {
@@ -822,13 +791,6 @@ export class GreenGoblin {
       });
     }
 
-    // Animate pulsating hoverboard electromagnetic energy aura field
-    if (this.auraMesh && this.auraMat) {
-      const auraPulse = 1.0 + Math.sin(this.hoverTime * 6.0) * 0.12;
-      this.auraMesh.scale.set(auraPulse, auraPulse, 1.0);
-      this.auraMat.opacity = 0.65 + Math.sin(this.hoverTime * 8.0) * 0.25;
-      this.auraMesh.rotation.z = Math.sin(this.hoverTime * 2.0) * 0.08;
-    }
 
     // Flicker rocket jet exhaust flames
     if (this.flames) {

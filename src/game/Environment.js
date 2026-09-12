@@ -27,7 +27,6 @@ export class Environment {
     this.create3DSkyscraperSkyline();
     this.createSearchlights();
     this.createSkyDome();
-    this.createFireflies();
 
     if (this.camera && this.domElement) {
       this.setupInteractivity();
@@ -664,36 +663,6 @@ export class Environment {
     this.scene.add(this.skyMesh);
   }
 
-  createFireflies() {
-    const count = 20; // Lightweight ambient glow particles
-    const positions = new Float32Array(count * 3);
-    const phases = new Float32Array(count);
-    const speeds = new Float32Array(count);
-
-    for (let i = 0; i < count; i++) {
-      positions[i * 3 + 0] = (Math.random() - 0.5) * 36;
-      positions[i * 3 + 1] = 0.5 + Math.random() * 3.5;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 36;
-      phases[i] = Math.random() * Math.PI * 2;
-      speeds[i] = 0.5 + Math.random() * 0.5;
-    }
-
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-    const mat = new THREE.PointsMaterial({
-      color: 0xfef08a,
-      size: 0.45,
-      transparent: true,
-      opacity: 0.75,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
-    });
-
-    this.fireflyPoints = new THREE.Points(geo, mat);
-    this.scene.add(this.fireflyPoints);
-    this.fireflyData = { positions, phases, speeds, count };
-  }
 
   setupInteractivity() {
     if (!this.domElement || !this.camera) return;
@@ -763,16 +732,6 @@ export class Environment {
       this.skyMesh.rotation.y += delta * 0.006;
     }
 
-    // 3. Fireflies subtle drift (only 20 particles)
-    if (this.fireflyPoints && this.fireflyData) {
-      const { positions, phases, speeds, count } = this.fireflyData;
-      for (let i = 0; i < count; i++) {
-        const i3 = i * 3;
-        phases[i] += delta * speeds[i];
-        positions[i3 + 1] += Math.sin(phases[i]) * 0.012;
-      }
-      this.fireflyPoints.geometry.attributes.position.needsUpdate = true;
-    }
 
     // 4. Interactive Water Ripples Animation
     for (let i = this.waterRipples.length - 1; i >= 0; i--) {

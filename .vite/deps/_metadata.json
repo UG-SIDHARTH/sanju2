@@ -1,0 +1,21 @@
+{
+  "hash": "fb7da5b9",
+  "configHash": "0f493901",
+  "lockfileHash": "9041ac15",
+  "browserHash": "c52f5c09",
+  "optimized": {
+    "three": {
+      "src": "../../node_modules/three/build/three.module.js",
+      "file": "three.js",
+      "fileHash": "96ba268a",
+      "needsInterop": false
+    },
+    "canvas-confetti": {
+      "src": "../../node_modules/canvas-confetti/dist/confetti.module.mjs",
+      "file": "canvas-confetti.js",
+      "fileHash": "f47438fd",
+      "needsInterop": false
+    }
+  },
+  "chunks": {}
+}

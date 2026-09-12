@@ -34,16 +34,21 @@ export class Board {
     baseMesh.position.y = -0.4;
     this.boardGroup.add(baseMesh);
 
-    // Glowing cyan rim
-    const rimGeo = new THREE.BoxGeometry(baseWidth + 0.3, 0.15, baseWidth + 0.3);
-    const rimMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
+    // Sleek architectural dark titanium border rim
+    const rimGeo = new THREE.BoxGeometry(baseWidth + 0.25, 0.12, baseWidth + 0.25);
+    const rimMat = new THREE.MeshStandardMaterial({
+      color: 0x334155,
+      roughness: 0.35,
+      metalness: 0.8
+    });
     const rimMesh = new THREE.Mesh(rimGeo, rimMat);
     rimMesh.position.y = 0.02;
     this.boardGroup.add(rimMesh);
   }
 
   // 256x256 high-clarity, lightweight tile textures (Optimized for 4GB RAM & Intel iGPU)
-  createTileTexture(number, isSpideyTrigger = false, isGoblin = false, isGoal = false, isPortal = false, portalDest = null) {
+  // 256x256 high-clarity, lightweight tile textures (Optimized for 4GB RAM & Intel iGPU)
+  createTileTexture(number, isSpideyTrigger = false, isGoblin = false, isGoal = false, isPortalEntrance = false, portalDest = null, isPortalExit = false, portalFrom = null) {
     const canvas = document.createElement('canvas');
     canvas.width = 256;
     canvas.height = 256;
@@ -59,10 +64,16 @@ export class Board {
       grad.addColorStop(0, '#f59e0b');
       grad.addColorStop(1, '#78350f');
       ctx.fillStyle = grad;
-    } else if (isPortal) {
+    } else if (isPortalEntrance) {
       const grad = ctx.createRadialGradient(128, 128, 15, 128, 128, 128);
       grad.addColorStop(0, '#3b0764');
       grad.addColorStop(0.7, '#0f172a');
+      grad.addColorStop(1, '#020617');
+      ctx.fillStyle = grad;
+    } else if (isPortalExit) {
+      const grad = ctx.createRadialGradient(128, 128, 15, 128, 128, 128);
+      grad.addColorStop(0, '#701a75');
+      grad.addColorStop(0.7, '#1e1b4b');
       grad.addColorStop(1, '#020617');
       ctx.fillStyle = grad;
     } else if (isSpideyTrigger) {
@@ -82,8 +93,10 @@ export class Board {
     ctx.lineWidth = 8;
     if (isGoal) {
       ctx.strokeStyle = '#fef08a';
-    } else if (isPortal) {
+    } else if (isPortalEntrance) {
       ctx.strokeStyle = '#c084fc';
+    } else if (isPortalExit) {
+      ctx.strokeStyle = '#f472b6';
     } else if (isSpideyTrigger) {
       ctx.strokeStyle = '#38bdf8';
     } else if (isGoblin) {
@@ -95,18 +108,32 @@ export class Board {
 
     // Inner bevel highlight
     ctx.lineWidth = 2;
-    ctx.strokeStyle = isPortal ? 'rgba(192, 132, 252, 0.6)' : isGoblin ? 'rgba(74, 222, 128, 0.5)' : 'rgba(255, 255, 255, 0.35)';
+    ctx.strokeStyle = isPortalEntrance ? 'rgba(192, 132, 252, 0.6)' : isPortalExit ? 'rgba(244, 114, 182, 0.6)' : isGoblin ? 'rgba(74, 222, 128, 0.5)' : 'rgba(255, 255, 255, 0.35)';
     ctx.strokeRect(13, 13, 230, 230);
 
     // Badges / Header labels
-    if (isPortal) {
+    if (isPortalEntrance) {
       ctx.fillStyle = '#e9d5ff';
-      ctx.font = '900 19px "Outfit", -apple-system, sans-serif';
+      ctx.font = '900 18px "Outfit", -apple-system, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(`🌀 PORTAL ➔ ${portalDest}`, 128, 43);
+      ctx.fillText(`🌀 ENTRANCE ➔ ${portalDest}`, 128, 43);
 
       // Swirling energy vortex rings
       ctx.strokeStyle = 'rgba(192, 132, 252, 0.35)';
+      ctx.lineWidth = 2;
+      for (let r = 25; r <= 80; r += 18) {
+        ctx.beginPath();
+        ctx.arc(128, 140, r, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    } else if (isPortalExit) {
+      ctx.fillStyle = '#fbcfe8';
+      ctx.font = '900 18px "Outfit", -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`✨ EXIT (FROM ${portalFrom})`, 128, 43);
+
+      // Cosmic flare radiating lines
+      ctx.strokeStyle = 'rgba(244, 114, 182, 0.35)';
       ctx.lineWidth = 2;
       for (let r = 25; r <= 80; r += 18) {
         ctx.beginPath();
@@ -137,7 +164,7 @@ export class Board {
       ctx.fillStyle = '#fef08a';
       ctx.font = '900 24px "Outfit", Impact, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('❓ SECRET MULTIVERSE', 128, 43);
+      ctx.fillText('🐙 TILE 100', 128, 43);
     }
 
     // Main Tile Number
@@ -145,14 +172,14 @@ export class Board {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    const textY = isSpideyTrigger || isGoblin || isGoal || isPortal ? 150 : 128;
+    const textY = isSpideyTrigger || isGoblin || isGoal || isPortalEntrance || isPortalExit ? 150 : 128;
 
     // Solid black outline for razor-sharp legibility
     ctx.lineWidth = 10;
     ctx.strokeStyle = '#000000';
     ctx.strokeText(`${number}`, 128, textY);
 
-    ctx.fillStyle = isGoal ? '#ffffff' : isPortal ? '#f3e8ff' : isSpideyTrigger ? '#ffffff' : isGoblin ? '#ffffff' : '#f8fafc';
+    ctx.fillStyle = isGoal ? '#ffffff' : isPortalEntrance ? '#f3e8ff' : isPortalExit ? '#fdf2f8' : isSpideyTrigger ? '#ffffff' : isGoblin ? '#ffffff' : '#f8fafc';
     ctx.fillText(`${number}`, 128, textY);
 
     const texture = new THREE.CanvasTexture(canvas);
@@ -225,24 +252,28 @@ export class Board {
     this.boardGroup.add(this.goalRing);
   }
 
-  setSpecialTiles(spideyTriggers, goblinPositions, portalMap = {}) {
+  setSpecialTiles(spideyTriggers, goblinPositions, portalEntrances = {}, portalExits = {}) {
     this.specialMarkers.spideyTriggers = spideyTriggers;
     this.specialMarkers.goblins = goblinPositions;
-    this.specialMarkers.portalMap = portalMap;
+    this.specialMarkers.portalEntrances = portalEntrances;
+    this.specialMarkers.portalExits = portalExits;
 
     for (let n = 1; n <= 100; n++) {
       const isSpidey = spideyTriggers.includes(n);
       const isGoblin = goblinPositions.includes(n);
       const isGoal = n === 100;
-      const isPortal = Boolean(portalMap[n]);
-      const portalDest = portalMap[n] || null;
+      const isPortalEntrance = Boolean(portalEntrances[n]);
+      const portalDest = portalEntrances[n] || null;
+      const isPortalExit = Boolean(portalExits[n]);
+      const portalFrom = portalExits[n] || null;
 
       const tile = this.tiles[n];
       tile.isSpideyTrigger = isSpidey;
       tile.isGoblin = isGoblin;
-      tile.isPortal = isPortal;
+      tile.isPortalEntrance = isPortalEntrance;
+      tile.isPortalExit = isPortalExit;
 
-      const newTex = this.createTileTexture(n, isSpidey, isGoblin, isGoal, isPortal, portalDest);
+      const newTex = this.createTileTexture(n, isSpidey, isGoblin, isGoal, isPortalEntrance, portalDest, isPortalExit, portalFrom);
       tile.topMat.map.dispose();
       tile.topMat.map = newTex;
       tile.topMat.needsUpdate = true;

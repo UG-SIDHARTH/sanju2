@@ -444,49 +444,44 @@ export class DrOctopus {
     }
   }
 
-  // --- DRAMATIC TILE 100 CLIMAX: THROW DOWN & MULTIVERSE SHOWDOWN ---
-  triggerAbduction(targetMJ, onThrown, onCameraUpdate) {
+  // --- DRAMATIC TILE 100 TRAP: KIDNAPS MJ & REPEATEDLY JUMPS AWAY ACROSS SKYLINE ---
+  triggerTrapKidnapping(targetMJ, onComplete, onCameraUpdate) {
     this.isAbducting = true;
     this.root.visible = true;
 
     const tilePos = targetMJ.root.position.clone();
-    // Start high in the sky above Tile 100
-    this.root.position.set(tilePos.x, 14.0, tilePos.z);
-    this.root.lookAt(tilePos.x, this.root.position.y, tilePos.z + 10);
+    // Start slightly in the air above Tile 100
+    this.root.position.set(tilePos.x, 10.0, tilePos.z - 1.2);
+    this.root.lookAt(tilePos.x, this.root.position.y, tilePos.z);
 
-    // 1. Play Heavy Mechanical Servos & Hydraulic Clamp
     this.audioManager.playDocOckEmergence();
+    this.audioManager.playDocOckVoiceChime();
 
-    // 2. Descend smoothly from the sky onto Tile 100
-    const descentDuration = 1.3;
+    const descentDuration = 0.8;
     const descentStart = performance.now();
 
     const animateDescent = () => {
       const now = performance.now();
       const p = Math.min(1.0, (now - descentStart) / (descentDuration * 1000));
-
-      // Ease out quad
       const t = 1 - Math.pow(1 - p, 2);
-      this.root.position.y = THREE.MathUtils.lerp(14.0, 0.2, t);
+      this.root.position.y = THREE.MathUtils.lerp(10.0, 0.2, t);
 
       if (onCameraUpdate) {
-        onCameraUpdate(this.root.position, targetMJ.root.position, p * 0.4);
+        onCameraUpdate(this.root.position, targetMJ.root.position, p * 0.5);
       }
 
       if (p < 1.0) {
         requestAnimationFrame(animateDescent);
       } else {
-        // Landed on Tile 100!
-        this.executeClawGrabAndThrow(targetMJ, onThrown, onCameraUpdate);
+        this.executeClawGrabAndEscape(targetMJ, onComplete, onCameraUpdate);
       }
     };
 
     requestAnimationFrame(animateDescent);
   }
 
-  executeClawGrabAndThrow(targetMJ, onThrown, onCameraUpdate) {
-    // 1. Claws clamp around MJ
-    const grabDuration = 0.7;
+  executeClawGrabAndEscape(targetMJ, onComplete, onCameraUpdate) {
+    const grabDuration = 0.6;
     const grabStart = performance.now();
 
     const animateGrab = () => {
@@ -495,12 +490,12 @@ export class DrOctopus {
 
       this.tentacles.forEach(t => {
         if (t.config.isUpper) {
-          t.joints.forEach((j) => {
+          t.joints.forEach(j => {
             j.rotation.x = THREE.MathUtils.lerp(-0.45, -0.92, p);
             j.rotation.z = THREE.MathUtils.lerp(t.config.side * 0.25, t.config.side * 0.40, p);
           });
           t.fingers.forEach(f => {
-            f.rotation.x = THREE.MathUtils.lerp(0, -0.55, p);
+            f.rotation.x = THREE.MathUtils.lerp(0, -0.65, p);
           });
         }
       });
@@ -509,91 +504,100 @@ export class DrOctopus {
         requestAnimationFrame(animateGrab);
       } else {
         targetMJ.animator.setState('abducted');
-        this.comicFX.spawnAt(targetMJ.root.position, 'CLANK!', '#e62429', '#ffffff', 1.8);
+        this.comicFX.spawnAt(targetMJ.root.position, 'CLANK!', '#dc2626', '#ffffff', 2.0);
         this.audioManager.playDocOckEmergence();
 
-        // 2. Lift MJ high above head and THROW HER DOWN!
         setTimeout(() => {
-          this.executeThrowDown(targetMJ, onThrown, onCameraUpdate);
-        }, 500);
+          this.executeLeapingEscape(targetMJ, onComplete, onCameraUpdate);
+        }, 400);
       }
     };
 
     requestAnimationFrame(animateGrab);
   }
 
-  executeThrowDown(targetMJ, onThrown, onCameraUpdate) {
-    const liftDuration = 1.0;
-    const liftStart = performance.now();
+  executeLeapingEscape(targetMJ, onComplete, onCameraUpdate) {
+    // 3 progressive bounding leaps across the rooftop and into the skyline
+    const startPos = this.root.position.clone();
 
-    const animateLift = () => {
-      const now = performance.now();
-      const p = Math.min(1.0, (now - liftStart) / (liftDuration * 1000));
-      const ease = p * p * (3 - 2 * p);
+    const waypoints = [
+      {
+        start: startPos.clone(),
+        end: new THREE.Vector3(startPos.x - 8, 1.2, startPos.z - 12),
+        peakY: 7.0,
+        duration: 1.0,
+        sfx: 'BOING!'
+      },
+      {
+        start: new THREE.Vector3(startPos.x - 8, 1.2, startPos.z - 12),
+        end: new THREE.Vector3(startPos.x - 24, 6.0, startPos.z - 28),
+        peakY: 18.0,
+        duration: 1.2,
+        sfx: 'LEAP!'
+      },
+      {
+        start: new THREE.Vector3(startPos.x - 24, 6.0, startPos.z - 28),
+        end: new THREE.Vector3(startPos.x - 45, -12.0, startPos.z - 50),
+        peakY: 26.0,
+        duration: 1.4,
+        sfx: 'VANISH!'
+      }
+    ];
 
-      // Lift MJ up into the air
-      targetMJ.root.position.y = 0.1 + ease * 6.5;
-      targetMJ.root.position.x = this.root.position.x + Math.sin(p * Math.PI) * 0.4;
-      targetMJ.root.position.z = this.root.position.z + 0.5;
-
-      // Tentacles raise upward
-      this.tentacles.forEach(t => {
-        if (t.config.isUpper) {
-          t.joints.forEach((j) => {
-            j.rotation.x = THREE.MathUtils.lerp(-0.92, 0.45, ease);
-          });
-        }
-      });
-
-      if (onCameraUpdate) {
-        onCameraUpdate(this.root.position, targetMJ.root.position, 0.5 + p * 0.3);
+    const runLeap = (leapIdx) => {
+      if (leapIdx >= waypoints.length) {
+        // Disappeared toward an unknown destination!
+        this.root.visible = false;
+        targetMJ.root.visible = false;
+        this.isAbducting = false;
+        if (onComplete) onComplete();
+        return;
       }
 
-      if (p < 1.0) {
-        requestAnimationFrame(animateLift);
-      } else {
-        // HURL MJ DOWN!
-        this.comicFX.spawnAt(targetMJ.root.position, 'HURL!', '#ef4444', '#fef08a', 2.2);
-        this.comicFX.showBanner('DR. OCTOPUS THROWS MJ DOWN! SPIDER-MEN ASSEMBLE!');
-        this.audioManager.playSuspenseHeartbeat();
+      const wp = waypoints[leapIdx];
+      const leapStart = performance.now();
+      this.comicFX.spawnAt(this.root.position, wp.sfx, '#f59e0b', '#ffffff', 1.8);
+      this.audioManager.playGliderRoar(1.2);
 
-        // Open claws wide
-        this.tentacles.forEach(t => {
-          if (t.config.isUpper) {
-            t.fingers.forEach(f => {
-              f.rotation.x = 0.45; // open claws
-            });
-          }
+      const animateOneLeap = () => {
+        const now = performance.now();
+        const p = Math.min(1.0, (now - leapStart) / (wp.duration * 1000));
+
+        // Parabolic jump arc
+        const curX = THREE.MathUtils.lerp(wp.start.x, wp.end.x, p);
+        const curZ = THREE.MathUtils.lerp(wp.start.z, wp.end.z, p);
+        const jumpArc = Math.sin(p * Math.PI) * (wp.peakY - Math.min(wp.start.y, wp.end.y));
+        const curY = THREE.MathUtils.lerp(wp.start.y, wp.end.y, p) + jumpArc;
+
+        this.root.position.set(curX, curY, curZ);
+        this.root.lookAt(wp.end.x, curY, wp.end.z);
+
+        // MJ is held in mechanical tentacles in front of Doc Ock
+        targetMJ.root.position.set(curX, curY + 1.2, curZ + 0.6);
+        targetMJ.root.rotation.set(0.2, 0, Math.sin(p * 12) * 0.2);
+
+        // Tentacle articulation while jumping
+        this.tentacles.forEach((t) => {
+          t.joints.forEach((j, jIdx) => {
+            j.rotation.x = Math.sin(p * Math.PI + jIdx) * 0.4;
+          });
         });
 
-        // MJ falls rapidly downward
-        const fallStart = performance.now();
-        const fallDuration = 1.6;
-        const initialY = targetMJ.root.position.y;
+        if (onCameraUpdate) {
+          onCameraUpdate(this.root.position, targetMJ.root.position, p);
+        }
 
-        const animateFall = () => {
-          const fNow = performance.now();
-          const fp = Math.min(1.0, (fNow - fallStart) / (fallDuration * 1000));
-          // Acceleration due to gravity
-          const gravityT = fp * fp;
+        if (p < 1.0) {
+          requestAnimationFrame(animateOneLeap);
+        } else {
+          runLeap(leapIdx + 1);
+        }
+      };
 
-          targetMJ.root.position.y = initialY - gravityT * 12.0;
-          targetMJ.root.position.z += 0.08;
-          targetMJ.root.rotation.x += 0.05;
-          targetMJ.root.rotation.z += 0.03;
-
-          if (fp < 1.0) {
-            requestAnimationFrame(animateFall);
-          }
-        };
-        requestAnimationFrame(animateFall);
-
-        // Notify that MJ has been thrown down! All Spider-Men must assemble!
-        if (onThrown) onThrown(targetMJ);
-      }
+      requestAnimationFrame(animateOneLeap);
     };
 
-    requestAnimationFrame(animateLift);
+    runLeap(0);
   }
 
   // React violently to Spider-Man team attack strikes
@@ -671,6 +675,24 @@ export class DrOctopus {
         tObj.joints.forEach((j, jIdx) => {
           const wave = Math.sin(this.animTime * 2.2 + tIdx * 1.5 + jIdx * 0.8) * 0.04;
           j.rotation.z += wave * 0.1;
+        });
+      });
+    }
+  }
+
+  reset() {
+    this.root.visible = false;
+    this.isAbducting = false;
+    this.animTime = 0;
+    this.root.position.set(0, 0, 0);
+    this.root.rotation.set(0, 0, 0);
+    if (this.tentacles) {
+      this.tentacles.forEach(t => {
+        t.joints.forEach(j => {
+          j.rotation.set(0, 0, 0);
+        });
+        t.fingers.forEach(f => {
+          f.rotation.set(0, 0, 0);
         });
       });
     }

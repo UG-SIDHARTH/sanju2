@@ -261,10 +261,12 @@ export class SpiderMan {
       metalness: 0.85
     });
 
-    // Glowing spider-ring on the ground
-    const ringGlowMat = new THREE.MeshBasicMaterial({
-      color: 0xef4444,
-      side: THREE.DoubleSide
+    // Realistic soft contact shadow material (Zero glow)
+    const contactShadowMat = new THREE.MeshBasicMaterial({
+      color: 0x000000,
+      transparent: true,
+      opacity: 0.35,
+      depthWrite: false
     });
 
     // --- 1. PELVIS & ATHLETIC HIPS ---
@@ -702,11 +704,11 @@ export class SpiderMan {
     // Default heroic superhero perch pose
     this.setPerchPose();
 
-    // Glowing spider web base halo at feet
-    const halo = new THREE.Mesh(new THREE.RingGeometry(0.70, 0.92, 24), ringGlowMat);
-    halo.rotation.x = -Math.PI / 2;
-    halo.position.y = 0.03;
-    this.root.add(halo);
+    // Realistic soft contact ambient shadow under feet (Zero glow, physically grounded)
+    const shadowMesh = new THREE.Mesh(new THREE.CircleGeometry(0.55, 16), contactShadowMat);
+    shadowMesh.rotation.x = -Math.PI / 2;
+    shadowMesh.position.y = 0.02;
+    this.root.add(shadowMesh);
 
     // Enable soft shadow casting & receiving on every mesh
     this.root.traverse(child => {

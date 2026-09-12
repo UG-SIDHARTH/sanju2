@@ -30,6 +30,7 @@ export class Portal {
     this.exitGroup.position.set(this.destPos.x, 1.2, this.destPos.z);
     this.scene.add(this.exitGroup);
 
+    this.isEntranceActive = true;
     this.buildPortalStructure(this.entranceGroup, true);
     this.buildPortalStructure(this.exitGroup, false);
 
@@ -46,7 +47,16 @@ export class Portal {
           glow: '#e11d48',
           shadow: '#1e050c',
           hexStr: '#f43f5e',
-          name: 'DARK CRIMSON VOID RIFT'
+          name: 'DARK CRIMSON RIFT'
+        };
+      case 'dark_abyss':
+        return {
+          primary: 0x0c4a6e,
+          core: 0x0284c7,
+          glow: '#38bdf8',
+          shadow: '#030712',
+          hexStr: '#0284c7',
+          name: 'DARK ABYSSAL VORTEX'
         };
       case 'dark_void':
       default:
@@ -62,7 +72,7 @@ export class Portal {
   }
 
   // Swirling Dark Matter Galaxy Canvas Texture
-  createDarkVortexTexture(colors) {
+  createDarkVortexTexture(colors, isEntrance) {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 512;
@@ -83,17 +93,18 @@ export class Portal {
     ctx.arc(cx, cy, 250, 0, Math.PI * 2);
     ctx.fill();
 
-    // Dark swirling spiral tendrils
-    const arms = 5;
+    // Swirling spiral tendrils (inward for entrance, outward for exit)
+    const arms = 6;
+    const dir = isEntrance ? 1 : -1;
     for (let arm = 0; arm < arms; arm++) {
       const baseAngle = (arm / arms) * Math.PI * 2;
       for (let r = 25; r < 240; r += 2) {
-        const spiralAngle = baseAngle + (r * 0.042);
+        const spiralAngle = baseAngle + dir * (r * 0.045);
         const x = cx + Math.cos(spiralAngle) * r;
         const y = cy + Math.sin(spiralAngle) * r;
 
         const alpha = Math.sin((r / 240) * Math.PI) * 0.9;
-        const width = 10 + (r * 0.05);
+        const width = 8 + (r * 0.05);
 
         ctx.fillStyle = colors.glow;
         ctx.globalAlpha = alpha;
@@ -103,11 +114,11 @@ export class Portal {
       }
     }
 
-    // Outer Dark Lightning Flare
+    // Outer Lightning Flare
     ctx.globalAlpha = 0.95;
     const flareGrad = ctx.createRadialGradient(cx, cy, 120, cx, cy, 240);
     flareGrad.addColorStop(0, colors.glow);
-    flareGrad.addColorStop(0.65, 'rgba(168, 85, 247, 0.85)');
+    flareGrad.addColorStop(0.65, isEntrance ? 'rgba(168, 85, 247, 0.85)' : 'rgba(236, 72, 153, 0.85)');
     flareGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = flareGrad;
     ctx.beginPath();
@@ -119,12 +130,12 @@ export class Portal {
   }
 
   buildPortalStructure(parentGroup, isEntrance) {
-    // 1. Dark Energy Outer Ring
+    // 1. Dark Energy Outer Ring (Obsidian frame with glowing runic runes)
     const ringGeo = new THREE.TorusGeometry(1.02, 0.065, 16, 48);
     const ringMat = new THREE.MeshStandardMaterial({
-      color: 0x18062b,
+      color: isEntrance ? 0x18062b : 0x2e0854,
       emissive: this.colors.core,
-      emissiveIntensity: 1.8,
+      emissiveIntensity: isEntrance ? 1.8 : 2.4,
       roughness: 0.2,
       metalness: 0.95
     });
@@ -132,7 +143,7 @@ export class Portal {
     parentGroup.add(ringMesh);
 
     // 2. Swirling Dark Accretion Disk
-    const vortexTex = this.createDarkVortexTexture(this.colors);
+    const vortexTex = this.createDarkVortexTexture(this.colors, isEntrance);
     const diskGeo = new THREE.PlaneGeometry(2.1, 2.1);
     const diskMat = new THREE.MeshBasicMaterial({
       map: vortexTex,
@@ -151,10 +162,10 @@ export class Portal {
       this.exitDisk = diskMesh;
     }
 
-    // 3. Central Pure Obsidian Event Horizon (Deep Black Void)
-    const voidGeo = new THREE.CircleGeometry(0.52, 32);
+    // 3. Central Pure Obsidian Event Horizon (Deep Black Void for entrance, Cosmic White-Purple Core for exit)
+    const voidGeo = new THREE.CircleGeometry(isEntrance ? 0.52 : 0.42, 32);
     const voidMat = new THREE.MeshBasicMaterial({
-      color: 0x020308,
+      color: isEntrance ? 0x020308 : 0xfdf4ff,
       side: THREE.DoubleSide
     });
     const voidMesh = new THREE.Mesh(voidGeo, voidMat);
@@ -175,7 +186,7 @@ export class Portal {
     parentGroup.add(haloMesh);
 
     // 5. Dark Matter Spark Particles
-    const sparkCount = 32;
+    const sparkCount = 36;
     const sparkGeo = new THREE.BufferGeometry();
     const sparkPositions = new Float32Array(sparkCount * 3);
     const sparkAngles = [];
@@ -197,7 +208,7 @@ export class Portal {
     sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPositions, 3));
 
     const sparkMat = new THREE.PointsMaterial({
-      color: this.colors.core,
+      color: isEntrance ? this.colors.core : 0xffffff,
       size: 0.18,
       transparent: true,
       opacity: 0.95,
@@ -214,7 +225,8 @@ export class Portal {
       angles: sparkAngles,
       radii: sparkRadii,
       speeds: sparkSpeeds,
-      count: sparkCount
+      count: sparkCount,
+      isEntrance
     });
   }
 
@@ -246,77 +258,48 @@ export class Portal {
     requestAnimationFrame(animateSpawn);
   }
 
-  // Vanishing & Reappearing Pulse during gameplay
-  playVanishAndReappear(targetGroup, onMidpoint, onDone) {
-    const startTime = performance.now();
-    const duration = 900;
-
-    const animate = () => {
-      const now = performance.now();
-      const p = Math.min(1.0, (now - startTime) / duration);
-
-      if (p < 0.5) {
-        // Vanishing into singularity
-        const vanishP = p / 0.5;
-        const s = Math.max(0.01, 1.0 - vanishP);
-        targetGroup.scale.set(s * 0.2, s * 1.5, s * 0.2);
-        if (p >= 0.48 && onMidpoint) {
-          onMidpoint();
-          onMidpoint = null;
-        }
-      } else {
-        // Reappearing explosive emergence
-        const appearP = (p - 0.5) / 0.5;
-        const s = Math.min(1.0, 1.0 + Math.sin(appearP * Math.PI) * 0.4);
-        targetGroup.scale.set(s, s, s);
-      }
-
-      if (p < 1.0) {
-        requestAnimationFrame(animate);
-      } else {
-        targetGroup.scale.set(1, 1, 1);
-        if (onDone) onDone();
-      }
-    };
-
-    requestAnimationFrame(animate);
+  // Check if tile is the Entrance Portal (only entrance triggers warp)
+  isEntranceTile(tileNum) {
+    return tileNum === this.startTile;
   }
 
-  hasTile(tileNum) {
-    return tileNum === this.startTile || tileNum === this.destTile;
+  // Check if tile is the Exit Portal
+  isExitTile(tileNum) {
+    return tileNum === this.destTile;
   }
 
+  // Destination is strictly the higher exit tile
   getDestination(fromTile) {
-    if (fromTile === this.startTile) return this.destTile;
-    if (fromTile === this.destTile) return this.startTile;
-    return null;
+    if (fromTile === this.startTile) {
+      return this.destTile;
+    }
+    return null; // Exit portals do NOT transport backwards
   }
 
-  // --- BIDIRECTIONAL DARK VOID WARP WITH VANISHING & APPEARING ANIMATION ---
+  // --- STRICT UNIDIRECTIONAL HIGHER WARP (ENTRANCE -> EXIT) ---
   warpPlayer(player, fromTile = null, onCameraTrack = null, onComplete = null) {
     if (!player || !player.root) {
       if (onComplete) onComplete();
       return;
     }
 
-    const isReverse = fromTile === this.destTile;
-    const originTile = isReverse ? this.destTile : this.startTile;
-    const targetTile = isReverse ? this.startTile : this.destTile;
+    const originTile = this.startTile;
+    const targetTile = this.destTile;
 
-    const suctionGround = isReverse ? this.destPos.clone() : this.startPos.clone();
-    const suctionPortalP = isReverse ? this.exitGroup.position.clone() : this.entranceGroup.position.clone();
-    const emergePortalP = isReverse ? this.entranceGroup.position.clone() : this.exitGroup.position.clone();
-    const targetGround = isReverse ? this.startPos.clone() : this.destPos.clone();
+    const suctionGround = this.startPos.clone();
+    const suctionPortalP = this.entranceGroup.position.clone();
+    const emergePortalP = this.exitGroup.position.clone();
+    const targetGround = this.destPos.clone();
 
-    const suctionGroup = isReverse ? this.exitGroup : this.entranceGroup;
-    const emergeGroup = isReverse ? this.entranceGroup : this.exitGroup;
+    const suctionGroup = this.entranceGroup;
+    const emergeGroup = this.exitGroup;
 
     // Audio & Comic Announcer
     if (this.audioManager?.playPortalEnter) {
       this.audioManager.playPortalEnter();
     }
     if (this.comicFX?.showBanner) {
-      this.comicFX.showBanner(`🌀 DARK VOID RIFT: TILE ${originTile} ➔ TILE ${targetTile}!`);
+      this.comicFX.showBanner(`🌀 DARK QUANTUM RIFT: TILE ${originTile} ➔ HIGHER TILE ${targetTile}!`);
     }
 
     const origScale = player.root.scale.clone();
