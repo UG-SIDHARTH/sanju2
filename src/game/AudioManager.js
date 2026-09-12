@@ -1,0 +1,612 @@
+// ==========================================================================
+// AUDIO MANAGER - High-Performance Procedural Web Audio Synthesizer
+// Zero external file dependencies - plays instantly and reliably!
+// Fail-safe: handles autoplay restrictions, null contexts, and browser policies
+// ==========================================================================
+
+export class AudioManager {
+  constructor() {
+    this.ctx = null;
+    this.isMuted = false;
+    this.masterGain = null;
+    this.ambienceGain = null;
+    this.isAmbiencePlaying = false;
+  }
+
+  init() {
+    if (this.ctx) return;
+    try {
+      const AudioCtx = (typeof window !== 'undefined') && (window.AudioContext || window.webkitAudioContext);
+      if (!AudioCtx) return;
+
+      this.ctx = new AudioCtx();
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.setValueAtTime(0.7, this.ctx.currentTime);
+      this.masterGain.connect(this.ctx.destination);
+
+      // Subtle background cinematic drone
+      this.ambienceGain = this.ctx.createGain();
+      this.ambienceGain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+      this.ambienceGain.connect(this.masterGain);
+      this.startAmbience();
+    } catch (err) {
+      console.warn('AudioContext init warning (autoplay restricted until interaction):', err);
+      this.ctx = null;
+      this.masterGain = null;
+    }
+  }
+
+  ensureContext() {
+    if (this.isMuted) return false;
+    try {
+      if (!this.ctx) {
+        this.init();
+      } else if (this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {});
+      }
+    } catch (e) {
+      return false;
+    }
+    return Boolean(this.ctx && this.masterGain);
+  }
+
+  toggleMute() {
+    this.isMuted = !this.isMuted;
+    if (this.ensureContext() && this.masterGain && this.ctx) {
+      try {
+        this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 0.7, this.ctx.currentTime);
+      } catch (e) {}
+    }
+    return !this.isMuted;
+  }
+
+  startAmbience() {
+    if (!this.ctx || this.isAmbiencePlaying || !this.ambienceGain) return;
+    try {
+      this.isAmbiencePlaying = true;
+
+      // Rhythmic low synth pulse
+      const osc = this.ctx.createOscillator();
+      const filter = this.ctx.createBiquadFilter();
+      
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(55, this.ctx.currentTime); // A1 note
+      
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(140, this.ctx.currentTime);
+
+      osc.connect(filter);
+      filter.connect(this.ambienceGain);
+      osc.start();
+    } catch (e) {
+      this.isAmbiencePlaying = false;
+    }
+  }
+
+  // --- SOUND EFFECTS ---
+
+  // Spider-Man Web Shoot: "THWIP!"
+  playThwip() {
+    if (!this.ensureContext()) return;
+    try {
+      const t = this.ctx.currentTime;
+
+      // White noise burst for air compression
+      const bufferSize = Math.floor(this.ctx.sampleRate * 0.15);
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const noiseFilter = this.ctx.createBiquadFilter();
+      noiseFilter.type = 'bandpass';
+      noiseFilter.frequency.setValueAtTime(3200, t);
+      noiseFilter.frequency.exponentialRampToValueAtTime(800, t + 0.14);
+      noiseFilter.Q.setValueAtTime(4, t);
+
+      const noiseGain = this.ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.8, t);
+      noiseGain.gain.exponentialRampToValueAtTime(0.01, t + 0.14);
+
+      noise.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(this.masterGain);
+      noise.start(t);
+
+      // High pitch snap osc
+      const osc = this.ctx.createOscillator();
+      const oscGain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(1600, t);
+      osc.frequency.exponentialRampToValueAtTime(350, t + 0.12);
+
+      oscGain.gain.setValueAtTime(0.5, t);
+      oscGain.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
+
+      osc.connect(oscGain);
+      oscGain.connect(this.masterGain);
+      osc.start(t);
+      osc.stop(t + 0.15);
+    } catch (e) {}
+  }
+
+  // Web Reel / Pull Sound
+  playWebPull() {
+    if (!this.ensureContext()) return;
+    try {
+      const t = this.ctx.currentTime;
+
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(220, t);
+      osc.frequency.linearRampToValueAtTime(660, t + 0.6);
+
+      gain.gain.setValueAtTime(0.3, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.7);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(t);
+      osc.stop(t + 0.7);
+    } catch (e) {}
+  }
+
+  // Green Goblin Laugh / Cackle
+  playGoblinLaugh() {
+    if (!this.ensureContext()) return;
+    try {
+      const t = this.ctx.currentTime;
+
+      const notes = [450, 520, 480, 560, 420, 360];
+      notes.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const startTime = t + idx * 0.08;
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, startTime);
+        osc.frequency.exponentialRampToValueAtTime(freq * 0.7, startTime + 0.07);
+
+        gain.gain.setValueAtTime(0.25, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.07);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(startTime);
+        osc.stop(startTime + 0.08);
+      });
+    } catch (e) {}
+  }
+
+  // Glider Thruster Roar
+  playGliderRoar(duration = 1.8) {
+    if (!this.ensureContext()) return;
+    try {
+      const t = this.ctx.currentTime;
+
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(110, t);
+      osc.frequency.exponentialRampToValueAtTime(330, t + duration * 0.4);
+      osc.frequency.exponentialRampToValueAtTime(90, t + duration);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(400, t);
+      filter.frequency.exponentialRampToValueAtTime(1200, t + duration * 0.4);
+      filter.frequency.exponentialRampToValueAtTime(300, t + duration);
+
+      gain.gain.setValueAtTime(0.05, t);
+      gain.gain.linearRampToValueAtTime(0.35, t + 0.3);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + duration);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(t);
+      osc.stop(t + duration);
+    } catch (e) {}
+  }
+
+  // Dice Tumble Click
+  playDiceClick() {
+    if (!this.ensureContext()) return;
+    try {
+      const t = this.ctx.currentTime;
+
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(300 + Math.random() * 200, t);
+
+      gain.gain.setValueAtTime(0.3, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.04);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(t);
+      osc.stop(t + 0.05);
+    } catch (e) {}
+  }
+
+  // Player Footstep Tap
+  playFootstep() {
+    if (!this.ensureContext()) return;
+    try {
+      const t = this.ctx.currentTime;
+
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(140 + Math.random() * 30, t);
+
+      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.06);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(t);
+      osc.stop(t + 0.07);
+    } catch (e) {}
+  }
+
+  // Bonus Roll Chime
+  playBonusChime() {
+    if (!this.ensureContext()) return;
+    try {
+      const t = this.ctx.currentTime;
+      const chord = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+
+      chord.forEach((freq, i) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const startTime = t + i * 0.08;
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, startTime);
+
+        gain.gain.setValueAtTime(0.2, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(startTime);
+        osc.stop(startTime + 0.45);
+      });
+    } catch (e) {}
+  }
+
+  // Dramatic Suspense Thump (when landing on 100)
+  playSuspenseHeartbeat() {
+    if (!this.ensureContext()) return;
+    try {
+      const t = this.ctx.currentTime;
+
+      [0, 0.25].forEach(offset => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const st = t + offset;
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(75, st);
+        osc.frequency.exponentialRampToValueAtTime(35, st + 0.18);
+
+        gain.gain.setValueAtTime(0.7, st);
+        gain.gain.exponentialRampToValueAtTime(0.01, st + 0.2);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(st);
+        osc.stop(st + 0.22);
+      });
+    } catch (e) {}
+  }
+
+  // Victory Fanfare
+  playVictory() {
+    if (!this.ensureContext()) return;
+    try {
+      const t = this.ctx.currentTime;
+      // Heroic fanfare notes
+      const fanfare = [
+        { f: 523.25, d: 0.15, s: 0 },
+        { f: 523.25, d: 0.15, s: 0.18 },
+        { f: 523.25, d: 0.15, s: 0.36 },
+        { f: 659.25, d: 0.4, s: 0.54 },
+        { f: 587.33, d: 0.2, s: 0.98 },
+        { f: 659.25, d: 0.2, s: 1.20 },
+        { f: 783.99, d: 0.8, s: 1.42 }
+      ];
+
+      fanfare.forEach(note => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const st = t + note.s;
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(note.f, st);
+
+        gain.gain.setValueAtTime(0.35, st);
+        gain.gain.exponentialRampToValueAtTime(0.01, st + note.d);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(st);
+        osc.stop(st + note.d + 0.05);
+      });
+    } catch (e) {}
+  }
+
+  // Defeat / Elimination Gong
+  playDefeatGong() {
+    if (!this.ensureContext()) return;
+    try {
+      const t = this.ctx.currentTime;
+
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(90, t);
+      osc.frequency.exponentialRampToValueAtTime(28, t + 2.0);
+
+      gain.gain.setValueAtTime(0.8, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 2.2);
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(250, t);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(t);
+      osc.stop(t + 2.3);
+    } catch (e) {}
+  }
+
+  // Spider-Man catches MJ with both arms: Warm, charming heroic chime
+  playHeroicCatch() {
+    if (!this.ensureContext()) return;
+    try {
+      const t = this.ctx.currentTime;
+
+      // Sweet heroic arpeggiated chime
+      const chords = [
+        { f: 523.25, s: 0, d: 0.35 },    // C5
+        { f: 659.25, s: 0.08, d: 0.35 }, // E5
+        { f: 783.99, s: 0.16, d: 0.4 },  // G5
+        { f: 1046.5, s: 0.24, d: 0.6 }   // C6
+      ];
+
+      chords.forEach(c => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const st = t + c.s;
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(c.f, st);
+
+        gain.gain.setValueAtTime(0.4, st);
+        gain.gain.exponentialRampToValueAtTime(0.001, st + c.d);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(st);
+        osc.stop(st + c.d + 0.05);
+      });
+    } catch (e) {}
+  }
+
+  // Dr. Octopus Mechanical Emergence: Heavy hydraulic servo hiss & metallic clamp
+  playDocOckEmergence() {
+    if (!this.ensureContext()) return;
+    try {
+      const t = this.ctx.currentTime;
+
+      // 1. Heavy low metallic thud
+      const subOsc = this.ctx.createOscillator();
+      const subGain = this.ctx.createGain();
+      subOsc.type = 'sawtooth';
+      subOsc.frequency.setValueAtTime(110, t);
+      subOsc.frequency.exponentialRampToValueAtTime(32, t + 0.8);
+
+      subGain.gain.setValueAtTime(0.7, t);
+      subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.9);
+
+      const subFilter = this.ctx.createBiquadFilter();
+      subFilter.type = 'lowpass';
+      subFilter.frequency.setValueAtTime(220, t);
+
+      subOsc.connect(subFilter);
+      subFilter.connect(subGain);
+      subGain.connect(this.masterGain);
+      subOsc.start(t);
+      subOsc.stop(t + 0.9);
+
+      // 2. High metallic servo whir
+      const servoOsc = this.ctx.createOscillator();
+      const servoGain = this.ctx.createGain();
+      servoOsc.type = 'sawtooth';
+      servoOsc.frequency.setValueAtTime(680, t + 0.1);
+      servoOsc.frequency.exponentialRampToValueAtTime(1250, t + 0.4);
+      servoOsc.frequency.exponentialRampToValueAtTime(450, t + 0.8);
+
+      servoGain.gain.setValueAtTime(0.01, t);
+      servoGain.gain.linearRampToValueAtTime(0.35, t + 0.2);
+      servoGain.gain.exponentialRampToValueAtTime(0.001, t + 0.85);
+
+      const servoFilter = this.ctx.createBiquadFilter();
+      servoFilter.type = 'bandpass';
+      servoFilter.frequency.setValueAtTime(900, t);
+      servoFilter.Q.setValueAtTime(5, t);
+
+      servoOsc.connect(servoFilter);
+      servoFilter.connect(servoGain);
+      servoGain.connect(this.masterGain);
+      servoOsc.start(t + 0.1);
+      servoOsc.stop(t + 0.9);
+    } catch (e) {}
+  }
+
+  // Dr. Octopus "JUST LIKE I PLANNED" sinister chord sting
+  playDocOckVoiceChime() {
+    if (!this.ensureContext()) return;
+    try {
+      const t = this.ctx.currentTime;
+
+      // Dark sinister minor chords: D minor / Bb major villainous progression
+      const darkChords = [146.83, 174.61, 220.0, 293.66]; // D3, F3, A3, D4
+
+      darkChords.forEach(freq => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, t);
+
+        gain.gain.setValueAtTime(0.3, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 2.4);
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(650, t);
+        filter.frequency.exponentialRampToValueAtTime(180, t + 2.2);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 2.5);
+      });
+    } catch (e) {}
+  }
+
+  // Gentle resonant water droplet plop
+  playWaterDrop() {
+    if (!this.ensureContext()) return;
+    try {
+      const t = this.ctx.currentTime;
+
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(420 + Math.random() * 120, t);
+      osc.frequency.exponentialRampToValueAtTime(880 + Math.random() * 200, t + 0.08);
+
+      gain.gain.setValueAtTime(0.35, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(t);
+      osc.stop(t + 0.3);
+    } catch (e) {}
+  }
+
+  // Soft organic foliage wind rustle
+  playRustle() {
+    if (!this.ensureContext()) return;
+    try {
+      const t = this.ctx.currentTime;
+
+      const bufferSize = Math.floor(this.ctx.sampleRate * 0.4);
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
+      }
+
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1400, t);
+      filter.Q.setValueAtTime(3.0, t);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.25, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.masterGain);
+      noise.start(t);
+    } catch (e) {}
+  }
+
+  // Quantum Multiverse Portal Warp In
+  playPortalEnter() {
+    if (!this.ensureContext()) return;
+    try {
+      const t = this.ctx.currentTime;
+
+      // Resonant sub-bass sweep & frequency riser
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(60, t);
+      osc.frequency.exponentialRampToValueAtTime(720, t + 0.6);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(200, t);
+      filter.frequency.exponentialRampToValueAtTime(1800, t + 0.6);
+
+      gain.gain.setValueAtTime(0.05, t);
+      gain.gain.linearRampToValueAtTime(0.45, t + 0.4);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.65);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(t);
+      osc.stop(t + 0.7);
+    } catch (e) {}
+  }
+
+  // Quantum Multiverse Portal Warp Emergence & Touchdown
+  playPortalExit() {
+    if (!this.ensureContext()) return;
+    try {
+      const t = this.ctx.currentTime;
+
+      // Dimensional release burst & deep touchdown punch
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, t);
+      osc.frequency.exponentialRampToValueAtTime(45, t + 0.45);
+
+      gain.gain.setValueAtTime(0.65, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(t);
+      osc.stop(t + 0.55);
+
+      // Chime resonance
+      [587.33, 880, 1174.66].forEach((f, idx) => {
+        const cOsc = this.ctx.createOscillator();
+        const cGain = this.ctx.createGain();
+        const st = t + idx * 0.05;
+        cOsc.type = 'triangle';
+        cOsc.frequency.setValueAtTime(f, st);
+        cGain.gain.setValueAtTime(0.25, st);
+        cGain.gain.exponentialRampToValueAtTime(0.001, st + 0.5);
+        cOsc.connect(cGain);
+        cGain.connect(this.masterGain);
+        cOsc.start(st);
+        cOsc.stop(st + 0.55);
+      });
+    } catch (e) {}
+  }
+}

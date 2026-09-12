@@ -1,0 +1,31 @@
+{
+  "hash": "fb7da5b9",
+  "configHash": "0f493901",
+  "lockfileHash": "9041ac15",
+  "browserHash": "c156496f",
+  "optimized": {
+    "three": {
+      "src": "../../node_modules/three/build/three.module.js",
+      "file": "three.js",
+      "fileHash": "bc0beda3",
+      "needsInterop": false
+    },
+    "canvas-confetti": {
+      "src": "../../node_modules/canvas-confetti/dist/confetti.module.mjs",
+      "file": "canvas-confetti.js",
+      "fileHash": "6c4829ac",
+      "needsInterop": false
+    },
+    "peerjs": {
+      "src": "../../node_modules/peerjs/dist/bundler.mjs",
+      "file": "peerjs.js",
+      "fileHash": "93cfdfb5",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-M5LBBGMC": {
+      "file": "chunk-M5LBBGMC.js"
+    }
+  }
+}

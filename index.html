@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Spider-Man Snakes & Ladders 3D</title>
+  <meta name="description" content="A cinematic anime-inspired 3D multiplayer Spider-Man Snakes & Ladders game featuring 6 Spider-Men with gold legs, 3 Green Goblins on hoverboards, 4 portals (2 entrance/exit pairs), exact 100 win rule, and the Mega Green Goblin & Black Spider-Man climax!" />
+  <!-- Google Fonts: Marvel-style bold display and clean UI -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <!-- 3D Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <!-- Comic Action Banner / Floating announcements -->
+  <div id="comic-announcer" class="comic-announcer hidden"></div>
+
+  <!-- In-Game UI Overlay -->
+  <div id="game-ui" class="game-ui hidden">
+    <!-- Top Bar: Logo & Game Info -->
+    <header class="top-bar">
+      <div class="brand-group">
+        <h1 class="logo-title">SPIDER-MAN</h1>
+        <span class="logo-subtitle">SNAKES & LADDERS 3D</span>
+      </div>
+
+      <div class="top-controls">
+        <button id="btn-turbo-mode" class="ui-btn ui-btn-icon ui-btn-turbo" title="Toggle Turbo Speed (Fast Gameplay)">
+          <span class="icon">⚡</span> <span class="label">Turbo: OFF</span>
+        </button>
+        <button id="btn-camera-mode" class="ui-btn ui-btn-icon" title="Toggle Camera View">
+          <span class="icon">🎥</span> <span class="label">Cinematic</span>
+        </button>
+        <button id="btn-sound-toggle" class="ui-btn ui-btn-icon" title="Toggle Audio">
+          <span class="icon">🔊</span> <span class="label">Sound ON</span>
+        </button>
+        <button id="btn-rules" class="ui-btn ui-btn-icon" title="Game Rules">
+          <span class="icon">📜</span> <span class="label">Rules</span>
+        </button>
+        <button id="btn-new-match" class="ui-btn ui-btn-icon ui-btn-danger" title="Restart Match">
+          <span class="icon">🔄</span> <span class="label">New Game</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Side Panel: Players Leaderboard & Status -->
+    <aside class="side-panel">
+      <div class="panel-header">
+        <span class="panel-title">PLAYERS</span>
+        <span class="panel-target">GOAL: TILE 100 (?)</span>
+      </div>
+      <div id="players-list" class="players-list">
+        <!-- Dynamically rendered player cards -->
+      </div>
+    </aside>
+
+    <!-- Action Log Ticker -->
+    <div class="action-ticker-container">
+      <div class="ticker-label">EVENT LOG:</div>
+      <div id="action-ticker" class="action-ticker">
+        <span class="ticker-item highlight">Welcome to Spider-Man Snakes & Ladders! Roll to begin.</span>
+      </div>
+    </div>
+
+    <!-- Bottom Center: Active Turn Control Card -->
+    <footer class="bottom-bar">
+      <div class="turn-card" id="turn-card">
+        <div class="player-turn-header">
+          <div class="avatar-badge" id="current-player-avatar">
+            <span class="avatar-letter">MJ</span>
+            <div class="hair-indicator" id="current-hair-indicator"></div>
+          </div>
+          <div class="turn-info">
+            <span class="turn-label">CURRENT TURN</span>
+            <h2 class="current-player-name" id="current-player-name">MJ-1</h2>
+          </div>
+          <div class="tile-badge">
+            <span class="tile-badge-label">POSITION</span>
+            <span class="tile-badge-val" id="current-player-tile">1</span>
+          </div>
+        </div>
+
+        <div class="turn-actions">
+          <button id="btn-roll-dice" class="roll-btn" title="Roll 3D Dice (Spacebar)">
+            <span class="roll-btn-bg"></span>
+            <span class="roll-btn-content">
+              <span class="dice-icon">🎲</span>
+              <span class="roll-btn-text">ROLL DICE</span>
+              <span class="key-hint">[SPACE]</span>
+            </span>
+          </button>
+        </div>
+
+        <div id="turn-extra-msg" class="turn-extra-msg hidden">
+          <span>⚡ BONUS ROLL ACTIVE!</span>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Floating Camera Zoom Bar -->
+    <div class="zoom-controls">
+      <button id="btn-zoom-in" class="zoom-btn" title="Zoom In (+)">➕</button>
+      <button id="btn-zoom-reset" class="zoom-btn" title="Reset Zoom">🔍</button>
+      <button id="btn-zoom-out" class="zoom-btn" title="Zoom Out (-)">➖</button>
+    </div>
+  </div>
+
+  <!-- Start Screen Modal -->
+  <div id="start-screen" class="modal-overlay">
+    <div class="start-modal">
+      <div class="spider-badge">🕷️ MARVEL ANIME MULTIVERSE</div>
+      <h1 class="start-title">SPIDER-MAN<br><span class="highlight-title">SNAKES & LADDERS</span></h1>
+      <div class="mode-subtitle-badge">🎮 2 PLAYER — SINGLE DEVICE</div>
+      <p class="start-desc">
+        An absurdly over-engineered 3D anime game with <strong>NO snakes and NO ladders!</strong><br>
+        6 Spider-Men with gold spider legs! 3 Green Goblins on flying hoverboards! 4 Portals (2 connected pairs)!<br>
+        Take turns rolling the 3D dice locally. Reach <strong>Tile 100 with an exact roll</strong> for the epic Multiverse showdown!
+      </p>
+
+      <!-- 2 Character Preview Cards (2-Player Mode Only) -->
+      <div class="character-preview-grid two-player-grid" id="character-preview-grid">
+        <div class="char-card active" data-char="1">
+          <div class="char-hair-swatch hair-mj1"></div>
+          <span class="char-name">MJ-1</span>
+          <span class="char-hair-label">Player 1 (Crimson Jacket)</span>
+        </div>
+        <div class="char-card active" data-char="2">
+          <div class="char-hair-swatch hair-mj2"></div>
+          <span class="char-name">MJ-2</span>
+          <span class="char-hair-label">Player 2 (Midnight Jacket)</span>
+        </div>
+      </div>
+
+      <div class="start-meta">
+        <div class="meta-item"><span class="meta-icon">🚫</span> No Snakes & No Ladders</div>
+        <div class="meta-item"><span class="meta-icon">🕷️</span> 6 Spider-Men (Gold Legs)</div>
+        <div class="meta-item"><span class="meta-icon">🎃</span> 3 Green Goblins (Hoverboards)</div>
+        <div class="meta-item"><span class="meta-icon">🌀</span> 4 Portals (2 Pairs - Always Higher)</div>
+        <div class="meta-item"><span class="meta-icon">🎯</span> Exact 100 Win Rule</div>
+        <div class="meta-item"><span class="meta-icon">👥</span> Single Device Pass & Play</div>
+      </div>
+
+      <button id="btn-start-game" class="btn-start-action">
+        <span id="btn-start-text">START 2-PLAYER MATCH</span> ➔
+      </button>
+    </div>
+  </div>
+
+  <!-- Rules Modal -->
+  <div id="rules-modal" class="modal-overlay hidden">
+    <div class="rules-card">
+      <div class="rules-header">
+        <h2>HOW TO PLAY - SPIDER-MAN SNAKES & LADDERS</h2>
+        <button id="btn-close-rules" class="close-btn">✕</button>
+      </div>
+      <div class="rules-body">
+        <div class="rule-box">
+          <div class="rule-icon">🚫</div>
+          <div class="rule-text">
+            <h3>No Snakes & No Ladders!</h3>
+            <p>Despite the title, there are <strong>zero snakes and zero ladders</strong> on this board! Instead, Spider-Men web-pull you, Green Goblins kidnap you on hoverboards, and black-hole Portals warp you higher!</p>
+          </div>
+        </div>
+
+        <div class="rule-box">
+          <div class="rule-icon">👥</div>
+          <div class="rule-text">
+            <h3>2 Players — Single Device</h3>
+            <p>Two human players (MJ-1 and MJ-2) take turns on the same laptop or mobile phone. Simply pass and play!</p>
+          </div>
+        </div>
+
+        <div class="rule-box">
+          <div class="rule-icon">🎯</div>
+          <div class="rule-text">
+            <h3>Exact 100 Win Rule</h3>
+            <p>To win, you must land <strong>EXACTLY on Tile 100</strong>! If you are on Tile 99, you need an exact roll of 1. If your roll exceeds 100, you cannot move and forfeit your turn!</p>
+          </div>
+        </div>
+
+        <div class="rule-box">
+          <div class="rule-icon">🕷️</div>
+          <div class="rule-text">
+            <h3>6 Spider-Men (Gold Spider Legs)</h3>
+            <p>6 Spider-Men with blue-and-red suits and gold spider legs on their backs. Landing on a trigger initiates a cinematic web pull pulling MJ across the board to Spider-Man's tile!</p>
+          </div>
+        </div>
+
+        <div class="rule-box">
+          <div class="rule-icon">🎃</div>
+          <div class="rule-text">
+            <h3>3 Green Goblins (Hoverboards)</h3>
+            <p>3 Green Goblins patrol the board standing on flying hoverboards. Landing on a Goblin triggers an airborne kidnapping that drops MJ to a lower position!</p>
+          </div>
+        </div>
+
+        <div class="rule-box">
+          <div class="rule-icon">🌀</div>
+          <div class="rule-text">
+            <h3>4 Portals (2 Connected Pairs)</h3>
+            <p>Two entrance portals and two exit portals. Entering an entrance portal pulls MJ into a dark-black-hole gravitational anomaly, emerging from the corresponding exit portal at a higher position (never downward)!</p>
+          </div>
+        </div>
+
+        <div class="rule-box rule-mystery">
+          <div class="rule-icon">⚡</div>
+          <div class="rule-text">
+            <h3>Tile 100 Climax: Mega Green Goblin & Black Spider-Man</h3>
+            <p>Reaching 100 opens an aerial rift. A gigantic Mega Green Goblin emerges on a war-glider: <em>"Right into the trap."</em> She grabs MJ and hurls her off the building! Suddenly, Black Spider-Man swings in from the skyline, defeats the Mega Goblin, dives mid-air to rescue MJ, and crowns her winner!</p>
+          </div>
+        </div>
+      </div>
+      <button id="btn-ok-rules" class="btn-primary-confirm">LET'S BATTLE</button>
+    </div>
+  </div>
+
+  <!-- Secret 100 Reveal Screen -->
+  <div id="reveal-screen" class="reveal-overlay hidden">
+    <div class="reveal-backdrop"></div>
+    <div class="reveal-content" id="reveal-content">
+      <div class="reveal-badge" id="reveal-badge">🏆 MULTIVERSE CHAMPION!</div>
+      <h1 class="reveal-title" id="reveal-title">MJ-1 WINS</h1>
+      <p class="reveal-subtitle" id="reveal-subtitle">Rescued by Black Spider-Man after shattering the Mega Green Goblin!</p>
+      <div class="reveal-player-card" id="reveal-player-card">
+        <!-- Player card rendered here -->
+      </div>
+      <div class="reveal-buttons">
+        <button id="btn-play-again" class="btn-start-action">PLAY AGAIN</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
