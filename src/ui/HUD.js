@@ -44,8 +44,53 @@ export class HUD {
     this.btnZoomReset = document.getElementById('btn-zoom-reset');
     this.btnZoomOut = document.getElementById('btn-zoom-out');
 
+    // Showcase Demo Elements
+    this.btnWatchDemo = document.getElementById('btn-watch-demo');
+    this.btnTopDemo = document.getElementById('btn-top-demo');
+    this.demoHud = document.getElementById('demo-hud');
+    this.btnDemoPrev = document.getElementById('btn-demo-prev');
+    this.btnDemoPause = document.getElementById('btn-demo-pause');
+    this.btnDemoNext = document.getElementById('btn-demo-next');
+    this.btnDemoExit = document.getElementById('btn-demo-exit');
+    this.demoSceneTitle = document.getElementById('demo-scene-title');
+    this.demoSceneSubtitle = document.getElementById('demo-scene-subtitle');
+
     this.setupListeners();
     this.updateStartButtonText();
+  }
+
+  showDemoHUD(visible) {
+    if (this.demoHud) {
+      this.demoHud.classList.toggle('hidden', !visible);
+    }
+    const turnCard = document.getElementById('turn-card');
+    if (turnCard) {
+      turnCard.style.display = visible ? 'none' : '';
+    }
+    const ticker = document.querySelector('.action-ticker-container');
+    if (ticker) {
+      ticker.style.display = visible ? 'none' : '';
+    }
+  }
+
+  updateDemoSceneInfo(sceneDef) {
+    if (this.demoSceneTitle) {
+      this.demoSceneTitle.textContent = sceneDef.title;
+    }
+    if (this.demoSceneSubtitle) {
+      this.demoSceneSubtitle.textContent = sceneDef.subtitle;
+    }
+    if (this.btnDemoPause) {
+      this.btnDemoPause.textContent = '⏸️ Pause';
+      this.btnDemoPause.classList.remove('active');
+    }
+  }
+
+  updateDemoPauseButton(isPaused) {
+    if (this.btnDemoPause) {
+      this.btnDemoPause.textContent = isPaused ? '▶️ Resume' : '⏸️ Pause';
+      this.btnDemoPause.classList.toggle('active', isPaused);
+    }
   }
 
   updateStartButtonText() {
@@ -143,6 +188,49 @@ export class HUD {
         this.gameUi.classList.remove('hidden');
         this.updateSidePanelTarget();
         this.gameManager.startNewMatch(this.selectedPlayerCount, this.selectedMaxTiles);
+      });
+    }
+
+    // Start Showcase Demo from Start Modal
+    if (this.btnWatchDemo) {
+      this.btnWatchDemo.addEventListener('click', () => {
+        this.gameManager.audioManager.init();
+        this.startScreen.classList.add('hidden');
+        this.gameUi.classList.remove('hidden');
+        this.gameManager.startDemoMode();
+      });
+    }
+
+    // Start Showcase Demo from Top Controls
+    if (this.btnTopDemo) {
+      this.btnTopDemo.addEventListener('click', () => {
+        this.gameManager.audioManager.init();
+        this.gameManager.startDemoMode();
+      });
+    }
+
+    // Demo HUD Controls
+    if (this.btnDemoPrev) {
+      this.btnDemoPrev.addEventListener('click', () => {
+        this.gameManager.demoDirector.prevScene();
+      });
+    }
+
+    if (this.btnDemoPause) {
+      this.btnDemoPause.addEventListener('click', () => {
+        this.gameManager.demoDirector.togglePause();
+      });
+    }
+
+    if (this.btnDemoNext) {
+      this.btnDemoNext.addEventListener('click', () => {
+        this.gameManager.demoDirector.nextScene();
+      });
+    }
+
+    if (this.btnDemoExit) {
+      this.btnDemoExit.addEventListener('click', () => {
+        this.gameManager.stopDemoMode();
       });
     }
 

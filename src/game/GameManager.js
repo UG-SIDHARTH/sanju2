@@ -12,6 +12,7 @@ import { Dice3D } from './Dice3D.js';
 import { DrOctopus } from './DrOctopus.js';
 import { Portal } from './Portal.js';
 import { AuraManager } from './AuraManager.js';
+import { DemoDirector } from './DemoDirector.js';
 
 export class GameManager {
   constructor(scene, camera, renderer, audioManager, comicFX) {
@@ -31,6 +32,9 @@ export class GameManager {
 
     // Tile 100 Trap Boss: Doctor Octopus
     this.drOctopus = new DrOctopus(scene, audioManager, comicFX);
+
+    // Cinematic Demo Showcase Director
+    this.demoDirector = new DemoDirector(this);
 
     // Game state (2P, 3P, 4P Single Device Pass & Play)
     this.players = [];
@@ -56,6 +60,14 @@ export class GameManager {
 
     this.activeMovement = null;
     this.isTurbo = false;
+  }
+
+  startDemoMode() {
+    this.demoDirector.startDemo();
+  }
+
+  stopDemoMode() {
+    this.demoDirector.stopDemo();
   }
 
   setTurboMode(isTurbo) {

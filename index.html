@@ -40,6 +40,9 @@
         <button id="btn-rules" class="ui-btn ui-btn-icon" title="Game Rules">
           <span class="icon">📜</span> <span class="label">Rules</span>
         </button>
+        <button id="btn-top-demo" class="ui-btn ui-btn-icon ui-btn-demo" title="Watch Showcase Demo of All Game Elements">
+          <span class="icon">🎬</span> <span class="label">Demo</span>
+        </button>
         <button id="btn-new-match" class="ui-btn ui-btn-icon ui-btn-danger" title="Restart Match">
           <span class="icon">🔄</span> <span class="label">New Game</span>
         </button>
@@ -105,6 +108,25 @@
       <button id="btn-zoom-in" class="zoom-btn" title="Zoom In (+)">➕</button>
       <button id="btn-zoom-reset" class="zoom-btn" title="Reset Zoom">🔍</button>
       <button id="btn-zoom-out" class="zoom-btn" title="Zoom Out (-)">➖</button>
+    </div>
+
+    <!-- Floating Demo Showcase HUD Overlay -->
+    <div id="demo-hud" class="demo-hud hidden">
+      <div class="demo-hud-card">
+        <div class="demo-header-row">
+          <div class="demo-tag">🎬 SHOWCASE DEMO</div>
+          <div class="demo-scene-title" id="demo-scene-title">1/8: MULTIVERSE RACERS</div>
+        </div>
+        <div class="demo-scene-subtitle" id="demo-scene-subtitle">
+          4 Distinct Anime MJ Variants with Auburn, Cyan, Blonde & Emerald Hair
+        </div>
+        <div class="demo-controls">
+          <button id="btn-demo-prev" class="demo-btn" title="Previous Element">⏮️ Prev</button>
+          <button id="btn-demo-pause" class="demo-btn" title="Pause / Resume">⏸️ Pause</button>
+          <button id="btn-demo-next" class="demo-btn" title="Next Element">⏭️ Next</button>
+          <button id="btn-demo-exit" class="demo-btn demo-btn-exit" title="Exit Demo">❌ Exit Demo</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -194,9 +216,14 @@
         <div class="meta-item"><span class="meta-icon">🏆</span> 2nd at 100 Wins</div>
       </div>
 
-      <button id="btn-start-game" class="btn-start-action">
-        <span id="btn-start-text">START 2-PLAYER MATCH</span> ➔
-      </button>
+      <div class="start-action-row">
+        <button id="btn-start-game" class="btn-start-action">
+          <span id="btn-start-text">START 2-PLAYER MATCH</span> ➔
+        </button>
+        <button id="btn-watch-demo" class="btn-demo-action" title="Watch interactive demonstration of all elements">
+          <span class="demo-icon">🎬</span> WATCH SHOWCASE DEMO
+        </button>
+      </div>
     </div>
   </div>
 

@@ -913,6 +913,161 @@ canvas {
   transform: translateY(1px);
 }
 
+.start-action-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.btn-demo-action {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.22) 0%, rgba(14, 165, 233, 0.38) 100%);
+  border: 2px solid #38bdf8;
+  border-radius: 14px;
+  padding: 16px 26px;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  letter-spacing: 1.2px;
+  color: #e0f2fe;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(56, 189, 248, 0.35);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-demo-action:hover {
+  transform: translateY(-3px) scale(1.03);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.4) 0%, rgba(14, 165, 233, 0.6) 100%);
+  box-shadow: 0 12px 32px rgba(56, 189, 248, 0.6);
+  color: #fff;
+}
+
+.btn-demo-action:active {
+  transform: translateY(1px);
+}
+
+.ui-btn-demo {
+  border-color: rgba(56, 189, 248, 0.45) !important;
+  color: #7dd3fc !important;
+}
+
+.ui-btn-demo:hover {
+  background: rgba(56, 189, 248, 0.2) !important;
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.4) !important;
+}
+
+/* Floating Showcase Demo HUD */
+.demo-hud {
+  position: absolute;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 900;
+  pointer-events: auto;
+  max-width: 580px;
+  width: 90%;
+  transition: all 0.3s ease;
+}
+
+.demo-hud-card {
+  background: rgba(13, 19, 31, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid #38bdf8;
+  border-radius: 18px;
+  padding: 14px 20px;
+  box-shadow: 0 12px 38px rgba(0, 0, 0, 0.8), 0 0 20px rgba(56, 189, 248, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+}
+
+.demo-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.demo-tag {
+  background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 1.5px;
+  padding: 3px 10px;
+  border-radius: 14px;
+}
+
+.demo-scene-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: #facc15;
+  letter-spacing: 1px;
+  text-shadow: 0 0 8px rgba(250, 204, 21, 0.4);
+}
+
+.demo-scene-subtitle {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.demo-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.demo-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 6px 14px;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.demo-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.demo-btn.active {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #f59e0b;
+  color: #fde047;
+}
+
+.demo-btn-exit {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+
+.demo-btn-exit:hover {
+  background: rgba(239, 68, 68, 0.35);
+  border-color: #f87171;
+  color: #fff;
+}
+
 /* Rules Modal */
 .rules-card {
   background: linear-gradient(160deg, #131b28 0%, #0c1017 100%);
@@ -1422,6 +1577,49 @@ canvas {
     font-size: 1.25rem;
     width: 100%;
     justify-content: center;
+  }
+
+  .start-action-row {
+    width: 100%;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btn-demo-action {
+    padding: 10px 18px;
+    font-size: 1.05rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .demo-hud {
+    top: 58px;
+    width: 95%;
+  }
+
+  .demo-hud-card {
+    padding: 8px 12px;
+    gap: 5px;
+    border-radius: 14px;
+  }
+
+  .demo-tag {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+  }
+
+  .demo-scene-title {
+    font-size: 0.95rem;
+  }
+
+  .demo-scene-subtitle {
+    font-size: 0.72rem;
+    line-height: 1.25;
+  }
+
+  .demo-btn {
+    padding: 5px 9px;
+    font-size: 0.75rem;
   }
 
   .comic-announcer {
