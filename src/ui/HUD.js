@@ -40,23 +40,6 @@ export class HUD {
     this.btnZoomOut = document.getElementById('btn-zoom-out');
 
     this.setupListeners();
-    this.checkUrlRoomParam();
-  }
-
-  checkUrlRoomParam() {
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const roomParam = urlParams.get('room');
-      if (roomParam && this.inputRoomCode) {
-        this.inputRoomCode.value = roomParam.toUpperCase().trim();
-        // Automatically open online join tab
-        this.switchModeTab('online');
-        this.switchNetTab('join');
-        if (this.joinStatusMsg) {
-          this.joinStatusMsg.textContent = `Room ${roomParam.toUpperCase()} detected! Click CONNECT & PLAY to join your friend.`;
-        }
-      }
-    } catch (e) {}
   }
 
   setupListeners() {

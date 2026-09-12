@@ -187,9 +187,6 @@ export class GameManager {
       char.isEliminated = false;
       this.scene.add(char.root);
       this.players.push(char);
-
-      // Add flowing celestial anime aura to players
-      this.auraManager.createCharacterAura(char.root, i === 0 ? 0xef4444 : 0x06b6d4, 0.9);
     }
 
     // Generate fresh, completely randomized board for every match
@@ -208,86 +205,6 @@ export class GameManager {
 
     this.hud.logEvent(`Match started! 6 Spider-Men, 3 Green Goblins & 6 Portals (3 Pairs) randomized.`);
     this.cameraDirector.focusOnBoard();
-
-    // If hosting online multiplayer, broadcast sync to client
-    if (this.networkManager.mode === 'host') {
-      this.networkManager.sendMatchSync();
-    }
-  }
-
-  spawnEntitiesFromConfig() {
-    // 1. Spawn 6 Spider-Men
-    this.spiderMen = [];
-    this.spideyConfig.forEach(cfg => {
-      const spidey = new SpiderMan(this.scene, cfg.id, cfg.station, this.audioManager, this.comicFX, this.board);
-      const pos = this.board.getTileWorldPosition(cfg.station);
-      spidey.setPosition(pos);
-      spidey.setTriggerTile(cfg.trigger);
-      this.spiderMen.push(spidey);
-
-      // Heroic anime aura
-      this.auraManager.createCharacterAura(spidey.root, 0x38bdf8, 1.0);
-    });
-
-    // 2. Spawn 3 Green Goblins
-    this.greenGoblins = [];
-    this.goblinConfig.forEach(cfg => {
-      const goblin = new GreenGoblin(this.scene, cfg.id, cfg.station, this.audioManager, this.comicFX);
-      const pos = this.board.getTileWorldPosition(cfg.station);
-      goblin.setPosition(pos);
-      this.greenGoblins.push(goblin);
-
-      // Cursed anime toxic aura
-      this.auraManager.createCharacterAura(goblin.root, 0xa855f7, 1.0);
-    });
-
-    // 3. Spawn 2 Dark Void Portals
-    this.portals = [];
-    this.portalConfigs.forEach(cfg => {
-      const startPos = this.board.getTileWorldPosition(cfg.start);
-      const destPos = this.board.getTileWorldPosition(cfg.dest);
-      const portal = new Portal(
-        this.scene,
-        cfg.id,
-        cfg.start,
-        cfg.dest,
-        startPos,
-        destPos,
-        this.audioManager,
-        this.comicFX,
-        cfg.theme || 'dark_void'
-      );
-      this.portals.push(portal);
-    });
-
-    // Refresh 100-Tile board visuals with exact markers
-    const spideyTriggers = this.spideyConfig.map(s => s.trigger);
-    const goblinHazardTiles = this.goblinConfig.map(g => g.station);
-    this.board.setSpecialTiles(spideyTriggers, goblinHazardTiles, this.portalMap);
-  }
-
-  // Apply match sync received from Host over WebRTC
-  applyRemoteMatchSync(syncPayload) {
-    this.spideyConfig = syncPayload.spiderMen;
-    this.goblinConfig = syncPayload.goblins;
-    this.portalConfigs = syncPayload.portals;
-
-    this.goblinDropMap = {};
-    this.goblinConfig.forEach(g => {
-      this.goblinDropMap[g.station] = g.drop;
-    });
-
-    this.portalMap = {};
-    this.portalConfigs.forEach(p => {
-      this.portalMap[p.start] = p.dest;
-      this.portalMap[p.dest] = p.start;
-    });
-
-    this.spawnEntitiesFromConfig();
-    this.activePlayerIndex = syncPayload.activePlayerIndex || 0;
-    this.hud.renderPlayersList(this.players, this.activePlayerIndex);
-    this.hud.updateTurnDisplay(this.getActivePlayer(), false);
-    this.hud.setRollButtonEnabled(this.networkManager.isMyTurn(this.activePlayerIndex));
   }
 
   spawnEntitiesFromConfig() {
@@ -342,8 +259,6 @@ export class GameManager {
   // 2-Player Local Dice Roll Trigger
   handleRollDice() {
     if (this.isTurnProcessing) return;
-    if (!this.networkManager.isMyTurn(this.activePlayerIndex)) return;
-
     this.isTurnProcessing = true;
     this.hud.setRollButtonEnabled(false);
 
@@ -692,7 +607,7 @@ export class GameManager {
       this.isTurnProcessing = false;
       this.bonusRollEarned = true;
       this.hud.updateTurnDisplay(activePlayer, true);
-      this.hud.setRollButtonEnabled(this.networkManager.isMyTurn(this.activePlayerIndex));
+      this.hud.setRollButtonEnabled(true);
       this.hud.logEvent(`⚡ ${activePlayer.config.name} has a BONUS ROLL ready!`);
     } else {
       this.advanceToNextPlayer();
