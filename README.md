@@ -1,152 +1,161 @@
-# 🕷️ Spider-Man Snakes & Ladders 3D
+# SPIDER-MAN SNAKES & LADDERS 3D 🎯
 
-A cinematic, high-performance 3D board game built with **Three.js** and **Vanilla JavaScript**. Set atop a sleek Manhattan penthouse rooftop arena overlooking an illuminated city skyline (featuring Stark Tower, Oscorp, and the Daily Bugle), players race across a 100-tile board featuring classic comic-accurate Marvel heroes and villains.
-
----
-
-## 🎮 Key Features & Gameplay
-
-### ✨ Anime & Manga Art Style
-- **Expressive Anime Avatars**: Mary Jane (MJ) characters feature high-detail anime faces with large sparkling eyes, gradient irises, limbal rings, winged anime eyeliner, cute manga cheek blush (`///`), minimalist nose dots, and glossy lips.
-- **Manga Action Bursts (`ComicFX`)**: 3D floating onomatopoeia rendered as 24-point jagged anime starbursts with radial speedlines, thick manga ink outlines, and high-energy SFX typography (`⚡ THWIP!!`, `🎃 GYAHAHA!!`, `🌀 WARP!!`).
-- **Anime Twilight Sky & Atmosphere**: Vibrant anime night sky gradient (deep void to twilight violet) with a glowing anime crescent moon, soft celestial halo, and twinkling 4-point cross star sparkles (`✨`).
-
-### 🏃‍♀️ Natural Running Pace (No "Flash" Speed)
-- **Balanced Step Cadence**: MJ traverses tiles at **0.40s per tile** (a natural, readable human running pace) instead of rushing like the Flash.
-- **Synchronized Kinematics**: Walk cycle stride frequency calibrated at **7.8 rad/s** to align foot-falls with tile movement, preventing foot-sliding.
-- **Optional Turbo Mode**: A 0.22s speed toggle is available via the **⚡ Turbo** button for faster gameplay whenever desired.
-
-### 🎃 Overwhelmingly Green Goblin (Classic Comic & Anime Design)
-- **Vibrant Scaly Green Body**: Rendered in radiant emerald and bright lime scales (`#16a34a` / `#22c55e` / `#86efac`) with subtle emissive green luminescence (`0x14532d`).
-- **Prominent Scaly Green Torso & Head**: Muscular green scaly chest, abdomen, head, ears, brow, and chin proudly showing without being concealed by oversized garments.
-- **Scaly Green Limbs & Goblin Elf Boots**: Scaly green forearms, claws, and curled-toe elf boots accented with royal purple gauntlet cuffs and shoulder harness straps.
-- **Toxic Green Glider Energy**: Bat-glider features glowing emerald cutting edges (`0x22c55e`), toxic green thruster plasma, and an electric green hover aura field.
-- **Vivid Green Hazard Tiles**: Board hazard tiles (28, 47, 73, 95) styled in toxic emerald and lime gradients with `🎃 GOBLIN HAZARD` badges.
-
-### 🕸️ 4 Classic Spider-Men (Articulated Mechanical Spider Legs)
-- 4 Spider-Men guard the arena, each equipped with **4 articulated mechanical spider legs (waldoes)** mounted on a spinal armor backplate with anime glowing white eye lenses.
-- Landing on a Spider Trigger reels the player forward across tiers with dynamic camera tracking and web slingshot mechanics.
-
-### 🌀 2 Bidirectional (Reversible) Quantum Portals
-- **Tile 61 ⟷ Tile 69** (*Cyan Quantum Dimension*)
-- **Tile 36 ⟷ Tile 7** (*Amber Multiverse Rift*)
-- Fully reversible: landing on either endpoint instantly warps the player to the opposite side with gravitational suction, event horizon distortion, and dimensional emergence.
-
-### 🐙 Tile 100 Multiverse Showdown & Doctor Octopus
-- Landing on Tile 100 triggers the ultimate Multiverse evaluation.
-- Classic Ditko/Romita Doctor Octopus (emerald green suit, bright yellow boots, yellow gauntlets, yellow chest harness, round goggles, bowl cut, and 4 heavy mechanical tentacles).
-
-### ⚡ Fast-Paced Balance & Turbo Mode
-- **No Endgame Stall**: Any roll equal to or exceeding 100 immediately reaches the goal.
-- **Turbo Speed Toggle (`⚡ Turbo`)**: Instantly switches between normal smooth stepping and 80ms turbo pacing.
-- **Interactive Leaderboard**: Real-time progress bars; click any player card to smoothly focus the camera.
-
-### 🔊 Procedural Web Audio Synthesizer
-- 100% procedurally synthesized audio using the **Web Audio API** (zero external MP3/WAV assets to load).
-- Sound effects include: web "THWIP!", glider roar, goblin cackle, portal warp sweeps, footstep taps, and victory fanfares.
-- Bulletproof fail-safe design preventing audio context interruptions on restricted browsers.
+### Basic Details
+**Team Name**: SHADOWS  
+**Team Members**:
+- **Team Lead**: SIDHARTH D - [Your College Name]
+- **Member 2**: SANJU LAKSHMAN B - [Your College Name]
+- **Member 3**: N/A (2-Member Hackathon Team)
 
 ---
 
-## ⚡ Low-Spec Hardware Optimization
-
-Engineered to run at a smooth **60 FPS** on budget systems (such as **Intel Pentium CPUs, Intel HD integrated graphics, and 4GB DDR3 RAM**):
-
-- **Zero Real-Time Shadow Overhead**: Eliminates 2048×2048 depth-pass shadow rendering for a 3x–5x framerate boost on integrated GPUs.
-- **Strict 1.0 Pixel Ratio (DPR)**: Caps `setPixelRatio` at 1.0 to prevent GPU fragment overload.
-- **Lightweight 256×256 Tile Textures**: Board memory consumption reduced from ~140 MB to ~26 MB, eliminating HDD texture paging.
-- **Minimalist Clean Architecture**: Removed high-poly tree models and particle physics loops in favor of sleek, low-poly corner pedestals with LED neon rims.
+### Project Description
+An absurdly over-engineered 3D anime browser game called **"Spider-Man Snakes & Ladders"** that has **strictly ZERO snakes and ZERO ladders**. Built for an 18-hour hackathon, two players pass-and-play locally on a single device as identical Mary Janes (distinguished strictly by hair color) navigating a 100-tile rooftop board guarded by 6 Spider-Men with mechanical gold legs, 3 hoverboard-flying Green Goblins, and 3 dark-singularity black-hole portals—only to discover that reaching Tile 100 is an inescapable Doctor Octopus kidnapping trap!
 
 ---
 
-## 🚀 Getting Started
+### The Problem (that doesn't exist)
+Traditional board games like *Snakes & Ladders* have suffered for centuries from a severe, unacceptable lack of web-slinging superheroes, pumpkin bombs, dark gravitational wormholes, and tentacled supervillains ambushing players at the finish line. Millions of friendships are ruined by boring 2D flat cardboard dice rolls when what the world truly needed was an over-the-top 3D Marvel anime thriller on a Manhattan skyscraper where winning is literally a scam.
 
-### Prerequisites
-- [Node.js](https://nodejs.org/) (version 18 or higher recommended)
-- npm
+---
 
-### Installation & Local Run
+### The Solution (that nobody asked for)
+We built a completely physical 3D anime universe in the browser! Players control identical Mary Janes (Auburn Red vs. Electric Cyan hair). 
+- Instead of climbing ladders, **6 Spider-Men** visibly fire web lines across the 3D board to yank you through mid-air.
+- Instead of sliding down snakes, **3 Green Goblins** tackle you onto their jet hoverboards and kidnap you downward.
+- **3 Portal Pairs (6 black-hole singularities)** warp you upward into the cosmos.
+- And if you have the precision to roll the exact number to reach Tile 100? **Doctor Octopus** leaps out of nowhere, grabs you with 4 mechanical cyber-claws, repeatedly bounces across the skyline into the unknown, and proclaims:  
+  > **YOU LOSE — You fell right into their trap!**
+
+---
+
+### Technical Details
+
+#### Technologies/Components Used
+
+**For Software:**
+- **Languages used**: JavaScript (ES6+ Modules), HTML5, Vanilla CSS3 (Custom 3D Theme & Anime Design System)
+- **Frameworks used**: Vite (Next-generation lightning-fast frontend tooling)
+- **Libraries used**: Three.js (WebGL 3D Engine), Canvas-Confetti
+- **Tools used**: Git, GitHub, Antigravity IDE, Web Audio API (100% procedural sound synthesis — 0 external audio files)
+
+**For Hardware:**
+*N/A — Pure Software WebGL Project running on Laptop, Android, and iPhone browsers with touch & keyboard controls.*
+
+---
+
+### Implementation
+
+#### For Software:
+
+**Installation**:
 ```bash
-# 1. Install dependencies
-npm install
+# Clone the repository
+git clone https://github.com/UG-SIDHARTH/sanju2.git
 
-# 2. Start the local development server (runs on Port 9000)
+# Navigate to project directory
+cd sanju2
+
+# Install dependencies
+npm install
+```
+
+**Run**:
+```bash
+# Start the local development server (runs on Port 9000)
 npm run dev
 
-# 3. Open in your browser
+# Open in browser
 http://localhost:9000/
 ```
 
-> **Note**: The application is configured by default to run strictly on **Port 9000** (`strictPort: true` in `vite.config.js`).
-
-### Production Build
+**Production Build**:
 ```bash
-# Compile and minify for production into dist/
 npm run build
-
-# Preview the production build locally
 npm run preview
 ```
 
 ---
 
-## 🐳 Docker & Cloudflare Tunnel Deployment
+### Project Documentation
 
-The project includes pre-configured Docker and Nginx configurations:
+#### For Software:
 
-```bash
-# Run with Docker Compose
-docker compose up -d --build
+**Screenshots**:
+
+![Start Screen - 2-Player Pass & Play](https://raw.githubusercontent.com/UG-SIDHARTH/sanju2/main/dist/assets/screenshot1.png)  
+*Start Screen: 2-Player single-device configuration, identical MJ models with Auburn Red & Electric Cyan hair previews, and Multiverse rules.*
+
+![3D Physical Board & Cinematic Gameplay](https://raw.githubusercontent.com/UG-SIDHARTH/sanju2/main/dist/assets/screenshot2.png)  
+*3D Serpentine Board: Real physical 100-tile environment atop a Manhattan rooftop with 6 Spider-Men (gold legs) and 3 Green Goblins (hoverboards).*
+
+![Tile 100 Doctor Octopus Trap](https://raw.githubusercontent.com/UG-SIDHARTH/sanju2/main/dist/assets/screenshot3.png)  
+*Doctor Octopus Tile 100 Climax: Mechanical tentacles grab MJ, leaping across the skyline into the fog, triggering 'YOU LOSE - You fell right into their trap.'*
+
+**Diagrams**:
+
+```mermaid
+flowchart TD
+    A[Start 2-Player Match] --> B[Procedural Board Layout: 6 Spideys, 3 Goblins, 3 Portal Pairs]
+    B --> C[Active Player Turn: MJ-1 or MJ-2]
+    C --> D[Physical 3D Dice Roll: 1 to 6]
+    D --> E{Tile 100 Exact Check}
+    E -->|Start + Roll > 100| F[Roll Forfeited: Turn Ends]
+    E -->|Start + Roll == 100| G[TILE 100 TRAP ACTIVATED!]
+    E -->|Start + Roll < 100| H[Smooth Tile-by-Tile Walk Animation]
+    
+    H --> I{Tile Hazard Check}
+    I -->|Spider-Man Trigger| J[Cinematic Web Pull to Station]
+    I -->|Green Goblin Hazard| K[Cinematic Hoverboard Kidnap Drop]
+    I -->|Portal Entrance| L[Black Hole Warp to Higher Exit]
+    I -->|Occupied Tile| M[Both Remain + Bonus Roll Granted!]
+    I -->|Empty Tile| N[Normal Step Finish]
+    
+    J --> O{Roll == 6 or Collision?}
+    K --> O
+    L --> O
+    M --> O
+    N --> O
+    O -->|Yes| C
+    O -->|No| P[Pass Device: Next Player Turn]
+    P --> C
+    
+    G --> Q[Doctor Octopus Emerges]
+    Q --> R[Mechanical Tentacles Grab MJ]
+    R --> S[3 Parabolic Skyline Leaps into Fog]
+    S --> T[YOU LOSE: You fell right into their trap!]
+    T --> U[Restart Match: Fresh Procedural Board]
 ```
-- **Internal Nginx Port**: Binds to `9000`.
-- **Public Domain**: Integrated with Cloudflare Tunnel (`cloudflared.config.yml`).
+*Architecture & Gameplay State Machine: Turn flow, physical dice rolling, hazard triggers, and Tile 100 Doctor Octopus trap.*
+
+**For Hardware:**  
+*N/A — Pure software web application.*
 
 ---
 
-## ⌨️ Controls & Shortcuts
+### Project Demo
 
-| Action | Control |
-|---|---|
-| **Roll Dice** | Click **ROLL DICE** or press <kbd>SPACE</kbd> |
-| **Focus Player Camera** | Click on any player's card in the side panel |
-| **Toggle Turbo Speed** | Click the **⚡ Turbo** button in the top bar |
-| **Toggle Sound** | Click the **🔊 Sound** button in the top bar |
-| **Change Camera Angle** | Click the **🎥 Camera** button in the top bar |
-| **Zoom In / Out** | Use the floating zoom buttons (<kbd>➕</kbd> / <kbd>➖</kbd> / <kbd>🔍</kbd>) |
+**Video**:  
+[Add your demo video link here]  
+*Video demonstrates the 2-player pass-and-play mode, 3D dice physics, Spider-Man web pulls, Green Goblin hoverboard kidnapping, dark singularity portal warps, and the unexpected Doctor Octopus ambush at Tile 100.*
 
----
-
-## 📂 Project Structure
-
-```
-sanju2/
-├── index.html               # Main HTML entry & UI overlays
-├── package.json             # Project dependencies & npm scripts
-├── vite.config.js           # Vite configuration (fixed on Port 9000)
-├── nginx.conf               # Nginx server configuration (Port 9000)
-├── docker-compose.yml       # Container orchestration
-├── cloudflared.config.yml   # Cloudflare Tunnel configuration
-└── src/
-    ├── main.js              # Application bootstrap & WebGL renderer setup
-    ├── style.css            # Comic & glassmorphism UI styles
-    ├── game/
-    │   ├── GameManager.js   # Match rules, turn flow, hazards & portals
-    │   ├── Board.js         # 100-tile board generation & tile textures
-    │   ├── SpiderMan.js     # Spider-Man 3D model & waldoes animation
-    │   ├── GreenGoblin.js   # Classic Green Goblin 3D model & glider flight
-    │   ├── DrOctopus.js     # Doctor Octopus 3D model & tentacles
-    │   ├── Portal.js        # Bidirectional quantum multiverse portals
-    │   ├── Dice3D.js        # 3D physics-style dice roll animation
-    │   ├── Environment.js   # Manhattan skyline, rooftop arena & lighting
-    │   ├── AudioManager.js  # Procedural Web Audio sound effects
-    │   ├── CharacterFactory.js # Player avatar models & hair configurations
-    │   ├── CameraDirector.js# Cinematic camera angles & focus transitions
-    │   └── ComicFX.js       # Comic action popups & banners
-    └── ui/
-        └── HUD.js           # HUD elements, leaderboard & modal controllers
-```
+**Additional Demos**:  
+- **GitHub Repository**: [https://github.com/UG-SIDHARTH/sanju2](https://github.com/UG-SIDHARTH/sanju2)  
+- **Live Local URL**: `http://localhost:9000/`
 
 ---
 
-## 📜 License
-Private Marvel-themed educational project. Spider-Man, Green Goblin, Doctor Octopus, and related characters are trademarks of Marvel Characters, Inc.
+### Team Contributions
+
+- **SIDHARTH D**:
+  - Core 3D engine integration using Three.js and custom shader/render loop.
+  - Procedural board layout generation (randomizing 6 Spider-Men, 3 Goblins, and 3 Portal Pairs with distance safety constraints).
+  - 3D physical dice physics simulation and unpredictable crypto-safe random generation.
+  - Turn resolution logic, collision bonus roll system, and exact 100 win/forfeit mechanics.
+  - Build optimization, Git architecture, and zero-latency single-device state management.
+
+- **SANJU LAKSHMAN B**:
+  - 3D character modeling and animation rigs (identical Mary Jane twins with Auburn Red vs. Electric Cyan hair).
+  - 3D entity design: 6 Spider-Men with 4 articulated gold waldoes, 3 Green Goblins with spiked hoverboards.
+  - Doctor Octopus Tile 100 boss rig with 4 articulated titanium tentacles and 3-stage skyline leap escape animation.
+  - Manga/Anime visual theme design, responsive comic HUD overlay, and 100% procedural Web Audio synthesizer.
