@@ -20,6 +20,7 @@ export class Board {
       spideyTriggers: [],
       goblins: []
     };
+    this.goalLabel = '🐙 TILE 100';
 
     this.createBoardPlatform();
     this.generateTiles();
@@ -164,7 +165,7 @@ export class Board {
       ctx.fillStyle = '#fef08a';
       ctx.font = '900 24px "Outfit", Impact, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('🐙 TILE 100', 128, 43);
+      ctx.fillText(this.goalLabel || '🐙 TILE 100', 128, 43);
     }
 
     // Main Tile Number
@@ -283,6 +284,17 @@ export class Board {
   getTileWorldPosition(tileNumber) {
     const safeN = Math.max(1, Math.min(100, Math.floor(tileNumber)));
     return this.tiles[safeN].position.clone();
+  }
+
+  setGoalLabel(label = '🐙 TILE 100') {
+    this.goalLabel = label;
+    const tile100 = this.tiles[100];
+    if (tile100 && tile100.topMat) {
+      const newTex = this.createTileTexture(100, false, false, true, false, null, false, null);
+      if (tile100.topMat.map) tile100.topMat.map.dispose();
+      tile100.topMat.map = newTex;
+      tile100.topMat.needsUpdate = true;
+    }
   }
 
   update(delta) {

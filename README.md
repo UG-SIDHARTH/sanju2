@@ -10,22 +10,24 @@
 ---
 
 ### Project Description
-An absurdly over-engineered 3D anime browser game called **"Spider-Man Snakes & Ladders"** that has **strictly ZERO snakes and ZERO ladders**. Built for an 18-hour hackathon, two human players pass-and-play locally on a single device as identical Mary Janes (distinguished strictly by hair color) navigating a 100-tile rooftop board guarded by 6 Spider-Men with mechanical gold legs, 3 hoverboard-flying Green Goblins, and 3 dark-singularity black-hole portals—only to discover that reaching Tile 100 is an inescapable Doctor Octopus kidnapping trap!
+An absurdly over-engineered 3D anime browser game called **"Spider-Man Snakes & Ladders"** that has **strictly ZERO snakes and ZERO ladders**. Built for an 18-hour hackathon, 2 to 4 human players pass-and-play locally on a single device as identical Mary Janes (distinguished strictly by hair color: Auburn Red, Electric Cyan, Golden Blonde, and Toxic Emerald) navigating a 100-tile rooftop board guarded by 6 Spider-Men with mechanical gold legs, 3 hoverboard-flying Green Goblins, and 3 dark-singularity black-hole portals—with an insane climax where the **1st player to reach Tile 100 is ambushed and captured by Doctor Octopus**, springing the trap so the **2nd player to reach Tile 100 wins the game!**
 
 ---
 
 ### The Problem (that doesn't exist)
-Traditional board games like *Snakes & Ladders* have suffered for centuries from a severe, unacceptable lack of web-slinging superheroes, pumpkin bombs, dark gravitational wormholes, and tentacled supervillains ambushing players at the finish line. Millions of friendships are ruined by boring 2D flat cardboard dice rolls when what the world truly needed was an over-the-top 3D Marvel anime thriller on a Manhattan skyscraper where winning is literally a scam.
+Traditional board games like *Snakes & Ladders* have suffered for centuries from a severe, unacceptable lack of web-slinging superheroes, pumpkin bombs, dark gravitational wormholes, and tentacled supervillains ambushing players at the finish line. Millions of friendships are ruined by boring 2D flat cardboard dice rolls when what the world truly needed was an over-the-top 3D Marvel anime thriller on a Manhattan skyscraper where winning requires sacrificing your best friend to Doctor Octopus so you can snatch the victory trophy right behind them.
 
 ---
 
 ### The Solution (that nobody asked for)
-We built a completely physical 3D anime universe in the browser! Players control identical Mary Janes (Auburn Red vs. Electric Cyan hair). 
-- Instead of climbing ladders, **6 Spider-Men** visibly fire web lines across the 3D board to yank you through mid-air.
+We built a completely physical 3D anime universe in the browser! Players choose between **2-Player, 3-Player, or 4-Player** pass-and-play modes on a single device, controlling identical Mary Janes differing strictly by vibrant hair colors (Auburn Red, Electric Cyan, Golden Blonde, Toxic Emerald). 
+- Instead of climbing ladders, **6 Spider-Men** visibly fire web lines across the 3D board to yank you forward through mid-air.
 - Instead of sliding down snakes, **3 Green Goblins** tackle you onto their jet hoverboards and kidnap you downward.
 - **3 Portal Pairs (6 black-hole singularities)** warp you upward into the cosmos.
-- And if you have the precision to roll the exact number to reach Tile 100? **Doctor Octopus** leaps out of nowhere, grabs you with 4 mechanical cyber-claws, repeatedly bounces across the skyline into the unknown, and proclaims:  
-  > **YOU LOSE — You fell right into their trap!**
+- **The Tile 100 Dual Climax**:
+  - When the **1st Player** reaches Tile 100 with an exact roll: **Doctor Octopus** erupts from above, grabs them in mechanical titanium claws, and repeatedly leaps across the skyline into the fog—eliminating them!
+  - Tile 100 springs open and converts on the physical board into the golden **🏆 WIN TILE 100**.
+  - The **2nd Player** (or next active player) to roll the exact count to Tile 100 escapes the ambush and **WINS THE GAME!**
 
 ---
 
@@ -85,14 +87,14 @@ npm run preview
 
 **Screenshots**:
 
-![Start Screen - 2-Player Pass & Play](https://raw.githubusercontent.com/UG-SIDHARTH/sanju2/main/dist/assets/screenshot1.png)  
-*Start Screen: 2-Player single-device configuration, identical MJ models with Auburn Red & Electric Cyan hair previews, and Multiverse rules.*
+![Start Screen - 2P, 3P, 4P Pass & Play](https://raw.githubusercontent.com/UG-SIDHARTH/sanju2/main/dist/assets/screenshot1.png)  
+*Start Screen: Interactive 2-Player, 3-Player, and 4-Player mode selection with real-time previews of all 4 MJ twins (Auburn Red, Electric Cyan, Golden Blonde, Toxic Emerald) and multiverse rules.*
 
 ![3D Physical Board & Cinematic Gameplay](https://raw.githubusercontent.com/UG-SIDHARTH/sanju2/main/dist/assets/screenshot2.png)  
 *3D Serpentine Board: Real physical 100-tile environment atop a Manhattan rooftop with 6 Spider-Men (gold legs) and 3 Green Goblins (hoverboards).*
 
-![Tile 100 Doctor Octopus Trap](https://raw.githubusercontent.com/UG-SIDHARTH/sanju2/main/dist/assets/screenshot3.png)  
-*Doctor Octopus Tile 100 Climax: Mechanical tentacles grab MJ, leaping across the skyline into the fog, triggering 'YOU LOSE - You fell right into their trap.'*
+![Tile 100 Dual Climax: 1st Captured, 2nd Wins](https://raw.githubusercontent.com/UG-SIDHARTH/sanju2/main/dist/assets/screenshot3.png)  
+*Tile 100 Dual Climax: 1st player is ambushed and abducted into the skyline by Doc Ock; Tile 100 dynamically transforms into the golden WIN TILE 100 where the 2nd player claims victory.*
 
 **Diagrams**:
 
@@ -101,13 +103,23 @@ npm run preview
 
 ```mermaid
 flowchart TD
-    A[Start 2-Player Match] --> B[Procedural Board Layout: 6 Spideys, 3 Goblins, 3 Portal Pairs]
-    B --> C[Active Player Turn: MJ-1 or MJ-2]
+    A[Start Match: Select 2P, 3P, or 4P] --> B[Procedural Board Layout: 6 Spideys, 3 Goblins, 3 Portal Pairs]
+    B --> C[Active Player Turn: Pass Device]
     C --> D[Physical 3D Dice Roll: 1 to 6]
     D --> E{Tile 100 Exact Check}
     E -->|Start + Roll > 100| F[Roll Forfeited: Turn Ends]
-    E -->|Start + Roll == 100| G[TILE 100 TRAP ACTIVATED!]
+    E -->|Start + Roll == 100| G{1st Player to 100?}
     E -->|Start + Roll < 100| H[Smooth Tile-by-Tile Walk Animation]
+    
+    G -->|YES - 1st to 100| Q[Doctor Octopus Ambush!]
+    Q --> R[Mechanical Tentacles Grab MJ]
+    R --> S[Skyline Escape Leaps: 1st Player Eliminated!]
+    S --> T[Tile 100 Converts to WIN TILE 100]
+    T --> P[Pass Device to Remaining Players]
+    
+    G -->|NO - 2nd to 100| V[TRAP EVADED: CHAMPION VICTORY!]
+    V --> W[Confetti Celebration & Victor Crowned]
+    W --> X[Restart Match: Fresh Procedural Board]
     
     H --> I{Tile Hazard Check}
     I -->|Spider-Man Trigger| J[Cinematic Web Pull to Station]
@@ -122,14 +134,8 @@ flowchart TD
     M --> O
     N --> O
     O -->|Yes| C
-    O -->|No| P[Pass Device: Next Player Turn]
+    O -->|No| P
     P --> C
-    
-    G --> Q[Doctor Octopus Emerges]
-    Q --> R[Mechanical Tentacles Grab MJ]
-    R --> S[3 Parabolic Skyline Leaps into Fog]
-    S --> T[YOU LOSE: You fell right into their trap!]
-    T --> U[Restart Match: Fresh Procedural Board]
 ```
 
 #### For Hardware:
@@ -149,7 +155,7 @@ flowchart TD
 
 **Video**:  
 [Add your demo video link here]  
-*Video demonstrates the 2-player pass-and-play mode, 3D dice physics, Spider-Man web pulls, Green Goblin hoverboard kidnapping, dark singularity portal warps, and the unexpected Doctor Octopus ambush at Tile 100.*
+*Video demonstrates 2P, 3P, and 4P pass-and-play modes, 3D dice physics, Spider-Man web pulls, Green Goblin hoverboard kidnapping, dark singularity portal warps, the Doctor Octopus 1st-player abduction, and the 2nd-player Tile 100 championship victory.*
 
 **Additional Demos**:  
 - **GitHub Repository**: [https://github.com/UG-SIDHARTH/sanju2](https://github.com/UG-SIDHARTH/sanju2)  
@@ -163,11 +169,11 @@ flowchart TD
   - Core 3D engine integration using Three.js and custom render loop.
   - Procedural board layout generation (randomizing 6 Spider-Men, 3 Goblins, and 3 Portal Pairs with safety distance constraints).
   - 3D physical dice simulation and unpredictable crypto-safe random generation.
-  - Turn resolution logic, collision bonus roll system, and exact 100 win/forfeit mechanics.
+  - Multi-player (2P, 3P, 4P) turn resolution logic, collision bonus roll system, and 1st player captured / 2nd player win rules.
   - Build optimization, Git architecture, and zero-latency single-device state management.
 
 - **SANJU LAKSHMAN B**:
-  - 3D character modeling and animation rigs (identical Mary Jane twins with Auburn Red vs. Electric Cyan hair).
+  - 3D character modeling and animation rigs (identical Mary Jane characters with Auburn Red, Electric Cyan, Golden Blonde, and Toxic Emerald hair).
   - 3D entity design: 6 Spider-Men with 4 articulated gold waldoes, 3 Green Goblins with spiked hoverboards.
   - Doctor Octopus Tile 100 boss rig with 4 articulated titanium tentacles and 3-stage skyline leap escape animation.
   - Manga/Anime visual theme design, responsive comic HUD overlay, and 100% procedural Web Audio synthesizer.

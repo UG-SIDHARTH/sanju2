@@ -32,13 +32,16 @@ export class GameManager {
     // Tile 100 Trap Boss: Doctor Octopus
     this.drOctopus = new DrOctopus(scene, audioManager, comicFX);
 
-    // Game state (Pure 2-Player Single Device)
+    // Game state (2P, 3P, 4P Single Device Pass & Play)
     this.players = [];
     this.activePlayerIndex = 0;
     this.isTurnProcessing = false;
     this.bonusRollEarned = false;
+    this.playerCount = 2;
+    this.firstPlayerCaptured = false;
+    this.capturedPlayer = null;
 
-    // Entities: Exactly 6 Spider-Men, 3 Green Goblins & 4 Portals (2 Pairs)
+    // Entities: Exactly 6 Spider-Men, 3 Green Goblins & 6 Portals (3 Pairs)
     this.spiderMen = [];
     this.greenGoblins = [];
     this.portals = [];
@@ -158,10 +161,11 @@ export class GameManager {
     });
   }
 
-  // --- START NEW 2-PLAYER MATCH ---
+  // --- START NEW MATCH (2, 3, or 4 Players) ---
   startNewMatch(playerCount = 2) {
-    // Only 2-player mode
-    const count = 2;
+    this.playerCount = Math.min(4, Math.max(2, playerCount));
+    this.firstPlayerCaptured = false;
+    this.capturedPlayer = null;
 
     // Clear old entities
     this.players.forEach(p => this.scene.remove(p.root));
@@ -180,8 +184,12 @@ export class GameManager {
       this.drOctopus.reset();
     }
 
-    // Spawn 2 Players (MJ-1 and MJ-2)
-    for (let i = 0; i < count; i++) {
+    if (this.board) {
+      this.board.setGoalLabel('🐙 TILE 100');
+    }
+
+    // Spawn MJs for selected player count (2, 3, or 4)
+    for (let i = 0; i < this.playerCount; i++) {
       const char = CharacterFactory.createMJ(i);
       char.currentTile = 1;
       char.isEliminated = false;
@@ -203,7 +211,7 @@ export class GameManager {
     this.hud.updateTurnDisplay(this.getActivePlayer(), false);
     this.hud.setRollButtonEnabled(true);
 
-    this.hud.logEvent(`Match started! 6 Spider-Men, 3 Green Goblins & 6 Portals (3 Pairs) randomized.`);
+    this.hud.logEvent(`Match started (${this.playerCount} Players)! 6 Spider-Men, 3 Green Goblins & 6 Portals (3 Pairs) randomized.`);
     this.cameraDirector.focusOnBoard();
   }
 
@@ -530,33 +538,65 @@ export class GameManager {
     this.finishTurn(bonus);
   }
 
-  // --- TILE 100 ENDGAME: DOCTOR OCTOPUS TRAP ---
+  // --- TILE 100 ENDGAME: 1ST CAPTURED BY DOC OCK, 2ND WINS ---
   handleSecret100Reached(player) {
     this.audioManager.playSuspenseHeartbeat();
     const tile100Pos = this.board.getTileWorldPosition(100);
     this.cameraDirector.focusOnTile100(tile100Pos);
     this.hud.logEvent(`⚡ ${player.config.name} REACHED TILE 100!`, true);
 
-    // 1. Tense pause focusing on MJ on Tile 100
-    this.auraManager.triggerSpeedLines(1.8, 0.6);
+    // CASE 1: 1st Player reaches Tile 100 -> DOCTOR OCTOPUS AMBUSH & CAPTURE!
+    if (!this.firstPlayerCaptured) {
+      this.auraManager.triggerSpeedLines(1.8, 0.6);
+
+      setTimeout(() => {
+        this.drOctopus.triggerTrapKidnapping(
+          player,
+          () => {
+            this.audioManager.playDefeatGong();
+
+            player.isEliminated = true;
+            player.root.visible = false;
+            this.firstPlayerCaptured = true;
+            this.capturedPlayer = player;
+
+            // Update physical board Tile 100 label to golden WINNER tile
+            this.board.setGoalLabel('🏆 WIN TILE 100');
+
+            const remainingActive = this.players.filter(p => !p.isEliminated);
+            this.hud.renderPlayersList(this.players, this.activePlayerIndex);
+
+            if (remainingActive.length > 0) {
+              this.comicFX.showBanner(`💥 ${player.config.name} CAPTURED! NEXT TO REACH 100 WINS!`);
+              this.hud.logEvent(`💀 ${player.config.name} was CAPTURED by Doc Ock! The NEXT player to reach 100 WINS!`, true);
+
+              this.hud.showTrapAmbushedNotice(player, remainingActive, () => {
+                this.cameraDirector.focusOnBoard();
+                this.advanceToNextPlayer();
+              });
+            } else {
+              this.hud.showTrapDefeat(player);
+              this.hud.logEvent(`💀 YOU LOSE! ${player.config.name} fell right into the trap!`, true);
+            }
+          },
+          (docPos, mjPos, progress) => {
+            this.cameraDirector.trackFlyingGoblin(docPos, docPos, progress);
+          }
+        );
+      }, 1000);
+      return;
+    }
+
+    // CASE 2: 2nd Player (or next player) reaches Tile 100 -> WINS THE GAME!
+    this.auraManager.triggerSpeedLines(2.4, 0.95);
+    this.audioManager.playBonusChime();
+    this.comicFX.spawnAt(player.root.position, 'WINNER!', '#facc15', '#ffffff', 3.0);
+    this.comicFX.showBanner(`🏆 ${player.config.name} REACHED TILE 100 AND WINS!`);
 
     setTimeout(() => {
-      // 2. Doctor Octopus suddenly appears at Tile 100!
-      this.drOctopus.triggerTrapKidnapping(
-        player,
-        () => {
-          // 3. Disappeared toward an unknown destination!
-          // Player who reached 100 LOSES!
-          this.audioManager.playDefeatGong();
-          this.hud.showTrapDefeat(player);
-          this.hud.logEvent(`💀 YOU LOSE! ${player.config.name} fell right into the trap!`, true);
-        },
-        (docPos, mjPos, progress) => {
-          // Cinematic camera tracking Doctor Octopus leaping across skyline with MJ
-          this.cameraDirector.trackFlyingGoblin(docPos, docPos, progress);
-        }
-      );
-    }, 1000);
+      this.hud.showVictory(player, this.capturedPlayer);
+      this.hud.logEvent(`🏆 MULTIVERSE CHAMPION! ${player.config.name} conquered Tile 100 and WON!`, true);
+    }, 600);
   }
 
   updatePlayerPositionsOnTile(tileNumber) {
@@ -616,7 +656,25 @@ export class GameManager {
 
   advanceToNextPlayer() {
     this.bonusRollEarned = false;
-    this.activePlayerIndex = (this.activePlayerIndex + 1) % this.players.length;
+
+    // Advance to next active (non-eliminated) player
+    let nextIndex = this.activePlayerIndex;
+    let found = false;
+    for (let i = 1; i <= this.players.length; i++) {
+      const idx = (this.activePlayerIndex + i) % this.players.length;
+      if (!this.players[idx].isEliminated) {
+        nextIndex = idx;
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      this.isTurnProcessing = false;
+      return;
+    }
+
+    this.activePlayerIndex = nextIndex;
     this.isTurnProcessing = false;
 
     const nextPlayer = this.getActivePlayer();

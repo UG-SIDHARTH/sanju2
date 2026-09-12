@@ -8,7 +8,9 @@ import * as THREE from 'three';
 
 export const MJ_CONFIGS = [
   { id: 1, name: 'MJ-1', hairColor: 0xc84224, hairName: 'Auburn Red', hex: '#ef4444', eyeColor: 0x10b981 },
-  { id: 2, name: 'MJ-2', hairColor: 0x00e5ff, hairName: 'Electric Cyan', hex: '#00e5ff', eyeColor: 0x10b981 }
+  { id: 2, name: 'MJ-2', hairColor: 0x00e5ff, hairName: 'Electric Cyan', hex: '#00e5ff', eyeColor: 0x10b981 },
+  { id: 3, name: 'MJ-3', hairColor: 0xfacc15, hairName: 'Golden Blonde', hex: '#facc15', eyeColor: 0x10b981 },
+  { id: 4, name: 'MJ-4', hairColor: 0x22c55e, hairName: 'Toxic Emerald', hex: '#22c55e', eyeColor: 0x10b981 }
 ];
 
 export class CharacterFactory {

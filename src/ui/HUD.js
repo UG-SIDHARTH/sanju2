@@ -33,6 +33,10 @@ export class HUD {
     this.btnNewMatch = document.getElementById('btn-new-match');
     this.btnStartGame = document.getElementById('btn-start-game');
     this.btnPlayAgain = document.getElementById('btn-play-again');
+    this.ambushModal = document.getElementById('ambush-modal');
+    this.btnContinueRace = document.getElementById('btn-continue-race');
+    this.selectedPlayerCount = 2;
+    this.onAmbushDismiss = null;
 
     // Camera Zoom
     this.btnZoomIn = document.getElementById('btn-zoom-in');
@@ -72,13 +76,60 @@ export class HUD {
       });
     }
 
-    // Start 2-Player Game
+    // Player Count Buttons (2P, 3P, 4P)
+    const countBtns = document.querySelectorAll('.player-count-btn');
+    countBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const count = parseInt(btn.dataset.count, 10) || 2;
+        this.selectedPlayerCount = count;
+
+        countBtns.forEach(b => b.classList.toggle('active', b === btn));
+
+        // Update preview cards active/inactive states
+        const charCards = document.querySelectorAll('.char-card');
+        charCards.forEach(c => {
+          const charId = parseInt(c.dataset.char, 10);
+          if (charId <= count) {
+            c.classList.remove('inactive');
+            c.classList.add('active');
+          } else {
+            c.classList.add('inactive');
+            c.classList.remove('active');
+          }
+        });
+
+        // Update start button text
+        const startTextEl = document.getElementById('btn-start-text');
+        if (startTextEl) {
+          startTextEl.textContent = `START ${count}-PLAYER MATCH`;
+        }
+
+        const subtitleBadge = document.getElementById('mode-subtitle-badge');
+        if (subtitleBadge) {
+          subtitleBadge.textContent = `🎮 ${count} PLAYERS — SINGLE DEVICE`;
+        }
+      });
+    });
+
+    // Start Game
     if (this.btnStartGame) {
       this.btnStartGame.addEventListener('click', () => {
         this.gameManager.audioManager.init();
         this.startScreen.classList.add('hidden');
         this.gameUi.classList.remove('hidden');
-        this.gameManager.startNewMatch(2);
+        this.gameManager.startNewMatch(this.selectedPlayerCount);
+      });
+    }
+
+    // Continue race button after Doctor Octopus ambush
+    if (this.btnContinueRace) {
+      this.btnContinueRace.addEventListener('click', () => {
+        if (this.ambushModal) this.ambushModal.classList.add('hidden');
+        if (this.onAmbushDismiss) {
+          const cb = this.onAmbushDismiss;
+          this.onAmbushDismiss = null;
+          cb();
+        }
       });
     }
 
@@ -136,8 +187,8 @@ export class HUD {
     // New Match
     if (this.btnNewMatch) {
       this.btnNewMatch.addEventListener('click', () => {
-        if (confirm('Start a brand new match? Board will re-randomize.')) {
-          this.gameManager.startNewMatch(2);
+        if (confirm(`Start a brand new match (${this.selectedPlayerCount} Players)? Board will re-randomize.`)) {
+          this.gameManager.startNewMatch(this.selectedPlayerCount);
         }
       });
     }
@@ -146,7 +197,7 @@ export class HUD {
     if (this.btnPlayAgain) {
       this.btnPlayAgain.addEventListener('click', () => {
         this.revealScreen.classList.add('hidden');
-        this.gameManager.startNewMatch(2);
+        this.gameManager.startNewMatch(this.selectedPlayerCount);
       });
     }
   }
@@ -179,7 +230,7 @@ export class HUD {
             </div>
             <span class="player-percent">${progress}%</span>
           </div>
-          <span class="player-status-tag">${player.isEliminated ? 'ELIMINATED' : player.config.hairName}</span>
+          <span class="player-status-tag ${player.isEliminated ? 'tag-captured' : ''}">${player.isEliminated ? '🐙 CAPTURED' : player.config.hairName}</span>
         </div>
       `;
 
@@ -196,6 +247,7 @@ export class HUD {
 
   // Update bottom turn card
   updateTurnDisplay(player, hasBonusRoll = false) {
+    if (!player) return;
     if (this.currentPlayerName) this.currentPlayerName.textContent = player.config.name;
     if (this.currentPlayerTile) this.currentPlayerTile.textContent = player.currentTile;
     if (this.currentHairIndicator) this.currentHairIndicator.style.backgroundColor = player.config.hex;
@@ -227,7 +279,112 @@ export class HUD {
     }
   }
 
-  // Show Doctor Octopus Tile 100 Trap Defeat Screen
+  // Show Alert Notice when 1st Player is captured by Doctor Octopus
+  showTrapAmbushedNotice(capturedPlayer, remainingActive, onDismiss) {
+    this.onAmbushDismiss = onDismiss;
+
+    const titleEl = document.getElementById('ambush-title');
+    const descEl = document.getElementById('ambush-desc');
+    const cardEl = document.getElementById('ambush-captured-card');
+
+    if (titleEl) {
+      titleEl.textContent = `${capturedPlayer.config.name} WAS CAPTURED!`;
+    }
+
+    if (descEl) {
+      const remainingNames = remainingActive.map(p => p.config.name).join(', ');
+      descEl.innerHTML = `
+        Doctor Octopus sprang his trap and dragged ${capturedPlayer.config.name} into the skyline!<br><br>
+        <span class="ambush-highlight">⚡ THE TRAP IS GONE! THE NEXT RACER TO REACH TILE 100 WINS!</span><br>
+        <small style="color: #94a3b8; font-size: 0.9rem; margin-top: 8px; display: inline-block;">Active Racers Remaining: <strong>${remainingNames}</strong></small>
+      `;
+    }
+
+    if (cardEl) {
+      cardEl.innerHTML = `
+        <div class="player-avatar-mini" style="background-color: ${capturedPlayer.config.hex}; width: 44px; height: 44px; font-size: 1.2rem;">
+          ${capturedPlayer.config.id}
+        </div>
+        <div style="text-align: left;">
+          <h4 style="color: #fff; font-family: var(--font-display); font-size: 1.4rem;">${capturedPlayer.config.name}</h4>
+          <p style="color: #ef4444; font-size: 0.85rem; font-weight: 700;">AMBUSHED AT TILE 100 — OUT OF RACE</p>
+        </div>
+      `;
+    }
+
+    if (this.ambushModal) {
+      this.ambushModal.classList.remove('hidden');
+    }
+
+    // Auto dismiss after 4.5s if player doesn't click
+    setTimeout(() => {
+      if (this.ambushModal && !this.ambushModal.classList.contains('hidden')) {
+        this.ambushModal.classList.add('hidden');
+        if (this.onAmbushDismiss) {
+          const cb = this.onAmbushDismiss;
+          this.onAmbushDismiss = null;
+          cb();
+        }
+      }
+    }, 4500);
+  }
+
+  // Show Victory Screen when 2nd Player reaches Tile 100
+  showVictory(winnerPlayer, capturedPlayer) {
+    try {
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.6 }
+      });
+    } catch (e) {}
+
+    const titleEl = document.getElementById('reveal-title');
+    const subtitleEl = document.getElementById('reveal-subtitle');
+    const playerCardEl = document.getElementById('reveal-player-card');
+    const badgeEl = document.getElementById('reveal-badge');
+    const playAgainBtn = document.getElementById('btn-play-again');
+
+    if (badgeEl) {
+      badgeEl.textContent = '🏆 MULTIVERSE CHAMPION!';
+      badgeEl.style.backgroundColor = '#16a34a';
+    }
+
+    if (titleEl) {
+      titleEl.className = 'reveal-title win';
+      titleEl.textContent = `${winnerPlayer.config.name} WINS!`;
+      titleEl.style.color = '#facc15';
+    }
+
+    if (subtitleEl) {
+      const extra = capturedPlayer
+        ? `While ${capturedPlayer.config.name} fell into Doctor Octopus's ambush trap, ${winnerPlayer.config.name} reached Tile 100 second and conquered the Multiverse!`
+        : `Conquered the 100-tile Multiverse race!`;
+      subtitleEl.innerHTML = `<strong style="color: #fde047; font-size: 1.25rem;">VICTORY ACHIEVED!</strong><br><br>${extra}`;
+    }
+
+    if (playerCardEl) {
+      playerCardEl.innerHTML = `
+        <div class="player-avatar-mini" style="background-color: ${winnerPlayer.config.hex}; width: 56px; height: 56px; font-size: 1.5rem;">
+          ${winnerPlayer.config.id}
+        </div>
+        <div>
+          <h3 style="color: #fff; font-family: var(--font-display); font-size: 2rem;">${winnerPlayer.config.name}</h3>
+          <p style="color: #4ade80; font-weight: 800;">MULTIVERSE WINNER — REACHED TILE 100</p>
+        </div>
+      `;
+    }
+
+    if (playAgainBtn) {
+      playAgainBtn.textContent = 'PLAY AGAIN';
+    }
+
+    if (this.revealScreen) {
+      this.revealScreen.classList.remove('hidden');
+    }
+  }
+
+  // Show Doctor Octopus Tile 100 Trap Defeat Screen (Fallback if all racers are eliminated)
   showTrapDefeat(player) {
     const titleEl = document.getElementById('reveal-title');
     const subtitleEl = document.getElementById('reveal-subtitle');

@@ -109,28 +109,58 @@
   </div>
 
   <!-- Start Screen Modal -->
+  <!-- Start Screen Modal -->
   <div id="start-screen" class="modal-overlay">
     <div class="start-modal">
       <div class="spider-badge">🕷️ MARVEL ANIME MULTIVERSE</div>
       <h1 class="start-title">SPIDER-MAN<br><span class="highlight-title">SNAKES & LADDERS</span></h1>
-      <div class="mode-subtitle-badge">🎮 2 PLAYER — SINGLE DEVICE</div>
+      <div class="mode-subtitle-badge" id="mode-subtitle-badge">🎮 2–4 PLAYERS — SINGLE DEVICE</div>
       <p class="start-desc">
         An absurdly over-engineered 3D anime game with <strong>NO snakes and NO ladders!</strong><br>
         6 Spider-Men with gold spider legs! 3 Green Goblins on flying hoverboards! 6 Portals (3 connected pairs)!<br>
-        Take turns rolling the 3D dice locally. Reach <strong>Tile 100 with an exact roll</strong>... but beware of the trap!
+        Take turns rolling the 3D dice locally. <strong>1st player to reach 100 gets captured by Doc Ock... and the 2nd player to reach 100 WINS!</strong>
       </p>
 
-      <!-- 2 Character Preview Cards (2-Player Mode Only) -->
-      <div class="character-preview-grid two-player-grid" id="character-preview-grid">
+      <!-- Player Count Selection (2P, 3P, 4P) -->
+      <div class="player-select-container">
+        <span class="select-label">SELECT PLAYERS (PASS & PLAY)</span>
+        <div class="player-buttons">
+          <button class="player-count-btn active" data-count="2">
+            <span class="count-num">2</span>
+            <span class="count-txt">PLAYERS</span>
+          </button>
+          <button class="player-count-btn" data-count="3">
+            <span class="count-num">3</span>
+            <span class="count-txt">PLAYERS</span>
+          </button>
+          <button class="player-count-btn" data-count="4">
+            <span class="count-num">4</span>
+            <span class="count-txt">PLAYERS</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 Character Preview Cards -->
+      <div class="character-preview-grid" id="character-preview-grid">
         <div class="char-card active" data-char="1">
           <div class="char-hair-swatch hair-mj1"></div>
           <span class="char-name">MJ-1</span>
-          <span class="char-hair-label">Player 1 (Auburn Red Hair)</span>
+          <span class="char-hair-label">Auburn Red</span>
         </div>
         <div class="char-card active" data-char="2">
           <div class="char-hair-swatch hair-mj2"></div>
           <span class="char-name">MJ-2</span>
-          <span class="char-hair-label">Player 2 (Electric Cyan Hair)</span>
+          <span class="char-hair-label">Electric Cyan</span>
+        </div>
+        <div class="char-card inactive" data-char="3">
+          <div class="char-hair-swatch hair-mj3"></div>
+          <span class="char-name">MJ-3</span>
+          <span class="char-hair-label">Golden Blonde</span>
+        </div>
+        <div class="char-card inactive" data-char="4">
+          <div class="char-hair-swatch hair-mj4"></div>
+          <span class="char-name">MJ-4</span>
+          <span class="char-hair-label">Toxic Emerald</span>
         </div>
       </div>
 
@@ -139,8 +169,8 @@
         <div class="meta-item"><span class="meta-icon">🕷️</span> 6 Spider-Men (Gold Legs)</div>
         <div class="meta-item"><span class="meta-icon">🎃</span> 3 Green Goblins (Hoverboards)</div>
         <div class="meta-item"><span class="meta-icon">🌀</span> 6 Portals (3 Pairs - Always Higher)</div>
-        <div class="meta-item"><span class="meta-icon">🎯</span> Exact 100 Rule</div>
-        <div class="meta-item"><span class="meta-icon">👥</span> Single Device Pass & Play</div>
+        <div class="meta-item"><span class="meta-icon">🐙</span> 1st at 100 Captured</div>
+        <div class="meta-item"><span class="meta-icon">🏆</span> 2nd at 100 Wins</div>
       </div>
 
       <button id="btn-start-game" class="btn-start-action">
@@ -168,8 +198,16 @@
         <div class="rule-box">
           <div class="rule-icon">👥</div>
           <div class="rule-text">
-            <h3>2 Players — Single Device</h3>
-            <p>Two human players (MJ-1 and MJ-2) take turns on the same laptop or mobile phone. Same appearance, distinguished by their Auburn Red and Electric Cyan hair!</p>
+            <h3>2, 3, or 4 Players — Single Device</h3>
+            <p>Human players (MJ-1 through MJ-4) take turns locally on the same laptop or mobile phone. All identical Mary Jane models with natural bipedal kinematics, distinguished by their hair colors!</p>
+          </div>
+        </div>
+
+        <div class="rule-box rule-mystery">
+          <div class="rule-icon">🐙</div>
+          <div class="rule-text">
+            <h3>Tile 100: 1st Player Captured, 2nd Player Wins!</h3>
+            <p>Reaching Tile 100 first triggers <strong>Doctor Octopus</strong>! His mechanical tentacles snatch the leading player and leap away into the skyline (captured and eliminated)! With the trap sprung, <strong>the NEXT player to reach Tile 100 conquers the Multiverse and WINS THE GAME!</strong></p>
           </div>
         </div>
 
@@ -185,7 +223,7 @@
           <div class="rule-icon">🎲</div>
           <div class="rule-text">
             <h3>Bonus Rolls</h3>
-            <p>Roll a <strong>6</strong> to earn an immediate bonus roll! Also, landing on the same tile as the other player grants an immediate bonus roll (both players remain on the tile, nobody is displaced).</p>
+            <p>Roll a <strong>6</strong> to earn an immediate bonus roll! Also, landing on the same tile as another player grants an immediate bonus roll (all players remain on the tile, nobody is displaced).</p>
           </div>
         </div>
 
@@ -212,31 +250,39 @@
             <p>Three entrance portals and three exit portals. Entering an entrance portal pulls MJ into a dark-black-hole gravitational singularity, emerging from the corresponding exit portal at a higher position (never downward)!</p>
           </div>
         </div>
-
-        <div class="rule-box rule-mystery">
-          <div class="rule-icon">🐙</div>
-          <div class="rule-text">
-            <h3>Tile 100 — Doctor Octopus Trap!</h3>
-            <p>Reaching 100 is ALWAYS a trap! When MJ reaches Tile 100, Doctor Octopus appears with mechanical tentacles, grabs MJ, and repeatedly leaps away across the skyline into the unknown. The player who reached 100 loses: <em>"YOU LOSE - You fell right into their trap."</em></p>
-          </div>
-        </div>
       </div>
       <button id="btn-ok-rules" class="btn-primary-confirm">LET'S BATTLE</button>
     </div>
   </div>
 
-  <!-- Secret 100 Reveal Screen -->
+  <!-- Ambush Alert Modal (When 1st player is captured by Doc Ock) -->
+  <div id="ambush-modal" class="modal-overlay hidden">
+    <div class="ambush-card">
+      <div class="ambush-badge">🐙 DOCTOR OCTOPUS TRAP SPRUNG!</div>
+      <h2 class="ambush-title" id="ambush-title">MJ-1 WAS CAPTURED!</h2>
+      <p class="ambush-desc" id="ambush-desc">
+        Doctor Octopus sprang his trap and dragged MJ-1 across the skyline into the unknown!<br><br>
+        <span class="ambush-highlight">⚡ THE TRAP IS GONE! THE NEXT RACER TO REACH TILE 100 WINS!</span>
+      </p>
+      <div id="ambush-captured-card" class="ambush-captured-card"></div>
+      <button id="btn-continue-race" class="btn-start-action">
+        CONTINUE THE RACE ➔
+      </button>
+    </div>
+  </div>
+
+  <!-- Secret 100 Reveal / Victory Screen -->
   <div id="reveal-screen" class="reveal-overlay hidden">
     <div class="reveal-backdrop"></div>
     <div class="reveal-content" id="reveal-content">
-      <div class="reveal-badge" id="reveal-badge">⚠️ DOCTOR OCTOPUS TRAP!</div>
-      <h1 class="reveal-title" id="reveal-title">YOU LOSE</h1>
-      <p class="reveal-subtitle" id="reveal-subtitle">You fell right into their trap.</p>
+      <div class="reveal-badge" id="reveal-badge">🏆 MULTIVERSE CHAMPION!</div>
+      <h1 class="reveal-title" id="reveal-title">VICTORY</h1>
+      <p class="reveal-subtitle" id="reveal-subtitle">Conquered Tile 100!</p>
       <div class="reveal-player-card" id="reveal-player-card">
         <!-- Player card rendered here -->
       </div>
       <div class="reveal-buttons">
-        <button id="btn-play-again" class="btn-start-action">RESTART MATCH</button>
+        <button id="btn-play-again" class="btn-start-action">PLAY AGAIN</button>
       </div>
     </div>
   </div>
