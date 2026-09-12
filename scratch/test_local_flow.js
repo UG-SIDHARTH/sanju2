@@ -56,35 +56,36 @@ async function run() {
     };
 
     try {
-      console.log('--- TEST A: User switches to Online tab then starts game ---');
-      await send(`document.getElementById('tab-online').click(); 'switched to online'`);
-      await new Promise(r => setTimeout(r, 600));
-
-      const hostCode = await send(`document.getElementById('display-room-code').textContent`);
-      console.log('Room Code displayed:', hostCode);
-
-      // Click start game button directly while on online host view
-      console.log('User clicks start button while on host view without peer...');
+      console.log('--- TEST A: Start Local Match and verify players ---');
       await send(`document.getElementById('btn-start-game').click(); 'clicked start'`);
       await new Promise(r => setTimeout(r, 1000));
 
-      const netModeAfterStart = await send(`
+      const matchState = await send(`
         (() => {
           const gm = window.app.gameManager;
           return JSON.stringify({
-            mode: gm.networkManager.mode,
-            isOnline: gm.networkManager.isOnline(),
-            p0Turn: gm.networkManager.isMyTurn(0),
-            p1Turn: gm.networkManager.isMyTurn(1)
+            playerCount: gm.players.length,
+            activePlayer: gm.getActivePlayer()?.config.name,
+            maxTiles: gm.maxTiles
           });
         })()
       `);
-      console.log('Net state after start from host view:', netModeAfterStart);
+      console.log('Match state after start:', matchState);
 
       // Player 1 roll
       console.log('Rolling for Player 1 (MJ-1)...');
       await send(`document.getElementById('btn-roll-dice').click(); 'p1 roll'`);
-      await new Promise(r => setTimeout(r, 5500));
+      await new Promise(r => setTimeout(r, 600));
+
+      // Wait dynamically for Player 1 turn to finish
+      await new Promise(async (resolve) => {
+        for (let i = 0; i < 20; i++) {
+          await new Promise(r => setTimeout(r, 500));
+          const processing = await send(`window.app.gameManager.isTurnProcessing`);
+          if (!processing) break;
+        }
+        resolve();
+      });
 
       // Check Turn 2 (MJ-2)
       const turn2State = await send(`
@@ -92,26 +93,33 @@ async function run() {
           const rollBtn = document.getElementById('btn-roll-dice');
           const p = document.getElementById('current-player-name')?.textContent;
           const turnLabel = document.querySelector('.turn-label')?.textContent;
-          const isMyTurn = window.app.gameManager.networkManager.isMyTurn(window.app.gameManager.activePlayerIndex);
           return JSON.stringify({
             player: p,
             turnLabel,
-            btnDisabled: rollBtn.disabled,
-            isMyTurn
+            btnDisabled: rollBtn.disabled
           });
         })()
       `);
       console.log('Turn 2 State (MJ-2):', turn2State);
 
       const parsedTurn2 = JSON.parse(turn2State);
-      if (parsedTurn2.btnDisabled || !parsedTurn2.isMyTurn) {
-        throw new Error('FAIL: Player 2 roll button is disabled or not player turn!');
+      if (parsedTurn2.btnDisabled) {
+        throw new Error('FAIL: Player 2 roll button is disabled!');
       }
 
       // Player 2 roll
       console.log('Rolling for Player 2 (MJ-2)...');
       await send(`document.getElementById('btn-roll-dice').click(); 'p2 roll'`);
-      await new Promise(r => setTimeout(r, 5500));
+      
+      // Wait dynamically for Player 2 turn to finish
+      await new Promise(async (resolve) => {
+        for (let i = 0; i < 20; i++) {
+          await new Promise(r => setTimeout(r, 500));
+          const processing = await send(`window.app.gameManager.isTurnProcessing`);
+          if (!processing) break;
+        }
+        resolve();
+      });
 
       // Check Turn 3 (Back to MJ-1 or bonus)
       const turn3State = await send(`

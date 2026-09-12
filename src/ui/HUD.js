@@ -62,6 +62,7 @@ export class HUD {
   showDemoHUD(visible) {
     if (this.demoHud) {
       this.demoHud.classList.toggle('hidden', !visible);
+      this.demoHud.style.display = visible ? 'block' : 'none';
     }
     const turnCard = document.getElementById('turn-card');
     if (turnCard) {
@@ -70,6 +71,14 @@ export class HUD {
     const ticker = document.querySelector('.action-ticker-container');
     if (ticker) {
       ticker.style.display = visible ? 'none' : '';
+    }
+    const sidePanel = document.querySelector('.side-panel');
+    if (sidePanel) {
+      sidePanel.style.display = visible ? 'none' : '';
+    }
+    const bottomBar = document.querySelector('.bottom-bar');
+    if (bottomBar) {
+      bottomBar.style.display = visible ? 'none' : '';
     }
   }
 
@@ -186,6 +195,7 @@ export class HUD {
         this.gameManager.audioManager.init();
         this.startScreen.classList.add('hidden');
         this.gameUi.classList.remove('hidden');
+        this.showDemoHUD(false);
         this.updateSidePanelTarget();
         this.gameManager.startNewMatch(this.selectedPlayerCount, this.selectedMaxTiles);
       });
@@ -237,6 +247,10 @@ export class HUD {
     // Continue race button after Doctor Octopus ambush
     if (this.btnContinueRace) {
       this.btnContinueRace.addEventListener('click', () => {
+        if (this.ambushTimeout) {
+          clearTimeout(this.ambushTimeout);
+          this.ambushTimeout = null;
+        }
         if (this.ambushModal) this.ambushModal.classList.add('hidden');
         if (this.onAmbushDismiss) {
           const cb = this.onAmbushDismiss;
@@ -253,11 +267,22 @@ export class HUD {
       });
     }
 
-    // Keyboard Spacebar for rolling
+    // Keyboard Spacebar for rolling (guarded against active modals & demo)
     window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && this.btnRollDice && !this.btnRollDice.disabled && !this.gameUi.classList.contains('hidden')) {
-        e.preventDefault();
-        this.gameManager.handleRollDice();
+      if (e.code === 'Space') {
+        const isAnyModalOpen = (
+          (this.startScreen && !this.startScreen.classList.contains('hidden')) ||
+          (this.rulesModal && !this.rulesModal.classList.contains('hidden')) ||
+          (this.ambushModal && !this.ambushModal.classList.contains('hidden')) ||
+          (this.revealScreen && !this.revealScreen.classList.contains('hidden')) ||
+          (this.demoHud && !this.demoHud.classList.contains('hidden'))
+        );
+        if (isAnyModalOpen) return;
+
+        if (this.btnRollDice && !this.btnRollDice.disabled && !this.gameUi.classList.contains('hidden')) {
+          e.preventDefault();
+          this.gameManager.handleRollDice();
+        }
       }
     });
 
@@ -302,6 +327,7 @@ export class HUD {
       this.btnNewMatch.addEventListener('click', () => {
         const modeLabel = this.selectedMaxTiles === 60 ? 'Quick (60 Tiles)' : 'Classic (100 Tiles)';
         if (confirm(`Start a brand new match (${this.selectedPlayerCount}P, ${modeLabel})? Board will re-randomize.`)) {
+          this.showDemoHUD(false);
           this.updateSidePanelTarget();
           this.gameManager.startNewMatch(this.selectedPlayerCount, this.selectedMaxTiles);
         }
@@ -312,6 +338,7 @@ export class HUD {
     if (this.btnPlayAgain) {
       this.btnPlayAgain.addEventListener('click', () => {
         this.revealScreen.classList.add('hidden');
+        this.showDemoHUD(false);
         this.updateSidePanelTarget();
         this.gameManager.startNewMatch(this.selectedPlayerCount, this.selectedMaxTiles);
       });
@@ -436,7 +463,11 @@ export class HUD {
     }
 
     // Auto dismiss after 4.5s if player doesn't click
-    setTimeout(() => {
+    if (this.ambushTimeout) {
+      clearTimeout(this.ambushTimeout);
+      this.ambushTimeout = null;
+    }
+    this.ambushTimeout = setTimeout(() => {
       if (this.ambushModal && !this.ambushModal.classList.contains('hidden')) {
         this.ambushModal.classList.add('hidden');
         if (this.onAmbushDismiss) {

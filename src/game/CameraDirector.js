@@ -34,6 +34,7 @@ export class CameraDirector {
     this.orbitAngleX = 0;
     this.orbitAngleY = 0;
     this.prevPinchDist = null;
+    this.gm = null;
 
     this.setupControls();
   }
@@ -135,26 +136,36 @@ export class CameraDirector {
     return this.mode;
   }
 
+  setGameManager(gm) {
+    this.gm = gm;
+  }
+
   focusOnBoard() {
     const isPortrait = typeof window !== 'undefined' && window.innerWidth < window.innerHeight;
     const distScale = isPortrait ? 1.35 : 1.0;
+    const isQuick = Boolean(this.gm && this.gm.maxTiles === 60);
+    const centerZ = isQuick ? 6.04 : 0.0;
 
     if (this.mode === CAMERA_MODES.OVERVIEW) {
-      this.targetPosition.set(0, 36 * distScale, 1);
-      this.targetLookAt.set(0, 0, 0);
+      this.targetPosition.set(0, (isQuick ? 26 : 36) * distScale, centerZ + 1);
+      this.targetLookAt.set(0, 0, centerZ);
     } else if (this.mode === CAMERA_MODES.CLOSEUP) {
-      this.targetPosition.set(0, 16 * distScale, 18 * distScale);
-      this.targetLookAt.set(0, 0, 0);
+      this.targetPosition.set(0, 16 * distScale, centerZ + 18 * distScale);
+      this.targetLookAt.set(0, 0, centerZ);
     } else {
-      this.targetPosition.set(0, 26 * distScale, 25 * distScale);
-      this.targetLookAt.set(0, 0.5, 0);
+      this.targetPosition.set(0, (isQuick ? 20 : 26) * distScale, centerZ + (isQuick ? 19 : 25) * distScale);
+      this.targetLookAt.set(0, 0.5, centerZ);
     }
   }
 
   focusOnPlayer(playerPos) {
     if (this.mode === CAMERA_MODES.OVERVIEW) {
-      this.targetPosition.set(0, 36, 1);
-      this.targetLookAt.set(0, 0, 0);
+      const isPortrait = typeof window !== 'undefined' && window.innerWidth < window.innerHeight;
+      const distScale = isPortrait ? 1.35 : 1.0;
+      const isQuick = Boolean(this.gm && this.gm.maxTiles === 60);
+      const centerZ = isQuick ? 6.04 : 0.0;
+      this.targetPosition.set(0, (isQuick ? 26 : 36) * distScale, centerZ + 1);
+      this.targetLookAt.set(0, 0, centerZ);
       return;
     }
 
@@ -167,7 +178,11 @@ export class CameraDirector {
   }
 
   // --- PEAK CINEMATIC CLOSE-UP: SPIDER-MAN WEB PULL ---
+  // --- PEAK CINEMATIC CLOSE-UP: SPIDER-MAN WEB PULL ---
   focusOnSpiderManAction(spideyPos, mjPos, phase = 'start') {
+    this.orbitAngleX = 0;
+    this.orbitAngleY = 0;
+
     if (phase === 'start') {
       // Dramatic over-the-shoulder close-up behind Spider-Man looking at MJ
       const dir = new THREE.Vector3().subVectors(mjPos, spideyPos).normalize();
@@ -195,21 +210,30 @@ export class CameraDirector {
 
   // --- PEAK CINEMATIC CLOSE-UP: GREEN GOBLIN KIDNAPPING & FLIGHT ---
   trackFlyingGoblin(goblinPos, destinationPos, progress = 0) {
+    this.orbitAngleX = 0;
+    this.orbitAngleY = 0;
+
     if (progress < 0.15) {
       // Intense close-up on Goblin grabbing MJ onto hoverboard
       this.targetPosition.set(goblinPos.x + 2.4, goblinPos.y + 2.0, goblinPos.z + 3.6);
-      this.targetLookAt.set(goblinPos.x, goblinPos.y + 0.5, goblinPos.z);
+      this.targetLookAt.set(goblinPos.x, goblinPos.y + 0.6, goblinPos.z);
       this.posDamp = 9.0;
       this.lookDamp = 9.5;
     } else if (progress < 0.85) {
       // Tight aerial chase camera tracking closely behind hoverboard glider
-      const flightDir = new THREE.Vector3().subVectors(destinationPos, goblinPos).normalize();
+      const flightDir = new THREE.Vector3().subVectors(destinationPos, goblinPos);
+      if (flightDir.lengthSq() < 0.01) {
+        flightDir.set(0, 0, 1);
+      } else {
+        flightDir.normalize();
+      }
       const camPos = goblinPos.clone().addScaledVector(flightDir, -4.5);
       camPos.y = Math.max(goblinPos.y + 2.8, 6.0);
       camPos.x += Math.sin(progress * Math.PI * 4) * 0.8; // subtle dynamic camera sway
 
       this.targetPosition.copy(camPos);
-      this.targetLookAt.set(goblinPos.x, goblinPos.y - 0.2, goblinPos.z);
+      // Safe look target offset avoiding collinear orientation with camera up vector
+      this.targetLookAt.set(goblinPos.x, goblinPos.y + 0.6, goblinPos.z);
       this.posDamp = 7.5;
       this.lookDamp = 8.0;
     } else {
@@ -221,7 +245,21 @@ export class CameraDirector {
     }
   }
 
+  // --- DEDICATED CINEMATIC TRACKING: DOCTOR OCTOPUS SKYLINE AMBUSH & ESCAPE ---
+  trackDocOckEscape(docPos, mjPos, progress = 0) {
+    this.orbitAngleX = 0;
+    this.orbitAngleY = 0;
+    this.posDamp = 6.0;
+    this.lookDamp = 6.5;
+
+    // Follow from an epic high dynamic vantage point framing Doc Ock's leaps into the Manhattan skyline
+    this.targetPosition.set(docPos.x + 8.5, Math.max(docPos.y + 5.0, 7.5), docPos.z + 11.5);
+    this.targetLookAt.set(docPos.x, docPos.y + 1.2, docPos.z);
+  }
+
   focusOnDestinationTile(destPos) {
+    this.orbitAngleX = 0;
+    this.orbitAngleY = 0;
     this.targetPosition.set(destPos.x, destPos.y + 2.8, destPos.z + 5.0);
     this.targetLookAt.set(destPos.x, destPos.y + 0.8, destPos.z);
     this.posDamp = 6.5;
@@ -230,6 +268,8 @@ export class CameraDirector {
 
   // Dynamic cinematic dimensional camera tracking for Quantum Portal Warp
   trackPortalWarp(startPos, destPos, progress = 0) {
+    this.orbitAngleX = 0;
+    this.orbitAngleY = 0;
     const p = Math.min(1.0, Math.max(0.0, progress));
 
     if (p < 0.3) {
@@ -253,6 +293,8 @@ export class CameraDirector {
   }
 
   focusOnTile100(tile100Pos) {
+    this.orbitAngleX = 0;
+    this.orbitAngleY = 0;
     this.targetPosition.set(tile100Pos.x, tile100Pos.y + 3.5, tile100Pos.z + 6.2);
     this.targetLookAt.set(tile100Pos.x, tile100Pos.y + 1.2, tile100Pos.z);
   }

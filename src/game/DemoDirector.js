@@ -551,7 +551,7 @@ export class DemoDirector {
         },
         (docPos, mjPos, progress) => {
           if (!this.isActive || this.currentSceneIndex !== 6) return;
-          this.gm.cameraDirector.trackFlyingGoblin(docPos, docPos, progress);
+          this.gm.cameraDirector.trackDocOckEscape(docPos, mjPos, progress);
         }
       );
     }, 1200);

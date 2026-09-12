@@ -37,20 +37,41 @@ export class Board {
       this.goalRing.position.set(goalPos.x, goalPos.y + 0.05, goalPos.z);
     }
 
+    const isQuick = (this.maxTiles === 60);
+
+    // Physically adapt board platform and titanium rim to 6 rows vs 10 rows
+    if (this.baseMesh) {
+      if (isQuick) {
+        this.baseMesh.scale.set(1.0, 1.0, 0.60);
+        this.baseMesh.position.set(0, -0.4, 6.04);
+      } else {
+        this.baseMesh.scale.set(1.0, 1.0, 1.0);
+        this.baseMesh.position.set(0, -0.4, 0);
+      }
+    }
+    if (this.rimMesh) {
+      if (isQuick) {
+        this.rimMesh.scale.set(1.0, 1.0, 0.60);
+        this.rimMesh.position.set(0, 0.02, 6.04);
+      } else {
+        this.rimMesh.scale.set(1.0, 1.0, 1.0);
+        this.rimMesh.position.set(0, 0.02, 0);
+      }
+    }
+
     for (let n = 1; n <= 100; n++) {
       const tile = this.tiles[n];
       if (!tile) continue;
 
       if (n > this.maxTiles) {
-        // Dim unused tiles beyond maxTiles
-        tile.mesh.material.forEach(m => {
-          m.transparent = true;
-          m.opacity = 0.18;
-        });
+        // Completely hide unused tiles beyond maxTiles
+        tile.mesh.visible = false;
       } else {
+        tile.mesh.visible = true;
         tile.mesh.material.forEach(m => {
           m.transparent = false;
           m.opacity = 1.0;
+          m.needsUpdate = true;
         });
       }
     }
@@ -60,9 +81,9 @@ export class Board {
     const baseWidth = (this.tileSize + this.tileGap) * 10 + 1.6;
     const baseGeo = new THREE.BoxGeometry(baseWidth, 0.8, baseWidth);
     const baseMat = new THREE.MeshLambertMaterial({ color: 0x090d16 });
-    const baseMesh = new THREE.Mesh(baseGeo, baseMat);
-    baseMesh.position.y = -0.4;
-    this.boardGroup.add(baseMesh);
+    this.baseMesh = new THREE.Mesh(baseGeo, baseMat);
+    this.baseMesh.position.y = -0.4;
+    this.boardGroup.add(this.baseMesh);
 
     // Sleek architectural dark titanium border rim
     const rimGeo = new THREE.BoxGeometry(baseWidth + 0.25, 0.12, baseWidth + 0.25);
@@ -71,9 +92,9 @@ export class Board {
       roughness: 0.35,
       metalness: 0.8
     });
-    const rimMesh = new THREE.Mesh(rimGeo, rimMat);
-    rimMesh.position.y = 0.02;
-    this.boardGroup.add(rimMesh);
+    this.rimMesh = new THREE.Mesh(rimGeo, rimMat);
+    this.rimMesh.position.y = 0.02;
+    this.boardGroup.add(this.rimMesh);
   }
 
   // 256x256 high-clarity, lightweight tile textures (Optimized for 4GB RAM & Intel iGPU)
@@ -298,6 +319,14 @@ export class Board {
       const portalFrom = portalExits[n] || null;
 
       const tile = this.tiles[n];
+      if (!tile) continue;
+
+      if (n > this.maxTiles) {
+        tile.mesh.visible = false;
+        continue;
+      }
+      tile.mesh.visible = true;
+
       tile.isSpideyTrigger = isSpidey;
       tile.isGoblin = isGoblin;
       tile.isPortalEntrance = isPortalEntrance;

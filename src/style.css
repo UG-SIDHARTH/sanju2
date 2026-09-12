@@ -85,6 +85,20 @@ canvas {
   display: none !important;
 }
 
+/* Universal and element-level hidden utility classes */
+.hidden {
+  display: none !important;
+}
+
+.demo-hud.hidden {
+  display: none !important;
+}
+
+.turn-extra-msg.hidden {
+  display: none !important;
+}
+
+
 /* Top Navigation Bar */
 .top-bar {
   display: flex;

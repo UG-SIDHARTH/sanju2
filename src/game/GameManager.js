@@ -24,6 +24,7 @@ export class GameManager {
 
     this.board = null;
     this.cameraDirector = new CameraDirector(camera, renderer.domElement);
+    this.cameraDirector.setGameManager(this);
     this.dice = new Dice3D(scene, audioManager);
     this.hud = null;
 
@@ -219,6 +220,15 @@ export class GameManager {
 
   // --- START NEW MATCH (2, 3, or 4 Players; 60 or 100 Tiles) ---
   startNewMatch(playerCount = 2, maxTiles = 100) {
+    // If demo mode is active or lingering, cleanly stop it
+    if (this.demoDirector && this.demoDirector.isActive) {
+      this.demoDirector.stopDemo();
+      return;
+    }
+    if (this.hud && typeof this.hud.showDemoHUD === 'function') {
+      this.hud.showDemoHUD(false);
+    }
+
     this.playerCount = Math.min(4, Math.max(2, playerCount));
     this.maxTiles = maxTiles === 60 ? 60 : 100;
     this.firstPlayerCaptured = false;
@@ -325,11 +335,13 @@ export class GameManager {
 
   // 2-Player Local Dice Roll Trigger
   handleRollDice() {
-    if (this.isTurnProcessing) return;
+    if (this.isTurnProcessing || this.demoDirector?.isActive) return;
+    const activePlayer = this.getActivePlayer();
+    if (!activePlayer || activePlayer.isEliminated) return;
+
     this.isTurnProcessing = true;
     this.hud.setRollButtonEnabled(false);
 
-    const activePlayer = this.getActivePlayer();
     const diceRoll = this.getRandomInt(1, 6);
     this.executeDiceRoll(diceRoll, activePlayer);
   }
@@ -633,12 +645,13 @@ export class GameManager {
                 this.advanceToNextPlayer();
               });
             } else {
+              this.isTurnProcessing = false;
               this.hud.showTrapDefeat(player);
               this.hud.logEvent(`💀 YOU LOSE! ${player.config.name} fell right into the trap!`, true);
             }
           },
           (docPos, mjPos, progress) => {
-            this.cameraDirector.trackFlyingGoblin(docPos, docPos, progress);
+            this.cameraDirector.trackDocOckEscape(docPos, mjPos, progress);
           }
         );
       }, 1000);
@@ -646,6 +659,7 @@ export class GameManager {
     }
 
     // CASE 2: 2nd Player (or next player) reaches Goal Tile -> WINS THE GAME!
+    this.isTurnProcessing = false;
     this.auraManager.triggerSpeedLines(2.4, 0.95);
     this.audioManager.playBonusChime();
     this.comicFX.spawnAt(player.root.position, 'WINNER!', '#facc15', '#ffffff', 3.0);
@@ -685,8 +699,14 @@ export class GameManager {
       return;
     }
 
+    const nextTile = Math.min(this.maxTiles, tileNumber + 1);
+    const nextTilePos = this.board.getTileWorldPosition(nextTile);
+
     if (playersOnTile.length === 1) {
       playersOnTile[0].root.position.set(baseTilePos.x, 0.1, baseTilePos.z);
+      if (tileNumber < this.maxTiles) {
+        playersOnTile[0].root.lookAt(nextTilePos.x, 0.1, nextTilePos.z);
+      }
     } else if (playersOnTile.length > 1) {
       const radius = 0.65;
       playersOnTile.forEach((p, idx) => {
@@ -694,6 +714,9 @@ export class GameManager {
         const offsetX = Math.cos(angle) * radius;
         const offsetZ = Math.sin(angle) * radius;
         p.root.position.set(baseTilePos.x + offsetX, 0.1, baseTilePos.z + offsetZ);
+        if (tileNumber < this.maxTiles) {
+          p.root.lookAt(nextTilePos.x, 0.1, nextTilePos.z);
+        }
       });
     }
   }
