@@ -1,5 +1,7 @@
 # SPIDER-MAN SNAKES & LADDERS 3D 🎯
 
+![Spider-Man Snakes & Ladders Cover Banner](./public/assets/cover.jpg)
+
 ### Basic Details
 **Team Name**: SHADOWS  
 
