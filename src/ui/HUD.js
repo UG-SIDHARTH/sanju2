@@ -227,19 +227,26 @@ export class HUD {
     }
   }
 
-  // Show Secret 100 Climax Reveal Screen
-  showSecret100Reveal(player, isWin = true) {
+  // Show Doctor Octopus Tile 100 Trap Defeat Screen
+  showTrapDefeat(player) {
     const titleEl = document.getElementById('reveal-title');
     const subtitleEl = document.getElementById('reveal-subtitle');
     const playerCardEl = document.getElementById('reveal-player-card');
+    const badgeEl = document.getElementById('reveal-badge');
+
+    if (badgeEl) {
+      badgeEl.textContent = '💀 TOTAL TRAP!';
+      badgeEl.style.backgroundColor = '#dc2626';
+    }
 
     if (titleEl) {
-      titleEl.className = 'reveal-title win';
-      titleEl.textContent = `${player.config.name} WINS`;
+      titleEl.className = 'reveal-title lose';
+      titleEl.textContent = 'YOU LOSE';
+      titleEl.style.color = '#ef4444';
     }
 
     if (subtitleEl) {
-      subtitleEl.textContent = `${player.config.name} reached Tile 100! When the Mega Green Goblin ambushed from the dimensional rift and hurled her from the roof, Black Spider-Man swung in from the skyline, defeated the Mega Goblin, caught MJ in mid-air, and brought her to victory!`;
+      subtitleEl.innerHTML = `<strong style="color: #fca5a5; font-size: 1.25rem;">You fell right into their trap.</strong><br><br>${player.config.name} reached Tile 100! Doctor Octopus's mechanical arms grabbed her and leaped away across the skyline toward an unknown destination...`;
     }
 
     if (playerCardEl) {
@@ -249,7 +256,7 @@ export class HUD {
         </div>
         <div>
           <h3 style="color: #fff; font-family: var(--font-display); font-size: 1.8rem;">${player.config.name}</h3>
-          <p style="color: var(--color-gold); font-weight: 700;">WINNER OF THE MULTIVERSE</p>
+          <p style="color: #ef4444; font-weight: 700;">CAPTURED AT TILE 100 — DEFEATED</p>
         </div>
       `;
     }
@@ -257,18 +264,5 @@ export class HUD {
     if (this.revealScreen) {
       this.revealScreen.classList.remove('hidden');
     }
-
-    confetti({
-      particleCount: 140,
-      spread: 80,
-      origin: { y: 0.6 }
-    });
-    setTimeout(() => {
-      confetti({
-        particleCount: 160,
-        spread: 110,
-        origin: { y: 0.5 }
-      });
-    }, 500);
   }
 }

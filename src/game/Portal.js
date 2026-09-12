@@ -49,6 +49,15 @@ export class Portal {
           hexStr: '#f43f5e',
           name: 'DARK CRIMSON RIFT'
         };
+      case 'dark_abyss':
+        return {
+          primary: 0x0c4a6e,
+          core: 0x0284c7,
+          glow: '#38bdf8',
+          shadow: '#030712',
+          hexStr: '#0284c7',
+          name: 'DARK ABYSSAL VORTEX'
+        };
       case 'dark_void':
       default:
         return {

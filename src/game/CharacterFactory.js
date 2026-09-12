@@ -7,8 +7,8 @@
 import * as THREE from 'three';
 
 export const MJ_CONFIGS = [
-  { id: 1, name: 'MJ-1', hairColor: 0xc84224, hairName: 'Auburn Red', hex: '#ef4444', eyeColor: 0x10b981, jacketColor: '#881337', trimColor: 0xbe123c },
-  { id: 2, name: 'MJ-2', hairColor: 0xc84224, hairName: 'Auburn Red', hex: '#0284c7', eyeColor: 0x10b981, jacketColor: '#0f172a', trimColor: 0x0284c7 }
+  { id: 1, name: 'MJ-1', hairColor: 0xc84224, hairName: 'Auburn Red', hex: '#ef4444', eyeColor: 0x10b981 },
+  { id: 2, name: 'MJ-2', hairColor: 0x00e5ff, hairName: 'Electric Cyan', hex: '#00e5ff', eyeColor: 0x10b981 }
 ];
 
 export class CharacterFactory {
@@ -183,8 +183,8 @@ export class CharacterFactory {
       ctx.quadraticCurveTo(eyeX, eyeY - 76, eyeX + side * 38, eyeY - 50);
       ctx.stroke();
 
-      // Elegant Arched Anime Eyebrows (Natural Auburn to match hair)
-      ctx.strokeStyle = '#9a3412';
+      // Elegant Arched Anime Eyebrows (matches hair)
+      ctx.strokeStyle = config.hairColor === 0x00e5ff ? '#00b4d8' : '#9a3412';
       ctx.lineWidth = 4.5;
       ctx.beginPath();
       ctx.moveTo(eyeX - side * 44, eyeY - 88);
@@ -304,9 +304,10 @@ export class CharacterFactory {
       metalness: 0.05
     });
 
-    const jacketMat = CharacterFactory.createLeatherMaterial(config.jacketColor || '#1e293b');
+    // Identical clothes for both MJs (charcoal biker leather jacket, white shirt, denim jeans)
+    const jacketMat = CharacterFactory.createLeatherMaterial('#1e293b');
     const jacketTrimMat = new THREE.MeshStandardMaterial({
-      color: config.trimColor || 0x0f172a,
+      color: 0x0f172a,
       roughness: 0.30,
       metalness: 0.25
     });

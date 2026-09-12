@@ -16,8 +16,8 @@
   --color-text-muted: #94a3b8;
 
   /* MJ Hair Colors */
-  --hair-mj1: #ff3b30; /* Auburn Red */
-  --hair-mj2: #00e5ff; /* Neon Cyan/Blue */
+  --hair-mj1: #c84224; /* Auburn Red */
+  --hair-mj2: #00e5ff; /* Electric Cyan */
   --hair-mj3: #ffd700; /* Platinum Gold */
   --hair-mj4: #39ff14; /* Toxic Emerald */
 
@@ -744,6 +744,13 @@ canvas {
   margin-bottom: 24px;
 }
 
+.character-preview-grid.two-player-grid {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 360px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .char-card {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -788,8 +795,9 @@ canvas {
 
 .start-meta {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 20px;
+  gap: 10px 18px;
   font-size: 0.8rem;
   font-weight: 700;
   color: #94a3b8;

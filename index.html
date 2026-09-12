@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Spider-Man Snakes & Ladders 3D</title>
-  <meta name="description" content="A cinematic anime-inspired 3D multiplayer Spider-Man Snakes & Ladders game featuring 6 Spider-Men with gold legs, 3 Green Goblins on hoverboards, 4 portals (2 entrance/exit pairs), exact 100 win rule, and the Mega Green Goblin & Black Spider-Man climax!" />
+  <meta name="description" content="A cinematic anime-inspired 3D 2-player Spider-Man Snakes & Ladders game featuring 6 Spider-Men with gold legs, 3 Green Goblins on hoverboards, 6 portals (3 connected pairs), exact 100 win rule, and the Doctor Octopus 100 Trap!" />
   <!-- Google Fonts: Marvel-style bold display and clean UI -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -50,7 +50,7 @@
     <aside class="side-panel">
       <div class="panel-header">
         <span class="panel-title">PLAYERS</span>
-        <span class="panel-target">GOAL: TILE 100 (?)</span>
+        <span class="panel-target">GOAL: TILE 100 (🐙)</span>
       </div>
       <div id="players-list" class="players-list">
         <!-- Dynamically rendered player cards -->
@@ -116,8 +116,8 @@
       <div class="mode-subtitle-badge">🎮 2 PLAYER — SINGLE DEVICE</div>
       <p class="start-desc">
         An absurdly over-engineered 3D anime game with <strong>NO snakes and NO ladders!</strong><br>
-        6 Spider-Men with gold spider legs! 3 Green Goblins on flying hoverboards! 4 Portals (2 connected pairs)!<br>
-        Take turns rolling the 3D dice locally. Reach <strong>Tile 100 with an exact roll</strong> for the epic Multiverse showdown!
+        6 Spider-Men with gold spider legs! 3 Green Goblins on flying hoverboards! 6 Portals (3 connected pairs)!<br>
+        Take turns rolling the 3D dice locally. Reach <strong>Tile 100 with an exact roll</strong>... but beware of the trap!
       </p>
 
       <!-- 2 Character Preview Cards (2-Player Mode Only) -->
@@ -125,12 +125,12 @@
         <div class="char-card active" data-char="1">
           <div class="char-hair-swatch hair-mj1"></div>
           <span class="char-name">MJ-1</span>
-          <span class="char-hair-label">Player 1 (Crimson Jacket)</span>
+          <span class="char-hair-label">Player 1 (Auburn Red Hair)</span>
         </div>
         <div class="char-card active" data-char="2">
           <div class="char-hair-swatch hair-mj2"></div>
           <span class="char-name">MJ-2</span>
-          <span class="char-hair-label">Player 2 (Midnight Jacket)</span>
+          <span class="char-hair-label">Player 2 (Electric Cyan Hair)</span>
         </div>
       </div>
 
@@ -138,8 +138,8 @@
         <div class="meta-item"><span class="meta-icon">🚫</span> No Snakes & No Ladders</div>
         <div class="meta-item"><span class="meta-icon">🕷️</span> 6 Spider-Men (Gold Legs)</div>
         <div class="meta-item"><span class="meta-icon">🎃</span> 3 Green Goblins (Hoverboards)</div>
-        <div class="meta-item"><span class="meta-icon">🌀</span> 4 Portals (2 Pairs - Always Higher)</div>
-        <div class="meta-item"><span class="meta-icon">🎯</span> Exact 100 Win Rule</div>
+        <div class="meta-item"><span class="meta-icon">🌀</span> 6 Portals (3 Pairs - Always Higher)</div>
+        <div class="meta-item"><span class="meta-icon">🎯</span> Exact 100 Rule</div>
         <div class="meta-item"><span class="meta-icon">👥</span> Single Device Pass & Play</div>
       </div>
 
@@ -169,7 +169,7 @@
           <div class="rule-icon">👥</div>
           <div class="rule-text">
             <h3>2 Players — Single Device</h3>
-            <p>Two human players (MJ-1 and MJ-2) take turns on the same laptop or mobile phone. Simply pass and play!</p>
+            <p>Two human players (MJ-1 and MJ-2) take turns on the same laptop or mobile phone. Same appearance, distinguished by their Auburn Red and Electric Cyan hair!</p>
           </div>
         </div>
 
@@ -177,7 +177,15 @@
           <div class="rule-icon">🎯</div>
           <div class="rule-text">
             <h3>Exact 100 Win Rule</h3>
-            <p>To win, you must land <strong>EXACTLY on Tile 100</strong>! If you are on Tile 99, you need an exact roll of 1. If your roll exceeds 100, you cannot move and forfeit your turn!</p>
+            <p>To reach 100, you must roll <strong>EXACTLY the required number</strong>! If you are on Tile 99, you need an exact roll of 1. If your roll exceeds 100, you cannot move and your turn ends.</p>
+          </div>
+        </div>
+
+        <div class="rule-box">
+          <div class="rule-icon">🎲</div>
+          <div class="rule-text">
+            <h3>Bonus Rolls</h3>
+            <p>Roll a <strong>6</strong> to earn an immediate bonus roll! Also, landing on the same tile as the other player grants an immediate bonus roll (both players remain on the tile, nobody is displaced).</p>
           </div>
         </div>
 
@@ -200,16 +208,16 @@
         <div class="rule-box">
           <div class="rule-icon">🌀</div>
           <div class="rule-text">
-            <h3>4 Portals (2 Connected Pairs)</h3>
-            <p>Two entrance portals and two exit portals. Entering an entrance portal pulls MJ into a dark-black-hole gravitational anomaly, emerging from the corresponding exit portal at a higher position (never downward)!</p>
+            <h3>6 Portals (3 Connected Pairs)</h3>
+            <p>Three entrance portals and three exit portals. Entering an entrance portal pulls MJ into a dark-black-hole gravitational singularity, emerging from the corresponding exit portal at a higher position (never downward)!</p>
           </div>
         </div>
 
         <div class="rule-box rule-mystery">
-          <div class="rule-icon">⚡</div>
+          <div class="rule-icon">🐙</div>
           <div class="rule-text">
-            <h3>Tile 100 Climax: Mega Green Goblin & Black Spider-Man</h3>
-            <p>Reaching 100 opens an aerial rift. A gigantic Mega Green Goblin emerges on a war-glider: <em>"Right into the trap."</em> She grabs MJ and hurls her off the building! Suddenly, Black Spider-Man swings in from the skyline, defeats the Mega Goblin, dives mid-air to rescue MJ, and crowns her winner!</p>
+            <h3>Tile 100 — Doctor Octopus Trap!</h3>
+            <p>Reaching 100 is ALWAYS a trap! When MJ reaches Tile 100, Doctor Octopus appears with mechanical tentacles, grabs MJ, and repeatedly leaps away across the skyline into the unknown. The player who reached 100 loses: <em>"YOU LOSE - You fell right into their trap."</em></p>
           </div>
         </div>
       </div>
@@ -221,14 +229,14 @@
   <div id="reveal-screen" class="reveal-overlay hidden">
     <div class="reveal-backdrop"></div>
     <div class="reveal-content" id="reveal-content">
-      <div class="reveal-badge" id="reveal-badge">🏆 MULTIVERSE CHAMPION!</div>
-      <h1 class="reveal-title" id="reveal-title">MJ-1 WINS</h1>
-      <p class="reveal-subtitle" id="reveal-subtitle">Rescued by Black Spider-Man after shattering the Mega Green Goblin!</p>
+      <div class="reveal-badge" id="reveal-badge">⚠️ DOCTOR OCTOPUS TRAP!</div>
+      <h1 class="reveal-title" id="reveal-title">YOU LOSE</h1>
+      <p class="reveal-subtitle" id="reveal-subtitle">You fell right into their trap.</p>
       <div class="reveal-player-card" id="reveal-player-card">
         <!-- Player card rendered here -->
       </div>
       <div class="reveal-buttons">
-        <button id="btn-play-again" class="btn-start-action">PLAY AGAIN</button>
+        <button id="btn-play-again" class="btn-start-action">RESTART MATCH</button>
       </div>
     </div>
   </div>

@@ -4,13 +4,12 @@
 // ==========================================================================
 
 import * as THREE from 'three';
+import { CameraDirector } from './CameraDirector.js';
 import { CharacterFactory } from './CharacterFactory.js';
 import { SpiderMan } from './SpiderMan.js';
 import { GreenGoblin } from './GreenGoblin.js';
 import { Dice3D } from './Dice3D.js';
-import { CameraDirector } from './CameraDirector.js';
-import { MegaGreenGoblin } from './MegaGreenGoblin.js';
-import { BlackSpiderMan } from './BlackSpiderMan.js';
+import { DrOctopus } from './DrOctopus.js';
 import { Portal } from './Portal.js';
 import { AuraManager } from './AuraManager.js';
 
@@ -30,9 +29,8 @@ export class GameManager {
     // Flowing Anime Aura & Speed Lines
     this.auraManager = new AuraManager(scene, camera);
 
-    // Tile 100 Climax Antagonist & Hero
-    this.megaGreenGoblin = new MegaGreenGoblin(scene, audioManager, comicFX);
-    this.blackSpiderMan = new BlackSpiderMan(scene, audioManager, comicFX);
+    // Tile 100 Trap Boss: Doctor Octopus
+    this.drOctopus = new DrOctopus(scene, audioManager, comicFX);
 
     // Game state (Pure 2-Player Single Device)
     this.players = [];
@@ -142,17 +140,18 @@ export class GameManager {
       return { id: idx + 1, station, drop };
     });
 
-    // 3. Exactly 4 Portals (2 connected pairs: 2 Entrance -> 2 Exit; always higher, never downward)
+    // 3. Exactly 6 Portals (3 connected pairs: 3 Entrance -> 3 Exit; always higher, never downward)
     this.portalEntrances = {};
     this.portalExits = {};
     const portalTiers = [
-      { startMin: 14, startMax: 30, destMin: 44, destMax: 66, theme: 'dark_void' },
-      { startMin: 38, startMax: 56, destMin: 72, destMax: 92, theme: 'dark_crimson' }
+      { startMin: 8, startMax: 24, destMin: 34, destMax: 50, theme: 'dark_void' },
+      { startMin: 28, startMax: 48, destMin: 56, destMax: 76, theme: 'dark_crimson' },
+      { startMin: 52, startMax: 70, destMin: 78, destMax: 94, theme: 'dark_abyss' }
     ];
 
     this.portalConfigs = portalTiers.map((tier, idx) => {
       const start = pickTile(tier.startMin, tier.startMax);
-      const dest = pickTile(Math.max(start + 14, tier.destMin), tier.destMax);
+      const dest = pickTile(Math.max(start + 12, tier.destMin), tier.destMax);
       this.portalEntrances[start] = dest;
       this.portalExits[dest] = start;
       return { id: idx + 1, start, dest, theme: tier.theme };
@@ -177,12 +176,8 @@ export class GameManager {
     this.portals.forEach(p => p.dispose());
     this.portals = [];
 
-    if (this.megaGreenGoblin) {
-      this.megaGreenGoblin.root.visible = false;
-      this.megaGreenGoblin.isFlying = false;
-    }
-    if (this.blackSpiderMan) {
-      this.blackSpiderMan.root.visible = false;
+    if (this.drOctopus) {
+      this.drOctopus.reset();
     }
 
     // Spawn 2 Players (MJ-1 and MJ-2)
@@ -208,7 +203,7 @@ export class GameManager {
     this.hud.updateTurnDisplay(this.getActivePlayer(), false);
     this.hud.setRollButtonEnabled(true);
 
-    this.hud.logEvent(`Match started! 6 Spider-Men, 3 Green Goblins & 4 Portals (2 Pairs) randomized.`);
+    this.hud.logEvent(`Match started! 6 Spider-Men, 3 Green Goblins & 6 Portals (3 Pairs) randomized.`);
     this.cameraDirector.focusOnBoard();
   }
 
@@ -535,88 +530,33 @@ export class GameManager {
     this.finishTurn(bonus);
   }
 
-  // --- EPIC TILE 100 ENDGAME: MEGA GREEN GOBLIN AMBUSH & BLACK SPIDER-MAN RESCUE ---
+  // --- TILE 100 ENDGAME: DOCTOR OCTOPUS TRAP ---
   handleSecret100Reached(player) {
     this.audioManager.playSuspenseHeartbeat();
     const tile100Pos = this.board.getTileWorldPosition(100);
     this.cameraDirector.focusOnTile100(tile100Pos);
-    this.hud.logEvent(`⚡ ${player.config.name} REACHED TILE 100! THE CLIMAX BEGINS!`, true);
+    this.hud.logEvent(`⚡ ${player.config.name} REACHED TILE 100!`, true);
 
-    // 1. Tense environment & dramatic pause focusing on MJ
+    // 1. Tense pause focusing on MJ on Tile 100
     this.auraManager.triggerSpeedLines(1.8, 0.6);
 
     setTimeout(() => {
-      // 2. Strange portal suddenly appears in the air above Tile 100
-      this.audioManager.playPortalEnter();
-      this.comicFX.showBanner('DIMENSIONAL RIFT DETECTED ABOVE TILE 100!');
-
-      // Create glowing aerial rift ring
-      const riftGeo = new THREE.TorusGeometry(3.5, 0.25, 16, 32);
-      const riftMat = new THREE.MeshBasicMaterial({ color: 0x22c55e });
-      const riftMesh = new THREE.Mesh(riftGeo, riftMat);
-      const aerialPortalPos = tile100Pos.clone().add(new THREE.Vector3(0, 10, -4));
-      riftMesh.position.copy(aerialPortalPos);
-      riftMesh.rotation.x = Math.PI / 4;
-      this.scene.add(riftMesh);
-
-      // 3. Gigantic MEGA GREEN GOBLIN emerges from the portal!
-      const targetHoverPos = tile100Pos.clone().add(new THREE.Vector3(0, 4.5, 1.5));
-      this.megaGreenGoblin.emergeFromPortal(targetHoverPos, () => {
-        // Remove aerial rift
-        this.scene.remove(riftMesh);
-        riftGeo.dispose();
-        riftMat.dispose();
-
-        // 4. Camera cuts into dramatic close-up
-        this.cameraDirector.focusOnDestinationTile(targetHoverPos);
-        this.auraManager.triggerSpeedLines(2.5, 0.9);
-
-        // 5. Mega Green Goblin looks at MJ and says: "Right into the trap."
-        this.megaGreenGoblin.sayQuote(() => {
-          // 6. Mega Green Goblin kidnaps MJ and throws her from the rooftop!
-          this.hud.logEvent(`😱 MEGA GREEN GOBLIN HURLS ${player.config.name} OFF THE ROOFTOP!`);
-          this.megaGreenGoblin.grabAndThrowMJ(player, (thrownMJ) => {
-            this.executeBlackSpiderManRescue(thrownMJ, tile100Pos);
-          });
-        });
-      });
-    }, 1200);
-  }
-
-  executeBlackSpiderManRescue(fallingMJ, tile100Pos) {
-    // 7. Fullscreen Anime Speed Lines & Web-Swing Influx!
-    this.auraManager.triggerSpeedLines(3.8, 1.0);
-    this.comicFX.showBanner('BLACK SPIDER-MAN SWINGS IN FROM THE SKYLINE!');
-
-    const buildingAnchor = tile100Pos.clone().add(new THREE.Vector3(-18, 22, -10));
-    const combatPos = this.megaGreenGoblin.root.position.clone().add(new THREE.Vector3(2.5, 0, 1.8));
-
-    // Dynamic camera tracking Black Spidey
-    this.cameraDirector.focusOnDestinationTile(combatPos);
-
-    this.blackSpiderMan.swingIntoScene(buildingAnchor, combatPos, () => {
-      // 8. Engage Mega Green Goblin in dynamic combat
-      this.hud.logEvent(`⚔️ BLACK SPIDER-MAN ENGAGES MEGA GREEN GOBLIN IN COMBAT!`, true);
-      this.auraManager.triggerSpeedLines(4.0, 1.0);
-
-      this.blackSpiderMan.executeCombatSequence(this.megaGreenGoblin, () => {
-        this.hud.logEvent(`💥 MEGA GREEN GOBLIN DEFEATED! PLUNGES INTO SKYLINE!`);
-
-        // 9. Black Spider-Man dives mid-air after falling MJ, catches her, slings back up!
-        setTimeout(() => {
-          this.cameraDirector.focusOnPlayer(fallingMJ.root.position);
-          this.auraManager.triggerSpeedLines(3.0, 1.0);
-
-          this.blackSpiderMan.diveAndRescueMJ(fallingMJ, tile100Pos, () => {
-            // 10. Crown MJ as the WINNER!
-            this.audioManager.playVictory();
-            this.hud.showSecret100Reveal(fallingMJ, true);
-            this.hud.logEvent(`🏆 ${fallingMJ.config.name} WAS RESCUED AND CROWNED THE CHAMPION! VICTORY!`, true);
-            this.cameraDirector.focusOnTile100(tile100Pos);
-          });
-        }, 500);
-      });
-    });
+      // 2. Doctor Octopus suddenly appears at Tile 100!
+      this.drOctopus.triggerTrapKidnapping(
+        player,
+        () => {
+          // 3. Disappeared toward an unknown destination!
+          // Player who reached 100 LOSES!
+          this.audioManager.playDefeatGong();
+          this.hud.showTrapDefeat(player);
+          this.hud.logEvent(`💀 YOU LOSE! ${player.config.name} fell right into the trap!`, true);
+        },
+        (docPos, mjPos, progress) => {
+          // Cinematic camera tracking Doctor Octopus leaping across skyline with MJ
+          this.cameraDirector.trackFlyingGoblin(docPos, docPos, progress);
+        }
+      );
+    }, 1000);
   }
 
   updatePlayerPositionsOnTile(tileNumber) {
@@ -695,7 +635,6 @@ export class GameManager {
     this.spiderMen.forEach(s => s?.update?.(delta));
     this.greenGoblins.forEach(g => g?.update?.(delta));
     this.portals.forEach(p => p?.update?.(delta));
-    if (this.megaGreenGoblin) this.megaGreenGoblin?.update?.(delta);
-    if (this.blackSpiderMan) this.blackSpiderMan?.update?.(delta);
+    if (this.drOctopus) this.drOctopus?.update?.(delta);
   }
 }

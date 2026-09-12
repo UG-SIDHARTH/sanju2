@@ -1,5 +1,3 @@
-import "./chunk-M5LBBGMC.js";
-
 // node_modules/canvas-confetti/dist/confetti.module.mjs
 var module = {};
 (function main(global, module2, isWorker, workerSize) {

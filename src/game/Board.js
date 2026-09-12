@@ -164,7 +164,7 @@ export class Board {
       ctx.fillStyle = '#fef08a';
       ctx.font = '900 24px "Outfit", Impact, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('🏆 FINAL 100', 128, 43);
+      ctx.fillText('🐙 TILE 100', 128, 43);
     }
 
     // Main Tile Number
