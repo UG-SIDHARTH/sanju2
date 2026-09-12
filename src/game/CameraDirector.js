@@ -136,14 +136,17 @@ export class CameraDirector {
   }
 
   focusOnBoard() {
+    const isPortrait = typeof window !== 'undefined' && window.innerWidth < window.innerHeight;
+    const distScale = isPortrait ? 1.35 : 1.0;
+
     if (this.mode === CAMERA_MODES.OVERVIEW) {
-      this.targetPosition.set(0, 36, 1);
+      this.targetPosition.set(0, 36 * distScale, 1);
       this.targetLookAt.set(0, 0, 0);
     } else if (this.mode === CAMERA_MODES.CLOSEUP) {
-      this.targetPosition.set(0, 16, 18);
+      this.targetPosition.set(0, 16 * distScale, 18 * distScale);
       this.targetLookAt.set(0, 0, 0);
     } else {
-      this.targetPosition.set(0, 26, 25);
+      this.targetPosition.set(0, 26 * distScale, 25 * distScale);
       this.targetLookAt.set(0, 0.5, 0);
     }
   }

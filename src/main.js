@@ -109,14 +109,31 @@ class App {
   }
 
   setupResize() {
-    window.addEventListener('resize', () => {
+    const handleResize = () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
-      this.camera.aspect = w / h;
+      const aspect = w / h;
+      this.camera.aspect = aspect;
+
+      // Dynamically scale vertical FOV on narrow screens so the 100-tile board fits horizontally
+      if (aspect < 1.0) {
+        this.camera.fov = Math.min(72, Math.max(45, 45 / aspect * 0.70));
+      } else {
+        this.camera.fov = 45;
+      }
       this.camera.updateProjectionMatrix();
+
       this.renderer.setSize(w, h);
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.0));
-    });
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+
+      if (this.gameManager && this.gameManager.cameraDirector) {
+        this.gameManager.cameraDirector.focusOnBoard();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', () => setTimeout(handleResize, 150));
+    handleResize();
   }
 
   animate() {

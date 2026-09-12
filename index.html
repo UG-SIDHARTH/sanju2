@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Spider-Man Snakes & Ladders 3D</title>
   <meta name="description" content="A cinematic anime-inspired 3D 2-player Spider-Man Snakes & Ladders game featuring 6 Spider-Men with gold legs, 3 Green Goblins on hoverboards, 6 portals (3 connected pairs), exact 100 win rule, and the Doctor Octopus 100 Trap!" />
   <!-- Google Fonts: Marvel-style bold display and clean UI -->
@@ -50,7 +50,7 @@
     <aside class="side-panel">
       <div class="panel-header">
         <span class="panel-title">PLAYERS</span>
-        <span class="panel-target">GOAL: TILE 100 (🐙)</span>
+        <span class="panel-target" id="panel-target">GOAL: TILE 100 (🐙)</span>
       </div>
       <div id="players-list" class="players-list">
         <!-- Dynamically rendered player cards -->
@@ -120,6 +120,27 @@
         6 Spider-Men with gold spider legs! 3 Green Goblins on flying hoverboards! 6 Portals (3 connected pairs)!<br>
         Take turns rolling the 3D dice locally. <strong>1st player to reach 100 gets captured by Doc Ock... and the 2nd player to reach 100 WINS!</strong>
       </p>
+
+      <!-- Game Mode Selection (Quick 60 vs Classic 100) -->
+      <div class="mode-select-container">
+        <span class="select-label">CHOOSE MATCH DURATION</span>
+        <div class="mode-buttons">
+          <button class="game-mode-btn active" data-tiles="60">
+            <span class="mode-btn-icon">⚡</span>
+            <div class="mode-btn-info">
+              <span class="mode-btn-title">QUICK MODE</span>
+              <span class="mode-btn-sub">60 TILES · FAST-PACED</span>
+            </div>
+          </button>
+          <button class="game-mode-btn" data-tiles="100">
+            <span class="mode-btn-icon">🏆</span>
+            <div class="mode-btn-info">
+              <span class="mode-btn-title">CLASSIC MODE</span>
+              <span class="mode-btn-sub">100 TILES · FULL ODYSSEY</span>
+            </div>
+          </button>
+        </div>
+      </div>
 
       <!-- Player Count Selection (2P, 3P, 4P) -->
       <div class="player-select-container">

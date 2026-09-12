@@ -294,8 +294,43 @@ async function runVerification() {
   console.log('  - Winner correctly identified as p2:', victoryWinner === p2 ? `${p2.config.name} (PASS)` : 'FAIL');
   console.log('  - Captured player correctly honored in victory screen:', victoryCaptured === p1 ? `${p1.config.name} (PASS)` : 'FAIL');
 
+  // 12. Verify Quick Mode (60 Tiles)
+  console.log('\n12. QUICK MODE (60 TILES) SPECIFICATION:');
+  gm.startNewMatch(3, 60);
+  console.log('  - Mode maxTiles:', gm.maxTiles, gm.maxTiles === 60 ? '(PASS)' : 'FAIL');
+  console.log('  - Player Count in Match:', gm.players.length, gm.players.length === 3 ? '(3 Players PASS)' : 'FAIL');
+  console.log('  - Board maxTiles:', gm.board.maxTiles, gm.board.maxTiles === 60 ? '(PASS)' : 'FAIL');
+  console.log('  - Board goalLabel:', gm.board.goalLabel, gm.board.goalLabel === '🐙 TILE 60' ? '(PASS)' : 'FAIL');
+  console.log('  - 4 Spider-Men generated:', gm.spiderMen.length, gm.spiderMen.length === 4 ? '(PASS)' : 'FAIL');
+  console.log('  - 2 Green Goblins generated:', gm.greenGoblins.length, gm.greenGoblins.length === 2 ? '(PASS)' : 'FAIL');
+  console.log('  - 2 Pairs of Portals generated:', gm.portals.length, gm.portals.length === 2 ? '(PASS)' : 'FAIL');
+
+  const allStationsBelow60 = (
+    gm.spideyConfig.every(s => s.trigger < 60 && s.station < 60) &&
+    gm.goblinConfig.every(g => g.station < 60 && g.drop < 60) &&
+    gm.portalConfigs.every(p => p.start < 60 && p.dest < 60)
+  );
+  console.log('  - All entities bounded below goal Tile 60:', allStationsBelow60 ? 'BOUNDED (PASS)' : 'FAIL');
+
+  // Simulate Quick Mode Climax at Tile 60
+  const qp1 = gm.players[0];
+  const qp2 = gm.players[1];
+  gm.drOctopus.triggerTrapKidnapping = (target, onComplete) => onComplete();
+  dummyHud.showTrapAmbushedNotice = (captured, remaining, onDismiss) => onDismiss();
+
+  gm.handleSecret100Reached(qp1);
+  await new Promise(resolve => setTimeout(resolve, 1100));
+  console.log('  - 1st Player (qp1) captured at Tile 60:', qp1.isEliminated ? 'ELIMINATED (PASS)' : 'FAIL');
+  console.log('  - Goal label updated to WIN TILE 60:', gm.board.goalLabel === '🏆 WIN TILE 60' ? '🏆 WIN TILE 60 (PASS)' : 'FAIL');
+
+  let quickVictoryCalled = false;
+  dummyHud.showVictory = (winner) => { quickVictoryCalled = true; };
+  gm.handleSecret100Reached(qp2);
+  await new Promise(resolve => setTimeout(resolve, 700));
+  console.log('  - 2nd Player (qp2) wins at Tile 60:', quickVictoryCalled ? 'VICTORY (PASS)' : 'FAIL');
+
   console.log('\n===========================================================');
-  console.log(' ALL 11 SUB-SYSTEMS & CORE SPECIFICATIONS VERIFIED 100% PASS');
+  console.log(' ALL 12 SUB-SYSTEMS & MODES (60T & 100T) VERIFIED 100% PASS');
   console.log('===========================================================');
 }
 

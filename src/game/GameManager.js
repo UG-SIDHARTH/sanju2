@@ -40,6 +40,7 @@ export class GameManager {
     this.playerCount = 2;
     this.firstPlayerCaptured = false;
     this.capturedPlayer = null;
+    this.maxTiles = 100;
 
     // Entities: Exactly 6 Spider-Men, 3 Green Goblins & 6 Portals (3 Pairs)
     this.spiderMen = [];
@@ -92,9 +93,9 @@ export class GameManager {
     return min + Math.floor(Math.random() * range);
   }
 
-  // --- PROCEDURAL GENERATOR: 6 SPIDER-MEN, 3 GOBLINS, 2 DARK PORTALS ---
+  // --- PROCEDURAL GENERATOR: SCALED FOR 60 TILES (QUICK) OR 100 TILES (CLASSIC) ---
   generateRandomBoardLayout() {
-    const usedTiles = new Set([1, 100]);
+    const usedTiles = new Set([1, this.maxTiles]);
 
     // Helper: pick random unused tile in [min, max]
     const pickTile = (min, max) => {
@@ -110,8 +111,52 @@ export class GameManager {
       return min;
     };
 
-    // 1. Generate 6 Spider-Man ladders (station > trigger, well distributed across tiers)
-    // Tiers: [12-28], [29-45], [46-62], [63-76], [77-88], [89-98]
+    if (this.maxTiles === 60) {
+      // 60-Tile Quick Mode: 4 Spider-Men, 2 Goblins, 2 Portals (all <= 57)
+      const spideyTiers = [
+        { triggerMin: 3, triggerMax: 10, stationMin: 16, stationMax: 24 },
+        { triggerMin: 12, triggerMax: 20, stationMin: 26, stationMax: 36 },
+        { triggerMin: 22, triggerMax: 34, stationMin: 40, stationMax: 48 },
+        { triggerMin: 36, triggerMax: 46, stationMin: 50, stationMax: 57 }
+      ];
+
+      this.spideyConfig = spideyTiers.map((tier, idx) => {
+        const trigger = pickTile(tier.triggerMin, tier.triggerMax);
+        const station = pickTile(Math.max(trigger + 6, tier.stationMin), tier.stationMax);
+        return { id: idx + 1, trigger, station };
+      });
+
+      const goblinTiers = [
+        { stationMin: 26, stationMax: 38, dropMin: 8, dropMax: 18 },
+        { stationMin: 44, stationMax: 57, dropMin: 22, dropMax: 36 }
+      ];
+
+      this.goblinDropMap = {};
+      this.goblinConfig = goblinTiers.map((tier, idx) => {
+        const station = pickTile(tier.stationMin, tier.stationMax);
+        const drop = pickTile(tier.dropMin, Math.min(station - 8, tier.dropMax));
+        this.goblinDropMap[station] = drop;
+        return { id: idx + 1, station, drop };
+      });
+
+      this.portalEntrances = {};
+      this.portalExits = {};
+      const portalTiers = [
+        { startMin: 5, startMax: 15, destMin: 20, destMax: 32, theme: 'dark_void' },
+        { startMin: 22, startMax: 35, destMin: 40, destMax: 56, theme: 'dark_crimson' }
+      ];
+
+      this.portalConfigs = portalTiers.map((tier, idx) => {
+        const start = pickTile(tier.startMin, tier.startMax);
+        const dest = pickTile(Math.max(start + 8, tier.destMin), tier.destMax);
+        this.portalEntrances[start] = dest;
+        this.portalExits[dest] = start;
+        return { id: idx + 1, start, dest, theme: tier.theme };
+      });
+      return;
+    }
+
+    // 100-Tile Classic Mode: 6 Spider-Men, 3 Goblins, 3 Portals
     const spideyTiers = [
       { triggerMin: 3, triggerMax: 15, stationMin: 22, stationMax: 34 },
       { triggerMin: 18, triggerMax: 30, stationMin: 38, stationMax: 50 },
@@ -128,7 +173,6 @@ export class GameManager {
     });
 
     // 2. Generate 3 Green Goblin hazards (station > drop)
-    // Tiers: mid-tier [35-55], upper-mid [60-78], high-tier [82-96]
     const goblinTiers = [
       { stationMin: 35, stationMax: 52, dropMin: 14, dropMax: 28 },
       { stationMin: 64, stationMax: 79, dropMin: 36, dropMax: 56 },
@@ -161,9 +205,10 @@ export class GameManager {
     });
   }
 
-  // --- START NEW MATCH (2, 3, or 4 Players) ---
-  startNewMatch(playerCount = 2) {
+  // --- START NEW MATCH (2, 3, or 4 Players; 60 or 100 Tiles) ---
+  startNewMatch(playerCount = 2, maxTiles = 100) {
     this.playerCount = Math.min(4, Math.max(2, playerCount));
+    this.maxTiles = maxTiles === 60 ? 60 : 100;
     this.firstPlayerCaptured = false;
     this.capturedPlayer = null;
 
@@ -185,7 +230,8 @@ export class GameManager {
     }
 
     if (this.board) {
-      this.board.setGoalLabel('🐙 TILE 100');
+      this.board.setGameMode(this.maxTiles);
+      this.board.setGoalLabel(`🐙 TILE ${this.maxTiles}`);
     }
 
     // Spawn MJs for selected player count (2, 3, or 4)
@@ -211,7 +257,8 @@ export class GameManager {
     this.hud.updateTurnDisplay(this.getActivePlayer(), false);
     this.hud.setRollButtonEnabled(true);
 
-    this.hud.logEvent(`Match started (${this.playerCount} Players)! 6 Spider-Men, 3 Green Goblins & 6 Portals (3 Pairs) randomized.`);
+    const modeName = this.maxTiles === 60 ? 'Quick (60 Tiles)' : 'Classic (100 Tiles)';
+    this.hud.logEvent(`Match started (${this.playerCount}P, ${modeName})! Entities randomized.`);
     this.cameraDirector.focusOnBoard();
   }
 
@@ -283,22 +330,21 @@ export class GameManager {
       this.hud.logEvent(`${activePlayer.config.name} rolled a ${diceRoll}!`, true);
 
       const startTile = activePlayer.currentTile;
-      const neededToReach100 = 100 - startTile;
+      const neededToReachGoal = this.maxTiles - startTile;
 
-      // --- EXACT 100 RULE ---
-      // If at 99, exactly need 1 to reach 100!
+      // --- EXACT GOAL RULE (TILE 60 OR 100) ---
       // If roll > needed, the player CANNOT move!
-      if (startTile + diceRoll > 100) {
+      if (startTile + diceRoll > this.maxTiles) {
         this.comicFX.spawnAt(
           activePlayer.root.position,
-          `NEED EXACT ${neededToReach100}!`,
+          `NEED EXACT ${neededToReachGoal}!`,
           '#ef4444',
           '#ffffff',
           2.0
         );
         this.audioManager.playFootstep();
         this.hud.logEvent(
-          `🚫 Over-rolled! ${activePlayer.config.name} needs an exact ${neededToReach100} to reach Tile 100!`,
+          `🚫 Over-rolled! ${activePlayer.config.name} needs an exact ${neededToReachGoal} to reach Tile ${this.maxTiles}!`,
           true
         );
 
@@ -319,7 +365,7 @@ export class GameManager {
       // Valid exact roll or forward progress!
       const actualSteps = diceRoll;
       let getsBonusFromSix = false;
-      if (diceRoll === 6 && (startTile + actualSteps) < 100) {
+      if (diceRoll === 6 && (startTile + actualSteps) < this.maxTiles) {
         getsBonusFromSix = true;
         this.comicFX.spawnAt(activePlayer.root.position, 'LUCKY 6!', '#f59e0b', '#ffffff', 1.8);
         this.audioManager.playBonusChime();
@@ -423,8 +469,8 @@ export class GameManager {
   checkTileEvents(player, landedTile, hadBonusRoll) {
     let bonusRoll = hadBonusRoll;
 
-    // 1. EXACT TILE 100 REACHED: TRIGGER EPIC CLIMAX!
-    if (landedTile === 100) {
+    // 1. EXACT GOAL REACHED (TILE 60 OR 100): TRIGGER EPIC CLIMAX!
+    if (landedTile === this.maxTiles) {
       this.handleSecret100Reached(player);
       return;
     }
@@ -538,14 +584,14 @@ export class GameManager {
     this.finishTurn(bonus);
   }
 
-  // --- TILE 100 ENDGAME: 1ST CAPTURED BY DOC OCK, 2ND WINS ---
+  // --- GOAL ENDGAME: 1ST CAPTURED BY DOC OCK, 2ND WINS ---
   handleSecret100Reached(player) {
     this.audioManager.playSuspenseHeartbeat();
-    const tile100Pos = this.board.getTileWorldPosition(100);
-    this.cameraDirector.focusOnTile100(tile100Pos);
-    this.hud.logEvent(`⚡ ${player.config.name} REACHED TILE 100!`, true);
+    const goalPos = this.board.getTileWorldPosition(this.maxTiles);
+    this.cameraDirector.focusOnTile100(goalPos);
+    this.hud.logEvent(`⚡ ${player.config.name} REACHED TILE ${this.maxTiles}!`, true);
 
-    // CASE 1: 1st Player reaches Tile 100 -> DOCTOR OCTOPUS AMBUSH & CAPTURE!
+    // CASE 1: 1st Player reaches Goal Tile -> DOCTOR OCTOPUS AMBUSH & CAPTURE!
     if (!this.firstPlayerCaptured) {
       this.auraManager.triggerSpeedLines(1.8, 0.6);
 
@@ -560,15 +606,15 @@ export class GameManager {
             this.firstPlayerCaptured = true;
             this.capturedPlayer = player;
 
-            // Update physical board Tile 100 label to golden WINNER tile
-            this.board.setGoalLabel('🏆 WIN TILE 100');
+            // Update physical board goal label to golden WINNER tile
+            this.board.setGoalLabel(`🏆 WIN TILE ${this.maxTiles}`);
 
             const remainingActive = this.players.filter(p => !p.isEliminated);
             this.hud.renderPlayersList(this.players, this.activePlayerIndex);
 
             if (remainingActive.length > 0) {
-              this.comicFX.showBanner(`💥 ${player.config.name} CAPTURED! NEXT TO REACH 100 WINS!`);
-              this.hud.logEvent(`💀 ${player.config.name} was CAPTURED by Doc Ock! The NEXT player to reach 100 WINS!`, true);
+              this.comicFX.showBanner(`💥 ${player.config.name} CAPTURED! NEXT TO REACH ${this.maxTiles} WINS!`);
+              this.hud.logEvent(`💀 ${player.config.name} was CAPTURED by Doc Ock! The NEXT player to reach ${this.maxTiles} WINS!`, true);
 
               this.hud.showTrapAmbushedNotice(player, remainingActive, () => {
                 this.cameraDirector.focusOnBoard();
@@ -587,15 +633,15 @@ export class GameManager {
       return;
     }
 
-    // CASE 2: 2nd Player (or next player) reaches Tile 100 -> WINS THE GAME!
+    // CASE 2: 2nd Player (or next player) reaches Goal Tile -> WINS THE GAME!
     this.auraManager.triggerSpeedLines(2.4, 0.95);
     this.audioManager.playBonusChime();
     this.comicFX.spawnAt(player.root.position, 'WINNER!', '#facc15', '#ffffff', 3.0);
-    this.comicFX.showBanner(`🏆 ${player.config.name} REACHED TILE 100 AND WINS!`);
+    this.comicFX.showBanner(`🏆 ${player.config.name} REACHED TILE ${this.maxTiles} AND WINS!`);
 
     setTimeout(() => {
       this.hud.showVictory(player, this.capturedPlayer);
-      this.hud.logEvent(`🏆 MULTIVERSE CHAMPION! ${player.config.name} conquered Tile 100 and WON!`, true);
+      this.hud.logEvent(`🏆 MULTIVERSE CHAMPION! ${player.config.name} conquered Tile ${this.maxTiles} and WON!`, true);
     }, 600);
   }
 

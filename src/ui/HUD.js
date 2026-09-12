@@ -36,6 +36,7 @@ export class HUD {
     this.ambushModal = document.getElementById('ambush-modal');
     this.btnContinueRace = document.getElementById('btn-continue-race');
     this.selectedPlayerCount = 2;
+    this.selectedMaxTiles = 60; // Default to Quick Mode (60 Tiles)
     this.onAmbushDismiss = null;
 
     // Camera Zoom
@@ -44,9 +45,36 @@ export class HUD {
     this.btnZoomOut = document.getElementById('btn-zoom-out');
 
     this.setupListeners();
+    this.updateStartButtonText();
+  }
+
+  updateStartButtonText() {
+    const startTextEl = document.getElementById('btn-start-text');
+    if (startTextEl) {
+      const modeLabel = this.selectedMaxTiles === 60 ? 'QUICK (60 TILES)' : 'CLASSIC (100 TILES)';
+      startTextEl.textContent = `START ${this.selectedPlayerCount}P ${modeLabel}`;
+    }
+  }
+
+  updateSidePanelTarget() {
+    const targetEl = document.getElementById('panel-target');
+    if (targetEl) {
+      targetEl.textContent = `GOAL: TILE ${this.selectedMaxTiles} (🐙)`;
+    }
   }
 
   setupListeners() {
+    // Game Mode Buttons (Quick 60 vs Classic 100)
+    const modeBtns = document.querySelectorAll('.game-mode-btn');
+    modeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tiles = parseInt(btn.dataset.tiles, 10) || 60;
+        this.selectedMaxTiles = tiles;
+        modeBtns.forEach(b => b.classList.toggle('active', b === btn));
+        this.updateStartButtonText();
+      });
+    });
+
     // Turbo Speed Toggle
     if (this.btnTurboMode) {
       this.btnTurboMode.addEventListener('click', () => {
@@ -98,11 +126,7 @@ export class HUD {
           }
         });
 
-        // Update start button text
-        const startTextEl = document.getElementById('btn-start-text');
-        if (startTextEl) {
-          startTextEl.textContent = `START ${count}-PLAYER MATCH`;
-        }
+        this.updateStartButtonText();
 
         const subtitleBadge = document.getElementById('mode-subtitle-badge');
         if (subtitleBadge) {
@@ -117,7 +141,8 @@ export class HUD {
         this.gameManager.audioManager.init();
         this.startScreen.classList.add('hidden');
         this.gameUi.classList.remove('hidden');
-        this.gameManager.startNewMatch(this.selectedPlayerCount);
+        this.updateSidePanelTarget();
+        this.gameManager.startNewMatch(this.selectedPlayerCount, this.selectedMaxTiles);
       });
     }
 
@@ -187,8 +212,10 @@ export class HUD {
     // New Match
     if (this.btnNewMatch) {
       this.btnNewMatch.addEventListener('click', () => {
-        if (confirm(`Start a brand new match (${this.selectedPlayerCount} Players)? Board will re-randomize.`)) {
-          this.gameManager.startNewMatch(this.selectedPlayerCount);
+        const modeLabel = this.selectedMaxTiles === 60 ? 'Quick (60 Tiles)' : 'Classic (100 Tiles)';
+        if (confirm(`Start a brand new match (${this.selectedPlayerCount}P, ${modeLabel})? Board will re-randomize.`)) {
+          this.updateSidePanelTarget();
+          this.gameManager.startNewMatch(this.selectedPlayerCount, this.selectedMaxTiles);
         }
       });
     }
@@ -197,7 +224,8 @@ export class HUD {
     if (this.btnPlayAgain) {
       this.btnPlayAgain.addEventListener('click', () => {
         this.revealScreen.classList.add('hidden');
-        this.gameManager.startNewMatch(this.selectedPlayerCount);
+        this.updateSidePanelTarget();
+        this.gameManager.startNewMatch(this.selectedPlayerCount, this.selectedMaxTiles);
       });
     }
   }
@@ -207,13 +235,15 @@ export class HUD {
     if (!this.playersList) return;
     this.playersList.innerHTML = '';
 
+    const maxTiles = this.gameManager?.maxTiles || this.selectedMaxTiles || 100;
+
     players.forEach((player, idx) => {
       const card = document.createElement('div');
       const isActive = idx === currentActiveIndex;
       card.className = `player-item ${isActive ? 'active-turn' : ''} ${player.isEliminated ? 'eliminated' : ''}`;
       card.title = `Click to focus camera on ${player.config.name}`;
 
-      const progress = Math.min(100, Math.max(1, player.currentTile));
+      const progress = Math.min(100, Math.max(1, Math.round((player.currentTile / maxTiles) * 100)));
 
       card.innerHTML = `
         <div class="player-avatar-mini" style="background-color: ${player.config.hex};">
@@ -282,6 +312,7 @@ export class HUD {
   // Show Alert Notice when 1st Player is captured by Doctor Octopus
   showTrapAmbushedNotice(capturedPlayer, remainingActive, onDismiss) {
     this.onAmbushDismiss = onDismiss;
+    const maxTiles = this.gameManager?.maxTiles || this.selectedMaxTiles || 100;
 
     const titleEl = document.getElementById('ambush-title');
     const descEl = document.getElementById('ambush-desc');
@@ -295,7 +326,7 @@ export class HUD {
       const remainingNames = remainingActive.map(p => p.config.name).join(', ');
       descEl.innerHTML = `
         Doctor Octopus sprang his trap and dragged ${capturedPlayer.config.name} into the skyline!<br><br>
-        <span class="ambush-highlight">⚡ THE TRAP IS GONE! THE NEXT RACER TO REACH TILE 100 WINS!</span><br>
+        <span class="ambush-highlight">⚡ THE TRAP IS GONE! THE NEXT RACER TO REACH TILE ${maxTiles} WINS!</span><br>
         <small style="color: #94a3b8; font-size: 0.9rem; margin-top: 8px; display: inline-block;">Active Racers Remaining: <strong>${remainingNames}</strong></small>
       `;
     }
@@ -307,7 +338,7 @@ export class HUD {
         </div>
         <div style="text-align: left;">
           <h4 style="color: #fff; font-family: var(--font-display); font-size: 1.4rem;">${capturedPlayer.config.name}</h4>
-          <p style="color: #ef4444; font-size: 0.85rem; font-weight: 700;">AMBUSHED AT TILE 100 — OUT OF RACE</p>
+          <p style="color: #ef4444; font-size: 0.85rem; font-weight: 700;">AMBUSHED AT TILE ${maxTiles} — OUT OF RACE</p>
         </div>
       `;
     }
@@ -329,7 +360,7 @@ export class HUD {
     }, 4500);
   }
 
-  // Show Victory Screen when 2nd Player reaches Tile 100
+  // Show Victory Screen when 2nd Player reaches Goal Tile
   showVictory(winnerPlayer, capturedPlayer) {
     try {
       confetti({
@@ -339,6 +370,7 @@ export class HUD {
       });
     } catch (e) {}
 
+    const maxTiles = this.gameManager?.maxTiles || this.selectedMaxTiles || 100;
     const titleEl = document.getElementById('reveal-title');
     const subtitleEl = document.getElementById('reveal-subtitle');
     const playerCardEl = document.getElementById('reveal-player-card');
@@ -358,8 +390,8 @@ export class HUD {
 
     if (subtitleEl) {
       const extra = capturedPlayer
-        ? `While ${capturedPlayer.config.name} fell into Doctor Octopus's ambush trap, ${winnerPlayer.config.name} reached Tile 100 second and conquered the Multiverse!`
-        : `Conquered the 100-tile Multiverse race!`;
+        ? `While ${capturedPlayer.config.name} fell into Doctor Octopus's ambush trap, ${winnerPlayer.config.name} reached Tile ${maxTiles} second and conquered the Multiverse!`
+        : `Conquered the ${maxTiles}-tile Multiverse race!`;
       subtitleEl.innerHTML = `<strong style="color: #fde047; font-size: 1.25rem;">VICTORY ACHIEVED!</strong><br><br>${extra}`;
     }
 
@@ -370,7 +402,7 @@ export class HUD {
         </div>
         <div>
           <h3 style="color: #fff; font-family: var(--font-display); font-size: 2rem;">${winnerPlayer.config.name}</h3>
-          <p style="color: #4ade80; font-weight: 800;">MULTIVERSE WINNER — REACHED TILE 100</p>
+          <p style="color: #4ade80; font-weight: 800;">MULTIVERSE WINNER — REACHED TILE ${maxTiles}</p>
         </div>
       `;
     }
@@ -384,8 +416,9 @@ export class HUD {
     }
   }
 
-  // Show Doctor Octopus Tile 100 Trap Defeat Screen (Fallback if all racers are eliminated)
+  // Show Doctor Octopus Trap Defeat Screen (Fallback if all racers are eliminated)
   showTrapDefeat(player) {
+    const maxTiles = this.gameManager?.maxTiles || this.selectedMaxTiles || 100;
     const titleEl = document.getElementById('reveal-title');
     const subtitleEl = document.getElementById('reveal-subtitle');
     const playerCardEl = document.getElementById('reveal-player-card');
@@ -403,7 +436,7 @@ export class HUD {
     }
 
     if (subtitleEl) {
-      subtitleEl.innerHTML = `<strong style="color: #fca5a5; font-size: 1.25rem;">You fell right into their trap.</strong><br><br>${player.config.name} reached Tile 100! Doctor Octopus's mechanical arms grabbed her and leaped away across the skyline toward an unknown destination...`;
+      subtitleEl.innerHTML = `<strong style="color: #fca5a5; font-size: 1.25rem;">You fell right into their trap.</strong><br><br>${player.config.name} reached Tile ${maxTiles}! Doctor Octopus's mechanical arms grabbed her and leaped away across the skyline toward an unknown destination...`;
     }
 
     if (playerCardEl) {
@@ -413,7 +446,7 @@ export class HUD {
         </div>
         <div>
           <h3 style="color: #fff; font-family: var(--font-display); font-size: 1.8rem;">${player.config.name}</h3>
-          <p style="color: #ef4444; font-weight: 700;">CAPTURED AT TILE 100 — DEFEATED</p>
+          <p style="color: #ef4444; font-weight: 700;">CAPTURED AT TILE ${maxTiles} — DEFEATED</p>
         </div>
       `;
     }

@@ -16,6 +16,7 @@ export class Board {
     this.tileThickness = 0.35;
     this.boardGroup = new THREE.Group();
 
+    this.maxTiles = 100;
     this.specialMarkers = {
       spideyTriggers: [],
       goblins: []
@@ -25,6 +26,34 @@ export class Board {
     this.createBoardPlatform();
     this.generateTiles();
     this.scene.add(this.boardGroup);
+  }
+
+  setGameMode(maxTiles = 100) {
+    this.maxTiles = maxTiles === 60 ? 60 : 100;
+    this.goalLabel = `🐙 TILE ${this.maxTiles}`;
+
+    const goalPos = this.tiles[this.maxTiles].position;
+    if (this.goalRing) {
+      this.goalRing.position.set(goalPos.x, goalPos.y + 0.05, goalPos.z);
+    }
+
+    for (let n = 1; n <= 100; n++) {
+      const tile = this.tiles[n];
+      if (!tile) continue;
+
+      if (n > this.maxTiles) {
+        // Dim unused tiles beyond maxTiles
+        tile.mesh.material.forEach(m => {
+          m.transparent = true;
+          m.opacity = 0.18;
+        });
+      } else {
+        tile.mesh.material.forEach(m => {
+          m.transparent = false;
+          m.opacity = 1.0;
+        });
+      }
+    }
   }
 
   createBoardPlatform() {
@@ -262,7 +291,7 @@ export class Board {
     for (let n = 1; n <= 100; n++) {
       const isSpidey = spideyTriggers.includes(n);
       const isGoblin = goblinPositions.includes(n);
-      const isGoal = n === 100;
+      const isGoal = (n === this.maxTiles);
       const isPortalEntrance = Boolean(portalEntrances[n]);
       const portalDest = portalEntrances[n] || null;
       const isPortalExit = Boolean(portalExits[n]);
@@ -286,14 +315,14 @@ export class Board {
     return this.tiles[safeN].position.clone();
   }
 
-  setGoalLabel(label = '🐙 TILE 100') {
-    this.goalLabel = label;
-    const tile100 = this.tiles[100];
-    if (tile100 && tile100.topMat) {
-      const newTex = this.createTileTexture(100, false, false, true, false, null, false, null);
-      if (tile100.topMat.map) tile100.topMat.map.dispose();
-      tile100.topMat.map = newTex;
-      tile100.topMat.needsUpdate = true;
+  setGoalLabel(label) {
+    this.goalLabel = label || `🐙 TILE ${this.maxTiles}`;
+    const goalTile = this.tiles[this.maxTiles];
+    if (goalTile && goalTile.topMat) {
+      const newTex = this.createTileTexture(this.maxTiles, false, false, true, false, null, false, null);
+      if (goalTile.topMat.map) goalTile.topMat.map.dispose();
+      goalTile.topMat.map = newTex;
+      goalTile.topMat.needsUpdate = true;
     }
   }
 
